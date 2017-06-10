@@ -1,6 +1,6 @@
 {
   "name": "zazzy-browser",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "A collection of general-purpose browser utilities used as higher-level building-blocks to create Bootstrap v3 websites and assist in client-server communications.",
   "engines": {
     "node": ">= 6.5.0"
@@ -15,22 +15,30 @@
     "type": "git",
     "url": "https://github.com/jpfluger/zazzy-browser.git"
   },
-  "main": "dist/zzb.js",
+  "main": "src/zzb-server.js",
   "scripts": {
-    "test": "gulp jshint",
+    "test": "mocha",
     "dist": "gulp default"
-  },
-  "devDependencies": {
-    "gulp": "^3.9.1",
-    "rimraf": "^2.6.1",
-    "fs-extra": "^3.0.1",
-    "gulp-insert": "^0.5.0",
-    "gulp-eslint": "^3.0.1",
-    "gulp-uglify": "^3.0.0",
-    "gulp-concat": "^2.6.1"
   },
   "keywords": [
     "browser",
     "zazzy"
-  ]
+  ],
+  "dependencies": {
+    "lodash": "^4.17.4"
+  },
+  "devDependencies": {
+    "mocha": "^3.4.2",
+    "gulp": "^3.9.1",
+    "rimraf": "^2.6.1",
+    "fs-extra": "^3.0.1",
+    "gulp-insert": "^0.5.0",
+    "gulp-concat": "^2.6.1",
+    "gulp-eslint": "^3.0.1",
+    "gulp-uglify": "^3.0.0",
+    "browserify": "^14.4.0",
+    "vinyl-source-stream": "^1.1.0",
+    "vinyl-buffer": "^1.0.0",
+    "browserify-transform-tools": "^1.7.0"
+  }
 }

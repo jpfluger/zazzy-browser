@@ -16,7 +16,7 @@ Zazzy Browser gets automatically loaded into the global cache and is referenced 
 * zzb.types: data type operations: supplements lodash
 * zzb.uuid: uuid functions
 * zzb.strings: string functions
-* zzb.ui: ui functions
+* zzb.uib: ui functions for bootsrap
 * zzb.forms: form functions
 * zzb.dialogs: dialog functions using `BootstrapDialog`
 * zzb.rob: uniform return object (rob) functions

@@ -7,9 +7,22 @@ var insert = require('gulp-insert')
 var concat = require('gulp-concat')
 var eslint = require('gulp-eslint')
 var uglify = require('gulp-uglify')
+var browserify = require('browserify')
+var source = require('vinyl-source-stream')
+var buffer = require('vinyl-buffer')
+var browserifyTools = require('browserify-transform-tools')
+
 var path = require('path')
 var util = require('util')
 var pkg = require('./package.json')
+
+var literalify = browserifyTools.makeRequireTransform('literalify', {excludeExtensions: ['json']}, function(args, opts, cb) {
+  if (opts.config && args[0] in opts.config) {
+    return cb(null, opts.config[args[0]]);
+  } else {
+    return cb();
+  }
+})
 
 var pckInfo = []
 pckInfo.push('//! zzb.js')
@@ -40,13 +53,28 @@ gulp.task('lint-js', function() {
 })
 
 gulp.task('dist-js', function (cb) {
-    return gulp.src([paths.js], {base: '.'})
+
+    // http://blog.revathskumar.com/2016/02/browserify-with-gulp.html
+    var appBundler = browserify({
+            entries: paths.js,
+            transform: [[literalify.configure({
+                'jQuery': 'window.$',
+                'BootstrapDialog': 'window.BootstrapDialog',
+                'lodash': 'window._'
+            })]],
+            cache: {}, packageCache: {}, fullPaths: false
+          });
+
+    appBundler
+        .bundle()
+        .pipe(source(paths.distJS))
+        .pipe(buffer())
         .pipe(insert.prepend(pckInfo.join('\n')))
-        .pipe(concat(paths.distJS))
-        .pipe(gulp.dest('.'));
+        .pipe(gulp.dest('.'))
+    cb()
 })
 
-gulp.task('minify-js', function () {
+gulp.task('minify-js', function (cb) {
     return gulp.src([paths.distJS], {base: '.'})
         .pipe(concat(paths.minJS))
         .pipe(uglify())
@@ -55,5 +83,6 @@ gulp.task('minify-js', function () {
 })
 
 gulp.task('default', ['clean-js', 'lint-js', 'dist-js', 'minify-js'])
+gulp.task('minify', ['minify-js'])
 gulp.task('clean', ['clean-js'])
 gulp.task('lint', ['lint-js'])
