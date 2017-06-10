@@ -12,10 +12,10 @@ var _strings = require('./strings.js').strings
 //   the name of the global cache object to use
 
 exports.zzbLoader = function(options) {
-  options = _.merge({name: 'zzb'})
+  options = _.merge({name: 'zzb', overwriteCached: false})
 
   // has it already been loaded yet?
-  if (global[options.zzb]) {
+  if (global[options.zzb] && !options.overwriteCached) {
     return global[options.zzb]
   }
 
@@ -25,10 +25,18 @@ exports.zzbLoader = function(options) {
   _zzb.prototype.uuid = new _uuid
   _zzb.prototype.strings = new _strings
 
-  global[options.name] = new _zzb()
-
   // always gets a copy b/c referenced libs depends on it
-  global['zzb'] = global[options.name]
+  global['zzb'] = new _zzb()
+
+  if (global[options.zzb] && options.overwriteCached) {
+    global[options.name]
+    global[options.name].prototype.zzNode = _zzNode
+    global[options.name].prototype.types = new _types
+    global[options.name].prototype.uuid = new _uuid
+    global[options.name].prototype.strings = new _strings
+  } else {
+    global[options.name] = global['zzb']
+  }
 
   return global[options.name]
 }
