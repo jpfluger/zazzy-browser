@@ -1,7 +1,7 @@
 {
   "name": "zazzy-browser",
   "license": "MIT",
-  "description": "A collection of general-purpose browser utilities used as higher-level building-blocks to create Bootstrap v3 websites and assist in client-server communications.",
+  "description": "General-purpose browser functions used as building-blocks to create Bootstrap v3 websites and assist in client-server communications.",
   "homepage": "https://github.com/jpfluger/zazzy-browser",
   "authors": [
     "Jaret Pfluger <japes@aberlorn.com>"
@@ -10,10 +10,7 @@
     "type": "git",
     "url": "git://github.com/jpfluger/zazzy-browser.git"
   },
-  "main": [
-    "dist/zzb.js",
-    "dist/zzb.min.js"
-  ],
+  "main": "dist/zzb.js",
   "keywords": [
     "browser",
     "zazzy"
