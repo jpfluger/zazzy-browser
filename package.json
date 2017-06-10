@@ -1,0 +1,36 @@
+{
+  "name": "zazzy-browser",
+  "version": "0.1.1",
+  "description": "A collection of general-purpose browser utilities used as higher-level building-blocks to create Bootstrap v3 websites and assist in client-server communications.",
+  "engines": {
+    "node": ">= 6.5.0"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "Jaret Pfluger",
+    "email": "japes@aberlorn.com"
+  },
+  "homepage": "https://github.com/jpfluger/zazzy-browser",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jpfluger/zazzy-browser.git"
+  },
+  "main": "dist/zzb.js",
+  "scripts": {
+    "test": "gulp jshint",
+    "dist": "gulp default"
+  },
+  "devDependencies": {
+    "gulp": "^3.9.1",
+    "rimraf": "^2.6.1",
+    "fs-extra": "^3.0.1",
+    "gulp-insert": "^0.5.0",
+    "gulp-eslint": "^3.0.1",
+    "gulp-uglify": "^3.0.0",
+    "gulp-concat": "^2.6.1"
+  },
+  "keywords": [
+    "browser",
+    "zazzy"
+  ]
+}
