@@ -147,4 +147,4 @@ _dialogs.prototype.handleError = function(options) {
   }
 }
 
-module.exports.dialogs = _dialogs
+exports.dialogs = _dialogs

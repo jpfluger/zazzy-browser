@@ -92,4 +92,4 @@ _status.prototype.get = function (options, callback) {
   })
 }
 
-module.exports.status = _status
+exports.status = _status

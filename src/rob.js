@@ -89,4 +89,4 @@ _rob.prototype.sanitizeRecords = function (recs) {
   return recs
 }
 
-module.exports.rob = _rob
+exports.rob = _rob

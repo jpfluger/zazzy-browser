@@ -11,9 +11,17 @@ if (typeof _ === 'undefined') {
 }
 
 (function (global, factory) {
-    typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
-    typeof define === 'function' && define.amd ? define(factory) :
+  if (typeof window !== 'undefined') {
+    window.zzb = factory()
+  } else if (typeof global !== 'undefined') {
     global.zzb = factory()
+  } else if (typeof define === 'function' && define.amd) {
+    define(factory);
+  } else if (typeof module === 'object' && module.exports) {
+    module.exports = factory();
+  } else {
+     throw new Error('could not locate global cache object in which to create zzb')
+  }
 }(this, (function () { 'use strict';
 
   // ---------------------------------------------------
@@ -25,55 +33,55 @@ if (typeof _ === 'undefined') {
   // types
   // ---------------------------------------------------
 
-  var _types = require('./types.js')
+  var _types = require('./types.js').types
 
   // ---------------------------------------------------
   // uuid
   // ---------------------------------------------------
 
-  var _uuid = require('./uuid.js')
+  var _uuid = require('./uuid.js').uuid
 
   // ---------------------------------------------------
   // strings
   // ---------------------------------------------------
 
-  var _strings = require('./strings.js')
+  var _strings = require('./strings.js').strings
 
   // ---------------------------------------------------
   // _uib
   // ---------------------------------------------------
 
-  var _uib = require('./uib.js')
+  var _uib = require('./uib.js').uib
 
   // ---------------------------------------------------
   // _forms
   // ---------------------------------------------------
 
-  var _forms = require('./forms.js')
+  var _forms = require('./forms.js').forms
 
   // ---------------------------------------------------
   // _dialogs
   // ---------------------------------------------------
 
-  var _dialogs = require('./dialogs.js')
+  var _dialogs = require('./dialogs.js').dialogs
 
   // ---------------------------------------------------
   // _rob (Return Object)
   // ---------------------------------------------------
 
-  var _rob = require('./rob.js')
+  var _rob = require('./rob.js').rob
 
   // ---------------------------------------------------
   // _ajax
   // ---------------------------------------------------
 
-  var _ajax = require('./ajax.js')
+  var _ajax = require('./ajax.js').ajax
 
   // ---------------------------------------------------
   // _status
   // ---------------------------------------------------
 
-  var _status = require('./status.js')
+  var _status = require('./status.js').status
 
   // ---------------------------------------------------
   // zzb

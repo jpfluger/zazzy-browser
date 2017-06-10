@@ -127,7 +127,7 @@ _ajax.prototype.postJSON = function (options) {
   return this.ajax(options)
 }
 
-module.exports.ajax = _ajax
+exports.ajax = _ajax
 
 },{}],2:[function(require,module,exports){
 // client only
@@ -279,7 +279,7 @@ _dialogs.prototype.handleError = function(options) {
   }
 }
 
-module.exports.dialogs = _dialogs
+exports.dialogs = _dialogs
 
 },{}],3:[function(require,module,exports){
 // client only
@@ -477,7 +477,7 @@ self.forms.toListFromErrors = function(errs) {
   return arrHtml.join('');
 };*/
 
-module.exports.forms = _forms
+exports.forms = _forms
 
 },{}],4:[function(require,module,exports){
 // client or server
@@ -571,7 +571,7 @@ _rob.prototype.sanitizeRecords = function (recs) {
   return recs
 }
 
-module.exports.rob = _rob
+exports.rob = _rob
 
 },{}],5:[function(require,module,exports){
 // client only
@@ -668,7 +668,7 @@ _status.prototype.get = function (options, callback) {
   })
 }
 
-module.exports.status = _status
+exports.status = _status
 
 },{}],6:[function(require,module,exports){
 // client or server
@@ -1069,7 +1069,7 @@ _uib.prototype.createPanelCollapsibleEnd = function () {
   return '</div></div></div>';
 };
 
-module.exports.uib = _uib
+exports.uib = _uib
 },{}],9:[function(require,module,exports){
 // client or server
 var _ = window._
@@ -1405,9 +1405,17 @@ if (typeof _ === 'undefined') {
 }
 
 (function (global, factory) {
-    typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
-    typeof define === 'function' && define.amd ? define(factory) :
+  if (typeof window !== 'undefined') {
+    window.zzb = factory()
+  } else if (typeof global !== 'undefined') {
     global.zzb = factory()
+  } else if (typeof define === 'function' && define.amd) {
+    define(factory);
+  } else if (typeof module === 'object' && module.exports) {
+    module.exports = factory();
+  } else {
+     throw new Error('could not locate global cache object in which to create zzb')
+  }
 }(this, (function () { 'use strict';
 
   // ---------------------------------------------------
@@ -1419,55 +1427,55 @@ if (typeof _ === 'undefined') {
   // types
   // ---------------------------------------------------
 
-  var _types = require('./types.js')
+  var _types = require('./types.js').types
 
   // ---------------------------------------------------
   // uuid
   // ---------------------------------------------------
 
-  var _uuid = require('./uuid.js')
+  var _uuid = require('./uuid.js').uuid
 
   // ---------------------------------------------------
   // strings
   // ---------------------------------------------------
 
-  var _strings = require('./strings.js')
+  var _strings = require('./strings.js').strings
 
   // ---------------------------------------------------
   // _uib
   // ---------------------------------------------------
 
-  var _uib = require('./uib.js')
+  var _uib = require('./uib.js').uib
 
   // ---------------------------------------------------
   // _forms
   // ---------------------------------------------------
 
-  var _forms = require('./forms.js')
+  var _forms = require('./forms.js').forms
 
   // ---------------------------------------------------
   // _dialogs
   // ---------------------------------------------------
 
-  var _dialogs = require('./dialogs.js')
+  var _dialogs = require('./dialogs.js').dialogs
 
   // ---------------------------------------------------
   // _rob (Return Object)
   // ---------------------------------------------------
 
-  var _rob = require('./rob.js')
+  var _rob = require('./rob.js').rob
 
   // ---------------------------------------------------
   // _ajax
   // ---------------------------------------------------
 
-  var _ajax = require('./ajax.js')
+  var _ajax = require('./ajax.js').ajax
 
   // ---------------------------------------------------
   // _status
   // ---------------------------------------------------
 
-  var _status = require('./status.js')
+  var _status = require('./status.js').status
 
   // ---------------------------------------------------
   // zzb

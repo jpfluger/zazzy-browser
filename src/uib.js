@@ -143,4 +143,4 @@ _uib.prototype.createPanelCollapsibleEnd = function () {
   return '</div></div></div>';
 };
 
-module.exports.uib = _uib
+exports.uib = _uib

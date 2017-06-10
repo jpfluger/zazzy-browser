@@ -121,4 +121,4 @@ _ajax.prototype.postJSON = function (options) {
   return this.ajax(options)
 }
 
-module.exports.ajax = _ajax
+exports.ajax = _ajax

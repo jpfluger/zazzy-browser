@@ -193,4 +193,4 @@ self.forms.toListFromErrors = function(errs) {
   return arrHtml.join('');
 };*/
 
-module.exports.forms = _forms
+exports.forms = _forms
