@@ -1,5 +1,5 @@
 //! zzb.js
-//! version: 0.2.4
+//! version: 0.2.5
 //! author(s): Jaret Pfluger
 //! license: MIT
 //! https://github.com/jpfluger/zazzy-browser
@@ -28,6 +28,9 @@ function _ajax () {
           if (!data) {
             return reject(new Error('Data returned is empty when at minimum a status is required'))
           }
+
+          // ?
+          //if (jqXHR.status != '200') {}
 
           if (!jqXHR.responseJSON) {
             // html or some other data type was returned
