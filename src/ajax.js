@@ -23,6 +23,9 @@ function _ajax () {
             return reject(new Error('Data returned is empty when at minimum a status is required'))
           }
 
+          // ?
+          //if (jqXHR.status != '200') {}
+
           if (!jqXHR.responseJSON) {
             // html or some other data type was returned
             data = {recs: [data]}

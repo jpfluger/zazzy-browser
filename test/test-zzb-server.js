@@ -74,9 +74,25 @@ describe('Validate zzb-server defaults', function () {
 
 describe('Validate zzb-server defaults using zzs object (non-default)', function () {
 
-  // set explicitly
-  global.zzs = zzbLoader({name: 'zzs'})
   var sPig = 'The pig smelled the mushrooms.'
+
+  global.zzs = new function() {
+    this.getPig = function () {
+      return sPig
+    }
+  }
+
+  zzbLoader({name: 'zzs', overwriteCached: true})
+
+  describe('Prior zzs function', function () {
+    it('getPig is defined', function (done) {
+      var err = null
+      if (zzs.getPig() !== sPig) {
+        err = new Error('getPig function not defined')
+      }
+      done(err)
+    })
+  })
 
   describe('Is loaded: zzNode', function () {
     it('Can create new', function (done) {
