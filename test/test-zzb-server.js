@@ -70,6 +70,17 @@ describe('Validate zzb-server defaults', function () {
       done(err)
     })
   })
+
+  describe('Is loaded: rob', function () {
+    it('should createError', function (done) {
+      var err = null
+      var robErr = zzb.rob.createError({message: sPig})
+      if (robErr.message != sPig) {
+        err = new Error('unexpected robErr.message')
+      }
+      done(err)
+    })
+  })
 })
 
 describe('Validate zzb-server defaults using zzs object (non-default)', function () {
@@ -153,6 +164,17 @@ describe('Validate zzb-server defaults using zzs object (non-default)', function
       var newString = zzs.strings.format(template, values)
       if (newString !== sPig) {
         err = new Error('newString not equal to the control string')
+      }
+      done(err)
+    })
+  })
+
+  describe('Is loaded: rob', function () {
+    it('should createError', function (done) {
+      var err = null
+      var robErr = zzs.rob.createError({message: sPig})
+      if (robErr.message != sPig) {
+        err = new Error('unexpected robErr.message')
       }
       done(err)
     })

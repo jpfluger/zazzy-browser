@@ -512,33 +512,46 @@ _rob.prototype.toObject = function (errs) {
   return eo
 }
 
-// Creates a single ROB error object from an error, which could be in the format of a string, array or object
-var createError = function (err) {
-  var newErr = {type: 'error', message: null, field: null, trace: null}
-  
-  if (!err) {
-    return newErr
-  }
+// Originally we created ROBErrorType but...
+// (a) the stack is wrong when invoked by outside functions and (b) we wanted to control if the stack shows or not
+function mergeErrorDefaults (options) {
+  // '_system' is a reserved word
+  //   why not use null? b/c when converting from array to an object of errors by field, we need a valid string
+  // why we have isErr?
+  //   server-side supports logger { emerg: 0, alert: 1, crit: 2, error: 3, warning: 4, notice: 5, info: 6, debug: 7 }
+  //   of which numbers 0 to 3 are errors and > 4 are not
+  options = _.merge({type: 'error', message: null, field: '_system', stack: null, isErr: true}, options)
 
-  if (typeof err === 'string') {
-    if (zzb.types.isNonEmptyString(err)) {
-      newErr.message = err
+  if (options.isErr) {
+    switch (options.type) {
+      case 'warning':
+      case 'notice':
+      case 'info':
+      case 'debug':
+        options.isErr = false      
+        break
+      default:
+        options.isErr = true
+        break
     }
   }
-  else if (Array.isArray(err)) {
-    console.log('bad intput in createError - cannot create an error object from an array')
-    return newErr
+
+  return options  
+}
+
+// Creates a single ROB error object from an object (eg existing error) or from a string
+// options1 could be a string or object, whereas options2 expects an object
+var createError = function (options1, options2) {
+  if (!options1) {
+    return mergeErrorDefaults()
+  } 
+  if (zzb.types.isNonEmptyString(options1)) {
+    return mergeErrorDefaults(_.merge({message: options1}, options2))
+  } else if (!Array.isArray(options1) && zzb.types.isObject(options1)) {
+    return mergeErrorDefaults(options1)
   }
-  // assume object
-  else if (zzb.types.isObject(err)) { // err instanceof Error || !Array.isArray(err)) {
-    // at minimum, always has this
-    newErr.message = err.message
-    // optional
-    newErr.field = err.field || '_system'
-    newErr.type = err.type || 'error'
-    newErr.trace = err.trace || null
-  }
-  return newErr
+
+  throw new Error('bad input in createError - unrecognized err datatype')
 }
 
 _rob.prototype.createError = createError
