@@ -166,4 +166,34 @@ _strings.prototype.joinArrToCommas = function(arr, fieldName) {
   }).join('')
 }
 
+/**
+ * zzb.strings.toPlural
+ *
+ * Usage:
+ *  zzb.strings.toPlural('dog', 1, options)
+ *  zzb.strings.toPlural('dog', 2, options)
+ * Produces
+ *  dog
+ *  dogs
+ *
+ * Appends an s or user-defined suffix (options.suffix) to a word if the number is not 1 or -1
+ * @param str
+ * @param charsToAppend
+ * @param ifMoreCharCount
+ * @returns {String}
+ */
+_strings.prototype.toPlural = function(word, number, options) {
+  options = _.merge({forcePlural: false, suffix: null}, options)
+
+  if ((number === 1 || number === -1) && !options.forcePlural) {
+    return word
+  }
+
+  if (options.suffix) {
+    return word + options.suffix
+  } else {
+    return word + 's'
+  }
+}
+
 exports.strings = _strings
