@@ -16,7 +16,7 @@ var _ = require('lodash')
 // example status (aka zzbStatus)
 //   {user: {isLoggedIn: false, username: null, roles: {}}, page: {path: '/'}
 
-var _status = function() {
+var _status = function () {
   this.zzbStatus = null
 }
 
@@ -34,11 +34,11 @@ _status.prototype.get = function (options, callback) {
     var tmpStatus = null
 
     // Try local storage first (if top-level page supports it) -> this function will delete it, if found
-    if (typeof(Storage) !== "undefined" && sessionStorage.zzbStatus) {
+    if (typeof Storage !== 'undefined' && sessionStorage.zzbStatus) {
       try {
         // using sessionStorage (not localStorage)
         tmpStatus = JSON.parse(sessionStorage.getItem('zzbStatus'))
-      } catch(err) {
+      } catch (err) {
         console.log('unable to parse zzbStatus from sessionStorage: ' + err)
       }
 
@@ -54,14 +54,14 @@ _status.prototype.get = function (options, callback) {
     if ($('#zzbStatus').length > 0 && zzb.types.isNonEmptyString($('#zzbStatus').attr('status'))) {
       try {
         tmpStatus = JSON.parse($('#zzbStatus').attr('status'))
-      } catch(err) {
+      } catch (err) {
         console.log('unable to parse zzbStatus from embedded attribute in #zzbStatus: ' + err)
       }
       if (tmpStatus) {
         this.zzbStatus = tmpStatus
         return callback && callback(null, this.zzbStatus)
       }
-    }    
+    }
   }
 
   // not in session storage? (best) try a server-side call to '/zzb/status'
@@ -71,14 +71,13 @@ _status.prototype.get = function (options, callback) {
   // remember newbies that inside .then() that "this" refrences the .then() function, so using "that" is a workaround
   var that = this
 
-  zzb.ajax.postJSON(
-  {
+  zzb.ajax.postJSON({
     url: '/zzb/status',
     data: options
   })
-  .then(function(rob){
+  .then(function (rob) {
     if (rob.errs) {
-      callback && callback(rob.errs, tmpStatus);
+      callback && callback(rob.errs, tmpStatus)
     } else {
       if (setSelf) {
         that.zzbStatus = rob.one()
@@ -86,7 +85,7 @@ _status.prototype.get = function (options, callback) {
       callback && callback(null, rob.one())
     }
   })
-  .catch(function(err){
+  .catch(function (err) {
     console.log('failed to retrieve zzbStatus: using defaults')
     callback && callback(zzb.types.sanitizeErrors(err), tmpStatus)
   })

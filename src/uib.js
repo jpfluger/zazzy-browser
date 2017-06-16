@@ -5,7 +5,7 @@ var _ = require('lodash')
 // _uib (UI Bootstrap)
 // ---------------------------------------------------
 
-var _uib = function() {}
+var _uib = function () {}
 
 /**
  * zzb.uib.createPanelGroup
@@ -16,7 +16,7 @@ var _uib = function() {}
 _uib.prototype.createPanelGroup = function (options) {
   options = _.merge({id: zzb.uuid.newV4(), classPanelGroup: '', innerHtml: ''}, options)
   var template = '<div id="panelGroup_{id}" class="panel-group {classPanelGroup}">{innerHtml}</div>'
-  return zzb.strings.format(template, options) // _.formatObj(template, uie);
+  return zzb.strings.format(template, options) // _.formatObj(template, uie)
 }
 
 /**
@@ -28,7 +28,7 @@ _uib.prototype.createPanelGroup = function (options) {
 _uib.prototype.createPanelBody = function (options) {
   options = _.merge({id: zzb.uuid.newV4(), classPanelBody: '', innerHtml: ''}, options)
   var template = '<div id="panelBody_{id}" class="panel-body {classPanelBody}">{innerHtml}</div>'
-  return zzb.strings.format(template, options) // _.formatObj(template, uie);
+  return zzb.strings.format(template, options) // _.formatObj(template, uie)
 }
 
 /**
@@ -40,19 +40,24 @@ _uib.prototype.createPanelBody = function (options) {
  * @returns {String}
  */
 _uib.prototype.createPanel = function (options) {
-  options = _.merge({id: zzb.uuid.newV4(), className: '', attributesExtra: '',
-    classPanelHeading: '', name: '',
-    classPanelBody: '', innerHtml: ''}, options)
+  options = _.merge({id: zzb.uuid.newV4(),
+    className: '',
+    attributesExtra: '',
+    classPanelHeading: '',
+    name: '',
+    classPanelBody: '',
+    innerHtml: ''
+  }, options)
 
-  var template = '<div id="panel_{id}" class="panel panel-default {className}" {attributesExtra}>'
-                  + '<div class="panel-heading {classPanelHeading}>">'
-                    + '{name}'
-                  + '</div>'
-                  + '<div id="panelBody_{id}" class="panel-body {classPanelBody}">'
-                    + this.createPanelBody(options) //'<div class="panel-body">{innerHtml}</div>'
-                  + '</div>'
-                + '</div>'
-  return zzb.strings.format(template, options) // _.formatObj(template, uie);
+  var template = '<div id="panel_{id}" class="panel panel-default {className}" {attributesExtra}>' +
+                  '<div class="panel-heading {classPanelHeading}>">' +
+                    '{name}' +
+                  '</div>' +
+                  '<div id="panelBody_{id}" class="panel-body {classPanelBody}">' +
+                    this.createPanelBody(options) + // '<div class="panel-body">{innerHtml}</div>'
+                  '</div>' +
+                '</div>'
+  return zzb.strings.format(template, options) // _.formatObj(template, uie)
 }
 
 /**
@@ -65,35 +70,42 @@ _uib.prototype.createPanel = function (options) {
  * @returns {String}
  */
 _uib.prototype.createPanelCollapsible = function (options) {
-  options = _.merge({id: zzb.uuid.newV4(), className: '', attributesExtra: '', name: '',
-    classPanelBody: '', innerHtml: '', 
-    isPanelCollapsed: false, classNamePanelCollapsed: '',
-    titleHtmlExtra: '', titleHtmlExtraRight: ''}, options)
+  options = _.merge({id: zzb.uuid.newV4(),
+    className: '',
+    attributesExtra: '',
+    name: '',
+    classPanelBody: '',
+    innerHtml: '',
+    isPanelCollapsed: false,
+    classNamePanelCollapsed: '',
+    titleHtmlExtra: '',
+    titleHtmlExtraRight: ''
+  }, options)
 
   if (options.isPanelCollapsed) {
-    options._panelCollapsedClass1 ='collapsed';
-    options._panelCollapsedClass2 ='';
+    options._panelCollapsedClass1 = 'collapsed'
+    options._panelCollapsedClass2 = ''
   } else {
-    options._panelCollapsedClass1 ='';
-    options._panelCollapsedClass2 ='in';
+    options._panelCollapsedClass1 = ''
+    options._panelCollapsedClass2 = 'in'
   }
 
-  var template = '<div id="panel_{id}" class="panel panel-default {className}" {attributesExtra}>'
-                  + '<div class="panel-heading">'
-                    + '<h4 class="panel-title">'
-                      + '{titleHtmlExtra}<a data-toggle="collapse" data-target="#panelCollapse_{id}" href="#panelCollapse_{id}" class="{_panelCollapsedClass1}{classNamePanelCollapsed}">'
-                        + '{name}'
-                      + '</a> {titleHtmlExtraRight}'
-                    + '</h4>'
-                  + '</div>'
-                  + '<div id="panelCollapse_{id}" class="panel-collapse collapse {_panelCollapsedClass2}">'
-                    + this.createPanelBody(options) //'<div class="panel-body">{innerHtml}</div>'
-                  + '</div>'
-                + '</div>'
+  var template = '<div id="panel_{id}" class="panel panel-default {className}" {attributesExtra}>' +
+                  '<div class="panel-heading">' +
+                    '<h4 class="panel-title">' +
+                      '{titleHtmlExtra}<a data-toggle="collapse" data-target="#panelCollapse_{id}" href="#panelCollapse_{id}" class="{_panelCollapsedClass1}{classNamePanelCollapsed}">' +
+                        '{name}' +
+                      '</a> {titleHtmlExtraRight}' +
+                    '</h4>' +
+                  '</div>' +
+                  '<div id="panelCollapse_{id}" class="panel-collapse collapse {_panelCollapsedClass2}">' +
+                    this.createPanelBody(options) + // '<div class="panel-body">{innerHtml}</div>'
+                  '</div>' +
+                '</div>'
 
-  //var test = _.formatObj(template, uie);
-  //console.log(test)
-  //return test;
+  // var test = _.formatObj(template, uie)
+  // console.log(test)
+  // return test
   return zzb.strings.format(template, options) // _.formatObj(template, uie)
 }
 
@@ -107,32 +119,39 @@ _uib.prototype.createPanelCollapsible = function (options) {
  * @returns {String}
  */
 _uib.prototype.createPanelCollapsibleBegin = function (options) {
-  options = _.merge({id: zzb.uuid.newV4(), className: '', attributesExtra: '', name: '',
-    classPanelBody: '', innerHtml: '', 
-    isPanelCollapsed: false, classNamePanelCollapsed: '',
-    titleHtmlExtra: '', titleHtmlExtraRight: ''}, options)
+  options = _.merge({id: zzb.uuid.newV4(),
+    className: '',
+    attributesExtra: '',
+    name: '',
+    classPanelBody: '',
+    innerHtml: '',
+    isPanelCollapsed: false,
+    classNamePanelCollapsed: '',
+    titleHtmlExtra: '',
+    titleHtmlExtraRight: ''
+  }, options)
 
   if (options.isPanelCollapsed) {
-    options._panelCollapsedClass1 ='collapsed';
-    options._panelCollapsedClass2 ='';
+    options._panelCollapsedClass1 = 'collapsed'
+    options._panelCollapsedClass2 = ''
   } else {
-    options._panelCollapsedClass1 ='';
-    options._panelCollapsedClass2 ='in';
+    options._panelCollapsedClass1 = ''
+    options._panelCollapsedClass2 = 'in'
   }
 
-  var template = '<div class="panel panel-default {className}" id="panel_{id}" {attributesExtra}>'
-                  + '<div class="panel-heading">'
-                    + '<h4 class="panel-title">'
-                      + '{titleHtmlExtra}<a data-toggle="collapse" data-target="#panelCollapse_{id}" href="#panelCollapse_{id}" class="{_panelCollapsedClass1}{classNamePanelCollapsed}">'
-                      + '{name}'
-                      + '</a> {titleHtmlExtraRight}'
-                    + '</h4>'
-                  + '</div>'
-                  + '<div id="panelCollapse_{id}" class="panel-collapse collapse {_panelCollapsedClass2}">'
-                    + '<div class="panel-body" id="panelBody_{id}">'
+  var template = '<div class="panel panel-default {className}" id="panel_{id}" {attributesExtra}>' +
+                    '<div class="panel-heading">' +
+                      '<h4 class="panel-title">' +
+                        '{titleHtmlExtra}<a data-toggle="collapse" data-target="#panelCollapse_{id}" href="#panelCollapse_{id}" class="{_panelCollapsedClass1}{classNamePanelCollapsed}">' +
+                        '{name}' +
+                        '</a> {titleHtmlExtraRight}' +
+                      '</h4>' +
+                    '</div>' +
+                    '<div id="panelCollapse_{id}" class="panel-collapse collapse {_panelCollapsedClass2}">' +
+                  '<div class="panel-body" id="panelBody_{id}">'
 
   return zzb.strings.format(template, options) // _.formatObj(template, uie)
-};
+}
 
 /**
  * zzb.uib.createPanelEnd
@@ -140,7 +159,7 @@ _uib.prototype.createPanelCollapsibleBegin = function (options) {
  * @returns {String}
  */
 _uib.prototype.createPanelCollapsibleEnd = function () {
-  return '</div></div></div>';
-};
+  return '</div></div></div>'
+}
 
 exports.uib = _uib

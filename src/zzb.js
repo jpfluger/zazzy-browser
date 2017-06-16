@@ -16,13 +16,14 @@ if (typeof _ === 'undefined') {
   } else if (typeof global !== 'undefined') {
     global.zzb = factory()
   } else if (typeof define === 'function' && define.amd) {
-    define(factory);
+    define(factory)
   } else if (typeof module === 'object' && module.exports) {
-    module.exports = factory();
+    module.exports = factory()
   } else {
-     throw new Error('could not locate global cache object in which to create zzb')
+    throw new Error('could not locate global cache object in which to create zzb')
   }
-}(this, (function () { 'use strict';
+}(this, (function () {
+  'use strict'
 
   // ---------------------------------------------------
   // zzNode

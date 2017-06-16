@@ -5,7 +5,7 @@ var _ = require('lodash')
 // rob (Return Object)
 // ---------------------------------------------------
 
-var _rob = function() {}
+var _rob = function () {}
 
 // reduce the error array to an object
 _rob.prototype.toObject = function (errs) {
@@ -43,7 +43,7 @@ function mergeErrorDefaults (options) {
       case 'notice':
       case 'info':
       case 'debug':
-        options.isErr = false      
+        options.isErr = false
         break
       default:
         options.isErr = true
@@ -51,7 +51,7 @@ function mergeErrorDefaults (options) {
     }
   }
 
-  return options  
+  return options
 }
 
 // Creates a single ROB error object from an object (eg existing error) or from a string
@@ -59,7 +59,7 @@ function mergeErrorDefaults (options) {
 var createError = function (options1, options2) {
   if (!options1) {
     return mergeErrorDefaults()
-  } 
+  }
   if (zzb.types.isNonEmptyString(options1)) {
     return mergeErrorDefaults(_.merge({message: options1}, options2))
   } else if (!Array.isArray(options1) && zzb.types.isObject(options1)) {
@@ -78,7 +78,7 @@ _rob.prototype.sanitizeErrors = function (errs) {
   if (!errs) {
     return newErrs
   }
-  
+
   if (!Array.isArray(errs)) {
     newErrs = [createError(errs)]
   } else if (errs.length > 0) {
@@ -98,8 +98,72 @@ _rob.prototype.sanitizeRecords = function (recs) {
   }
   if (!Array.isArray(recs)) {
     return [recs]
-  } 
+  }
   return recs
+}
+
+_rob.prototype.toListErrs = function (errs, defaultFormat, fieldsTemplate, systemTemplate) {
+  var arrFields = []
+  var arrSystem = []
+
+  defaultFormat = defaultFormat || 'text'
+
+  function getSystem (err) {
+    if (systemTemplate) {
+      return zzb.strings.format(systemTemplate, err.message)
+    } else {
+      if (defaultFormat === 'html') {
+        return zzb.strings.format('<li>{0}</li>', err.message)
+      } else {
+        return zzb.strings.format('System: {0}', err.message)
+      }
+    }
+  }
+
+  function getField (err) {
+    var title = err.title
+    if (!err.title) {
+      title = err.field // _.capitalize(
+    }
+    if (fieldsTemplate) {
+      return zzb.strings.format(fieldsTemplate, title, err.message)
+    } else {
+      if (defaultFormat === 'html') {
+        return zzb.strings.format('<li><strong>{0}</strong>: {1}</li>', title, err.message)
+      } else {
+        return zzb.strings.format('{0}: {1}', title, err.message)
+      }
+    }
+  }
+
+  if (errs && Array.isArray(errs) && errs.length > 0) {
+    _.each(errs, function (err) {
+      if (err.system === '_system') {
+        arrSystem.push(getSystem(err))
+      } else if (err.field) {
+        arrSystem.push(getField(err))
+      } else {
+        arrSystem.push(getSystem(err))
+      }
+    })
+  }
+
+  return {
+    system: arrSystem,
+    fields: arrFields,
+    hasSystemErrors: function () {
+      return (this.system && this.system.length > 0)
+    },
+    hasFieldErrors: function () {
+      return (this.fields && this.fields.length > 0)
+    },
+    combined: function () {
+      return this.system.concat(this.fields)
+    },
+    hasErrors: function () {
+      return (this.hasSystemErrors() && this.hasFieldErrors())
+    }
+  }
 }
 
 exports.rob = _rob

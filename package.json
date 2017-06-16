@@ -17,8 +17,10 @@
   },
   "main": "src/zzb-server.js",
   "scripts": {
+    "dist": "gulp default",
     "test": "mocha",
-    "dist": "gulp default"
+    "mocha": "mocha",
+    "syntax": "standard"
   },
   "keywords": [
     "browser",
@@ -31,6 +33,7 @@
   },
   "devDependencies": {
     "mocha": "^3.4.2",
+    "standard": "^10.0.2",
     "gulp": "^3.9.1",
     "rimraf": "^2.6.1",
     "fs-extra": "^3.0.1",
@@ -42,5 +45,8 @@
     "vinyl-source-stream": "^1.1.0",
     "vinyl-buffer": "^1.0.0",
     "browserify-transform-tools": "^1.7.0"
+  },
+  "standard": {
+    "globals": [ "zzb", "_", "$", "jQuery", "define", "sessionStorage" ]
   }
 }

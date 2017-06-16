@@ -5,38 +5,41 @@ var _ = require('lodash')
 // strings
 // ---------------------------------------------------
 
-var _strings = function() {}
+var _strings = function () {}
 
 //  ValueError :: String -> Error
-var formatValueError = function(message) {
-  var err = new Error(message);
-  err.name = 'ValueError';
-  return err;
-};
+var formatValueError = function (message) {
+  var err = new Error(message)
+  err.name = 'ValueError'
+  return err
+}
 
 //  defaultTo :: a,a? -> a
-var formatDefaultTo = function(x, y) {
-  return y == null ? x : y;
-};
+var formatDefaultTo = function (x, y) {
+  return y == null ? x : y
+}
 
-var formatLookup = function(obj, path) {
+var formatLookup = function (obj, path) {
   if (!/^\d+$/.test(path[0])) {
-    path = ['0'].concat(path);
+    path = ['0'].concat(path)
   }
   for (var idx = 0; idx < path.length; idx += 1) {
-    var key = path[idx];
-    obj = typeof obj[key] === 'function' ? obj[key]() : obj[key];
+    var key = path[idx]
+    obj = typeof obj[key] === 'function' ? obj[key]() : obj[key]
   }
-  return obj;
-};
+  return obj
+}
 
 // https://github.com/davidchambers/string-format
 // create :: Object -> String,*... -> String
-var formatString = function(transformers) {
-  return function(template) {
-    var args = Array.prototype.slice.call(arguments, 1);
-    var idx = 0;
-    var state = 'UNDEFINED';
+// zzb.strings.format('{0}, you have {1} mushroom{2}', 'Piggy', 2, 's')
+// zzb.strings.format('{0}, you have {1} mushroom{2}', ['Piggy', 2, 's'])
+// zzb.strings.format('{name}, you have {number} mushroom{ending}', {name: 'Piggy', number: 2, ending: 's'})
+var formatString = function (transformers) {
+  return function (template) {
+    var args = Array.prototype.slice.call(arguments, 1)
+    var idx = 0
+    var state = 'UNDEFINED'
 
     if (Array.isArray(args) && args.length > 0 && Array.isArray(args[0])) {
       var tmpArr = args[0].map(function (s) {
@@ -47,38 +50,38 @@ var formatString = function(transformers) {
 
     return template.replace(
       /([{}])\1|[{](.*?)(?:!(.+?))?[}]/g,
-      function(match, literal, key, xf) {
+      function (match, literal, key, xf) {
         if (literal != null) {
-          return literal;
+          return literal
         }
         if (key.length > 0) {
           if (state === 'IMPLICIT') {
             throw formatValueError('cannot switch from ' +
-              'implicit to explicit numbering');
+              'implicit to explicit numbering')
           }
-          state = 'EXPLICIT';
+          state = 'EXPLICIT'
         } else {
           if (state === 'EXPLICIT') {
             throw formatValueError('cannot switch from ' +
-              'explicit to implicit numbering');
+              'explicit to implicit numbering')
           }
-          state = 'IMPLICIT';
-          key = String(idx);
-          idx += 1;
+          state = 'IMPLICIT'
+          key = String(idx)
+          idx += 1
         }
-        var value = formatDefaultTo('', formatLookup(args, key.split('.')));
+        var value = formatDefaultTo('', formatLookup(args, key.split('.')))
 
         if (xf == null) {
-          return value;
+          return value
         } else if (Object.prototype.hasOwnProperty.call(transformers, xf)) {
-          return transformers[xf](value);
+          return transformers[xf](value)
         } else {
-          throw formatValueError('no transformer named "' + xf + '"');
+          throw formatValueError('no transformer named "' + xf + '"')
         }
       }
-    );
-  };
-};
+    )
+  }
+}
 
 _strings.prototype.format = formatString({})
 
@@ -97,17 +100,16 @@ _strings.prototype.format = formatString({})
  * @param options
  * @returns {String} a merging of object with the supplied template
 **/
-_strings.prototype.formatEmpty = function(template) {
+_strings.prototype.formatEmpty = function (template) {
   var args = Array.prototype.slice.call(arguments, 1)
   if (Array.isArray(args)) {
     return template.replace(/{(\d+)}/g, function (match, number) {
-      return typeof args[number] != 'undefined'
+      return typeof args[number] !== 'undefined'
         ? args[number]
         : '' // match
-        
     })
   } else {
-    return template.replace(/{((?:(?=([^{}]+|{{[^}]*}}))\2)*)}/g, function(match, key) {
+    return template.replace(/{((?:(?=([^{}]+|{{[^}]*}}))\2)*)}/g, function (match, key) {
       // console.log(match + '  ' + key)
       return (args.length > 0 && args[0][key]) ? args[0][key] : '' // match
     })
@@ -129,7 +131,7 @@ _strings.prototype.formatEmpty = function(template) {
  * @param ifMoreCharCount
  * @returns {String}
  */
-_strings.prototype.appendIfMoreThan = function(str, charsToAppend, ifMoreCharCount) {
+_strings.prototype.appendIfMoreThan = function (str, charsToAppend, ifMoreCharCount) {
   return ((str && (str.length > ifMoreCharCount)) ? str.substring(0, ifMoreCharCount) + charsToAppend : str)
 }
 
@@ -149,11 +151,11 @@ _strings.prototype.appendIfMoreThan = function(str, charsToAppend, ifMoreCharCou
  * @param arr
  * @returns {String}
  */
-_strings.prototype.joinArrToCommas = function(arr, fieldName) {
+_strings.prototype.joinArrToCommas = function (arr, fieldName) {
   if (!arr || !Array.isArray(arr) || arr.length === 0) {
     return ''
   }
-  return arr.map(arr, function(obj, idx){
+  return arr.map(arr, function (obj, idx) {
     var comma = ''
     if (idx < (arr.index - 1)) {
       comma = ''
@@ -182,7 +184,7 @@ _strings.prototype.joinArrToCommas = function(arr, fieldName) {
  * @param ifMoreCharCount
  * @returns {String}
  */
-_strings.prototype.toPlural = function(word, number, options) {
+_strings.prototype.toPlural = function (word, number, options) {
   options = _.merge({forcePlural: false, suffix: null}, options)
 
   if ((number === 1 || number === -1) && !options.forcePlural) {

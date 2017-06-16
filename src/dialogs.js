@@ -17,9 +17,9 @@ var _ = require('lodash')
  BootstrapDialog.TYPE_DANGER
  */
 
-var _dialogs = function() {}
+var _dialogs = function () {}
 
-_dialogs.prototype.showMessage = function(options) {
+_dialogs.prototype.showMessage = function (options) {
   options = _.merge({
     type: BootstrapDialog.TYPE_DEFAULT,
     title: '',
@@ -36,13 +36,13 @@ _dialogs.prototype.showMessage = function(options) {
     buttons: [{
       label: options.buttonCloseName,
       action: function (dialogRef) {
-        dialogRef.close();
+        dialogRef.close()
       }
     }]
-  });
-};
+  })
+}
 
-_dialogs.prototype.showMessageChoice = function(options) {
+_dialogs.prototype.showMessageChoice = function (options) {
   options = _.merge({
     type: BootstrapDialog.TYPE_DEFAULT,
     title: '',
@@ -70,7 +70,7 @@ _dialogs.prototype.showMessageChoice = function(options) {
         if (!options.onButtonLeftClick) {
           dialogRef.close()
         } else {
-          options.onButtonLeftClick(function(err) {
+          options.onButtonLeftClick(function (err) {
             if (!err) {
               dialogRef.close()
             }
@@ -86,7 +86,7 @@ _dialogs.prototype.showMessageChoice = function(options) {
         if (!options.onButtonRightClick) {
           dialogRef.close()
         } else {
-          options.onButtonRightClick(function(err) {
+          options.onButtonRightClick(function (err) {
             if (!err) {
               dialogRef.close()
             }
@@ -106,8 +106,8 @@ _dialogs.prototype.showMessageChoice = function(options) {
   })
 }
 
-_dialogs.prototype.handleError = function(options) {
-  //this.dialogs.handleError({log: 'failed to retrieve login dialog form: ' + err, title: 'Unknown error', message: 'An unknown communications error occurred while retrieving the login form. Please check your connection settings and try again.'})
+_dialogs.prototype.handleError = function (options) {
+  // this.dialogs.handleError({log: 'failed to retrieve login dialog form: ' + err, title: 'Unknown error', message: 'An unknown communications error occurred while retrieving the login form. Please check your connection settings and try again.'})
   options = _.merge({log: null, title: '', message: null, errs: null}, options)
 
   if (options.log) {
@@ -118,14 +118,13 @@ _dialogs.prototype.handleError = function(options) {
     if (Array.isArray(options.errs) && options.errs.length > 0 && options.errs[0]) {
       var arrHtml = []
 
-      _.each(options.errs, function(err, index) {
+      _.each(options.errs, function (err, index) {
         if (err.message && zzb.types.isNonEmptyString(err.message)) {
           arrHtml.push(zzb.strings.format('<div>{0}</div>', err.message))
         }
       })
 
       if (arrHtml.length > 0) {
-
         if (!options.message) {
           options.message = ''
         }

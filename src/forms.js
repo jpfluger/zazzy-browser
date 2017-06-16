@@ -8,10 +8,9 @@ var _ = require('lodash')
 // _forms
 // ---------------------------------------------------
 
-var _forms = function() {}
+var _forms = function () {}
 
 var renderHtml_Popover = function (errs, options) {
-
   var arrHtml = []
   var arrPopOver = []
 
@@ -24,8 +23,7 @@ var renderHtml_Popover = function (errs, options) {
     }
   }
 
-  _.each(errs, function(err, index) {
-
+  _.each(errs, function (err, index) {
     if (!err.field) {
       err.field = '_system'
     }
@@ -40,7 +38,7 @@ var renderHtml_Popover = function (errs, options) {
       }
 
       // only once
-      if (index == 0) {
+      if (index === 0) {
         arrHtml.push(zzb.strings.format('<span class="glyphicon {0} {1}"></span>', typeFormat.glyph, typeFormat.textClass))
       }
 
@@ -57,23 +55,23 @@ var afterHtmlAdded_Popover = function (reho) {
   if (reho.$elem && reho.$elem.length > 0) {
     if (reho && reho.contentPopOver && zzb.types.isNonEmptyString(reho.contentPopOver)) {
       reho.$elem.popover({
-         trigger:'hover',
-         animation: false,
-         content: reho.contentPopOver
-      });
+        trigger: 'hover',
+        animation: false,
+        content: reho.contentPopOver
+      })
     }
   }
 }
 
-_forms.prototype.displayUIErrors = function(options, callback) {
-
-  options = _.merge({selector: null, $form: null,
+_forms.prototype.displayUIErrors = function (options, callback) {
+  options = _.merge({selector: null,
+    $form: null,
     selectorField: '.zzb-form-field',
     attrFieldname: 'zzb-fieldname',
     // selectorLabel: '.zzb-form-field-label', // not used
     // selectorValue: '.zzb-form-field-value', // not used
     selectorError: '.zzb-form-field-error',
-    errs: null, 
+    errs: null,
     err: null,
     hideWhenNoError: false, // this always shows the 'success' checkmark
     typeFormats: {
@@ -87,10 +85,9 @@ _forms.prototype.displayUIErrors = function(options, callback) {
     handleSystemErrors: null
   }, options)
 
-  var success = false;
+  var success = false
 
   if (options.renderErrorHtml) {
-    
     if (options.$form) {
       options.selector = null // not required
     } else if (options.selector) {
@@ -98,13 +95,13 @@ _forms.prototype.displayUIErrors = function(options, callback) {
     }
 
     if (!options.$form || options.$form.length === 0) {
-      return callback && callback(success);
+      return callback && callback(success)
     }
 
-    if (options.err && !Array.isArray(options.err)){
+    if (options.err && !Array.isArray(options.err)) {
       options.errs = [zzb.rob.createError(options.err)]
       options.err = null
-    } else if (options.errs && !Array.isArray(options.errs)){
+    } else if (options.errs && !Array.isArray(options.errs)) {
       options.errs = [zzb.rob.createError(options.errs)]
       options.err = null
     }
@@ -129,7 +126,7 @@ _forms.prototype.displayUIErrors = function(options, callback) {
 
       if (zzb.types.isEmptyString(fieldname)) {
         console.log('discovered an error field and its parent field (eg zzb-form-field) but the fieldname attribute is empty (eg zzb-fieldname="")')
-        return true        
+        return true
       }
 
       if (fieldname === '_system') {
@@ -166,31 +163,5 @@ _forms.prototype.displayUIErrors = function(options, callback) {
 
   callback && callback(success)
 }
-
-
-/*
-self.forms.toListFromErrors = function(errs) {
-  var arrHtml = [];
-
-  if (errs && Array.isArray(errs)) {
-    var arrHtmlSystem = [];
-    arrHtml.push('<ul class="panelErrorList">')
-    _.each(errs, function(err) {
-      if (err.field === '_system') {
-        arrHtmlSystem.push(err.message)
-      } else if (err.field) {
-        arrHtml.push(_.formatArr('<li><strong>{0}</strong>:  {1}</li>', _.capitalize(err.field.toLowerCase()), err.message))
-      } else {
-        arrHtmlSystem.push(err.message)
-      }
-    });
-    if (arrHtmlSystem.length > 0) {
-      arrHtml.push(_.formatArr('<li><strong>System Errors</strong>:  {0}</li>', arrHtmlSystem.join(' ')))
-    }
-    arrHtml.push('</ul>')
-  }
-
-  return arrHtml.join('');
-};*/
 
 exports.forms = _forms

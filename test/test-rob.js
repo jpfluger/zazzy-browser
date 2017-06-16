@@ -1,5 +1,4 @@
-var util = require('util')
-var _ = require('lodash')
+/* global describe, it */
 var zzbLoader = require('../src/zzb-server.js').zzbLoader
 
 describe('Validate zzb.rob methods', function () {

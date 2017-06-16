@@ -1,10 +1,8 @@
-var util = require('util')
-var _ = require('lodash')
+/* global describe, it */
 var zzbLoader = require('../src/zzb-server.js').zzbLoader
 
 describe('Validate zzb.string methods', function () {
   var zzb = zzbLoader()
-  var sPig = 'The pig smelled mushrooms.'
 
   var sPigSingle = 'The pig smelled 1 mushroom.'
   var sPigPlural = 'The pig smelled 10 mushrooms.'
@@ -26,6 +24,37 @@ describe('Validate zzb.string methods', function () {
         err = new Error('failed plural word')
       } else if (zzb.strings.format(sPigTemplate, 10, zzb.strings.toPlural('mushroom', 10)) !== sPigPlural) {
         err = new Error('failed plural sentence')
+      }
+      done(err)
+    })
+  })
+
+  var sPig2 = 'Piggy, you have 2 mushrooms'
+  var sPigTemplateNumber = '{0}, you have {1} mushroom{2}'
+  var sPigTemplateNamed = '{name}, you have {number} mushroom{ending}'
+
+  describe('zzb.strings.format', function () {
+    it('should match template-number from strings', function (done) {
+      var err = null
+      var compare = zzb.strings.format(sPigTemplateNumber, 'Piggy', 2, 's')
+      if (compare !== sPig2) {
+        err = new Error('failed matcy from strings')
+      }
+      done(err)
+    })
+    it('should match template-number from array', function (done) {
+      var err = null
+      var compare = zzb.strings.format(sPigTemplateNumber, ['Piggy', 2, 's'])
+      if (compare !== sPig2) {
+        err = new Error('failed matcy from strings')
+      }
+      done(err)
+    })
+    it('should match template-named from object', function (done) {
+      var err = null
+      var compare = zzb.strings.format(sPigTemplateNamed, {name: 'Piggy', number: 2, ending: 's'})
+      if (compare !== sPig2) {
+        err = new Error('failed matcy from strings')
       }
       done(err)
     })

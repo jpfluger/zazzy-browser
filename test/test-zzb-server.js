@@ -1,5 +1,4 @@
-var util = require('util')
-var _ = require('lodash')
+/* global describe, it, zzs */
 var zzbLoader = require('../src/zzb-server.js').zzbLoader
 
 describe('Validate zzb-server defaults', function () {
@@ -22,7 +21,6 @@ describe('Validate zzb-server defaults', function () {
       var err = null
       if (!zzb.types.isNonEmptyString(sPig)) {
         err = new Error('failed zzb.types.isNonEmptyString')
-
       }
       done(err)
     })
@@ -75,7 +73,7 @@ describe('Validate zzb-server defaults', function () {
     it('should createError', function (done) {
       var err = null
       var robErr = zzb.rob.createError({message: sPig})
-      if (robErr.message != sPig) {
+      if (robErr.message !== sPig) {
         err = new Error('unexpected robErr.message')
       }
       done(err)
@@ -84,14 +82,13 @@ describe('Validate zzb-server defaults', function () {
 })
 
 describe('Validate zzb-server defaults using zzs object (non-default)', function () {
-
   var sPig = 'The pig smelled the mushrooms.'
 
-  global.zzs = new function() {
+  global.zzs = new function () {
     this.getPig = function () {
       return sPig
     }
-  }
+  }()
 
   zzbLoader({name: 'zzs', overwriteCached: true})
 
@@ -120,7 +117,6 @@ describe('Validate zzb-server defaults using zzs object (non-default)', function
       var err = null
       if (!zzs.types.isNonEmptyString(sPig)) {
         err = new Error('failed zzb.types.isNonEmptyString')
-
       }
       done(err)
     })
@@ -173,7 +169,7 @@ describe('Validate zzb-server defaults using zzs object (non-default)', function
     it('should createError', function (done) {
       var err = null
       var robErr = zzs.rob.createError({message: sPig})
-      if (robErr.message != sPig) {
+      if (robErr.message !== sPig) {
         err = new Error('unexpected robErr.message')
       }
       done(err)

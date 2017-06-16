@@ -40,7 +40,7 @@ function zzNode (parent, data, pkField, parentField) {
   if (!this.parent) {
     this.parent = null
   } else {
-    if (this.parent.getId() != this.data[parentField]) {
+    if (this.parent.getId() !== this.data[parentField]) {
       this.data[parentField] = this.parent.getId()
       this.isDirty = true
     }
@@ -49,19 +49,19 @@ function zzNode (parent, data, pkField, parentField) {
   // any children go here
   this.children = []
 
-  this.getData = function() {
+  this.getData = function () {
     return this.data
   }
 
-  this.getId = function() {
+  this.getId = function () {
     return this.data[pkField]
   }
 
-  this.getParent = function() {
+  this.getParent = function () {
     return this.parent
   }
 
-  this.getRoot = function() {
+  this.getRoot = function () {
     if (this.parent === null) {
       return this
     } else {
@@ -69,41 +69,40 @@ function zzNode (parent, data, pkField, parentField) {
     }
   }
 
-  this.removeChild = function(targetId) {
+  this.removeChild = function (targetId) {
     if (this.children.length > 0) {
-      var index = _.findIndex(this.children, function(obj){return obj.getId() === targetId})
+      var index = _.findIndex(this.children, function (obj) { return obj.getId() === targetId })
       if (index > -1) {
         this.children.splice(index, 1)
       }
     }
   }
 
-  this.addChild = function(data, newPKField, newParentField) {
+  this.addChild = function (data, newPKField, newParentField) {
     // already been added?
     var $this = this
-    var child = _.find(this.children, function(ch) {
+    var child = _.find(this.children, function (ch) {
       return ch.getId() === data[$this.pkField]
     })
     // nope
     if (!child) {
       // instead of "new zzNode", using a generic constructor
       child = new this.nodeConstructor(this, data,
-        (newPKField ? newPKField : this.pkField),
-        (newParentField ? newParentField : this.parentField)
+        newPKField || this.pkField,
+        newParentField || this.parentField
       )
       this.children.push(child)
     }
     return child
   }
 
-  this.findChild = function(targetId, doSearchItems) {
+  this.findChild = function (targetId, doSearchItems) {
     var hit = null
-    if (this.getId() === targetId){
+    if (this.getId() === targetId) {
       hit = this
-    }
-    else {
+    } else {
       if (doSearchItems && this.items.length > 0) {
-        _.each(this.items, function(item){
+        _.each(this.items, function (item) {
           if (item.getId() === targetId) {
             hit = item
             return false
@@ -111,7 +110,7 @@ function zzNode (parent, data, pkField, parentField) {
         })
       }
       if (!hit && this.children.length > 0) {
-        _.each(this.children, function(ch){
+        _.each(this.children, function (ch) {
           hit = ch.findChild(targetId, doSearchItems)
           if (hit) {
             return false
@@ -129,14 +128,14 @@ function zzNode (parent, data, pkField, parentField) {
   // not the parent but the designated owning object
   this.itemOwner = null
 
-  this.getItemOwner = function() {
+  this.getItemOwner = function () {
     return this.itemOwner
   }
 
-  this.addItem = function(data, newPKField, newParentField) {
+  this.addItem = function (data, newPKField, newParentField) {
     // already been added?
     var $this = this
-    var item = _.find(this.items, function(it) {
+    var item = _.find(this.items, function (it) {
       return it.getId() === data[$this.pkField]
     })
     // nope
@@ -149,19 +148,19 @@ function zzNode (parent, data, pkField, parentField) {
     return item
   }
 
-  this.removeItem = function(targetId) {
+  this.removeItem = function (targetId) {
     if (this.items.length > 0) {
-      var index = _.findIndex(this.items, function(obj){return obj.getId() === targetId})
+      var index = _.findIndex(this.items, function (obj) { return obj.getId() === targetId })
       if (index > -1) {
         this.items.splice(index, 1)
       }
     }
   }
 
-  this.findItem = function(targetId) {
+  this.findItem = function (targetId) {
     var hit = null
     if (this.items.length > 0) {
-      _.each(this.items, function(item) {
+      _.each(this.items, function (item) {
         if (item.getId() === targetId) {
           hit = item
           return false
@@ -169,7 +168,7 @@ function zzNode (parent, data, pkField, parentField) {
       })
     }
     if (!hit && this.children.length > 0) {
-      _.each(this.children, function(ch){
+      _.each(this.children, function (ch) {
         hit = ch.findItem(targetId)
         if (hit) {
           return false
@@ -179,7 +178,7 @@ function zzNode (parent, data, pkField, parentField) {
     return hit
   }
 
-  this.sortChildren = function(fn, noDeepSort) {
+  this.sortChildren = function (fn, noDeepSort) {
     if (!fn) {
       return
     }
@@ -193,14 +192,14 @@ function zzNode (parent, data, pkField, parentField) {
     }
   }
 
-  this.sortItems = function(fn, fnChildren, noDeepSort) {
+  this.sortItems = function (fn, fnChildren, noDeepSort) {
     if (!fn) {
       return
     }
     if (this.items.length > 0) {
       this.items.sort(fn)
       if (fnChildren) {
-        _.each(this.items, function(item){
+        _.each(this.items, function (item) {
           if (!noDeepSort) {
             item.sortChildren(fnChildren, noDeepSort)
           }
@@ -209,7 +208,7 @@ function zzNode (parent, data, pkField, parentField) {
     }
   }
 
-  this.getLevelDeep = function() {
+  this.getLevelDeep = function () {
     var level = 0
     if (this.parent) {
       level = 1
@@ -218,30 +217,30 @@ function zzNode (parent, data, pkField, parentField) {
     return level
   }
 
-  this.branchCallFunction = function(fn, startRootFirst, tryItemOwner) {
+  this.branchCallFunction = function (fn, startRootFirst, tryItemOwner) {
     if (!startRootFirst) {
       fn && fn(this)
     }
     if (this.parent) {
-      this.parent.branchCallFunction(fn,startRootFirst,tryItemOwner)
+      this.parent.branchCallfunction(fn, startRootFirst, tryItemOwner)
     }
     if (tryItemOwner && this.itemOwner) {
-      this.itemOwner.branchCallFunction(fn, startRootFirst, tryItemOwner)
+      this.itemOwner.branchCallfunction(fn, startRootFirst, tryItemOwner)
     }
     if (startRootFirst) {
       fn && fn(this)
     }
   }
 
-  this.branchCallFunctionChildren = function(fn, tryItems) {
+  this.branchCallFunctionChildren = function (fn, tryItems) {
     fn && fn(this)
     if (this.children.length > 0) {
-      _.each(this.children, function(ch){
+      _.each(this.children, function (ch) {
         ch.branchCallFunctionChildren(fn, tryItems)
       })
     }
     if (tryItems && this.items.length > 0) {
-      _.each(this.items, function(item) {
+      _.each(this.items, function (item) {
         item.branchCallFunctionChildren(fn, tryItems)
       })
     }

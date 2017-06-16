@@ -1,4 +1,4 @@
-'use strict';
+'use strict'
 
 var gulp = require('gulp')
 var fse = require('fs-extra')
@@ -16,11 +16,11 @@ var path = require('path')
 var util = require('util')
 var pkg = require('./package.json')
 
-var literalify = browserifyTools.makeRequireTransform('literalify', {excludeExtensions: ['json']}, function(args, opts, cb) {
+var literalify = browserifyTools.makeRequireTransform('literalify', {excludeExtensions: ['json']}, function (args, opts, cb) {
   if (opts.config && args[0] in opts.config) {
-    return cb(null, opts.config[args[0]]);
+    return cb(null, opts.config[args[0]])
   } else {
-    return cb();
+    return cb()
   }
 })
 
@@ -33,53 +33,54 @@ pckInfo.push(util.format('//! %s', pkg.homepage))
 pckInfo.push('')
 
 var paths = {
-    dist: path.join(__dirname, 'dist'),
-    js: './src/zzb.js',
-    distJS: './dist/zzb.js',
-    minJS: './dist/zzb.min.js'
+  dist: path.join(__dirname, 'dist'),
+  js: './src/zzb.js',
+  distJS: './dist/zzb.js',
+  minJS: './dist/zzb.min.js'
 }
 
 gulp.task('clean-js', function (cb) {
-    rimraf(paths.dist, function() {
-        fse.ensureDir(paths.dist, cb)
-    });
+  rimraf(paths.dist, function () {
+    fse.ensureDir(paths.dist, cb)
+  })
 })
 
-gulp.task('lint-js', function() {
-    return gulp.src([paths.js], {base: '.'})
-        .pipe(eslint({}))
-        .pipe(eslint.format())
-        .pipe(eslint.failAfterError())
+gulp.task('lint-js', function () {
+  return gulp.src([paths.js], {base: '.'})
+    .pipe(eslint({}))
+    .pipe(eslint.format())
+    .pipe(eslint.failAfterError())
 })
 
 gulp.task('dist-js', function (cb) {
+  // http://blog.revathskumar.com/2016/02/browserify-with-gulp.html
+  var appBundler = browserify({
+    entries: paths.js,
+    transform: [[literalify.configure({
+      'jQuery': 'window.$',
+      'BootstrapDialog': 'window.BootstrapDialog',
+      'lodash': 'window._'
+    })]],
+    cache: {},
+    packageCache: {},
+    fullPaths: false
+  })
 
-    // http://blog.revathskumar.com/2016/02/browserify-with-gulp.html
-    var appBundler = browserify({
-            entries: paths.js,
-            transform: [[literalify.configure({
-                'jQuery': 'window.$',
-                'BootstrapDialog': 'window.BootstrapDialog',
-                'lodash': 'window._'
-            })]],
-            cache: {}, packageCache: {}, fullPaths: false
-          });
-
-    appBundler
-        .bundle()
-        .pipe(source(paths.distJS))
-        .pipe(buffer())
-        .pipe(insert.prepend(pckInfo.join('\n')))
-        .pipe(gulp.dest('.'))
-    cb()
+  appBundler
+  .bundle()
+  .pipe(source(paths.distJS))
+  .pipe(buffer())
+  .pipe(insert.prepend(pckInfo.join('\n')))
+  .pipe(gulp.dest('.'))
+  cb()
 })
 
 gulp.task('minify-js', function (cb) {
-    return gulp.src([paths.distJS], {base: '.'})
-        .pipe(concat(paths.minJS))
-        .pipe(uglify())
-        .pipe(insert.prepend(pckInfo.join('\n')))
-        .pipe(gulp.dest('.'));
+  return gulp.src([paths.distJS], {base: '.'})
+      .pipe(concat(paths.minJS))
+      .pipe(uglify())
+      .pipe(insert.prepend(pckInfo.join('\n')))
+      .pipe(gulp.dest('.'))
 })
 
 gulp.task('default', ['clean-js', 'lint-js', 'dist-js', 'minify-js'])

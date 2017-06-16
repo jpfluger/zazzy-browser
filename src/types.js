@@ -1,5 +1,5 @@
 // client or server
-var _ = require('lodash')
+// var _ = require('lodash')
 
 // ---------------------------------------------------
 // types
@@ -7,23 +7,23 @@ var _ = require('lodash')
 
 function _types () {}
 
-_types.prototype.escapeJqueryId = function(id, prefix) {
+_types.prototype.escapeJqueryId = function (id, prefix) {
   // ref: https://learn.jquery.com/using-jquery-core/faq/how-do-i-select-an-element-by-an-id-that-has-characters-used-in-css-notation/
   prefix = (prefix == null ? '#' : prefix)
-  return prefix + id.replace( /(:|\.|\[|\]|,)/g, "\\$1" )
+  return prefix + id.replace(/(:|\.|\[|\]|,)/g, '\\$1')
 }
 
 // http://stackoverflow.com/questions/23252173/get-html-escaped-text-from-textarea-with-jquery
-_types.prototype.escapeHtml = function(unsafe) {
+_types.prototype.escapeHtml = function (unsafe) {
   if (!unsafe) {
     return ''
   } else {
     return unsafe
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;")
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;')
   }
 }
 
@@ -40,7 +40,7 @@ _types.prototype.isObject = function (o) {
 }
 
 _types.prototype.isNumber = function (o) {
-  return !isNaN(o - 0) && o !== null && o !== "" && o !== false
+  return !isNaN(o - 0) && o !== null && o !== '' && o !== false
 }
 
 _types.prototype.isNonEmptyString = function (s) {
