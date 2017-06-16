@@ -1,5 +1,5 @@
 //! zzb.js
-//! version: 0.2.7
+//! version: 0.2.8
 //! author(s): Jaret Pfluger
 //! license: MIT
 //! https://github.com/jpfluger/zazzy-browser
@@ -16,12 +16,12 @@ var _ = window._
 
 function _ajax () {
   this.ajax = function (options) {
-    return new Promise(function (fulfill, reject) {
+    return new Promise(function (resolve, reject) {
       $.ajax(options)
         .done(function (data, textStatus, jqXHR) {
           // allow an escape
           if (options.RAWRETURN) {
-            return fulfill(data)
+            return resolve(data)
           }
 
           // should always have a status of some type returned
@@ -30,7 +30,7 @@ function _ajax () {
           }
 
           // ?
-          //if (jqXHR.status != '200') {}
+          // if (jqXHR.status != '200') {}
 
           if (!jqXHR.responseJSON) {
             // html or some other data type was returned
@@ -38,7 +38,8 @@ function _ajax () {
           } else {
             // always redirect, if present
             if (data.redirect && data.redirect.length > 0) {
-              return window.location.href = data.redirect
+              window.location.href = data.redirect
+              return
             }
 
             // Errors are ALWAYS an ARRAY and in an expected ROB Error format
@@ -55,7 +56,7 @@ function _ajax () {
                 data.error = null
               } else if (data.errs) {
                 data.errs = zzb.rob.sanitizeErrors(data.errs)
-                data.err = null                
+                data.err = null
               }
             }
 
@@ -68,13 +69,13 @@ function _ajax () {
                 data.rec = null
               } else {
                 // pass in self
-                data.recs = zzb.rob.sanitizeRecords(data)                  
+                data.recs = zzb.rob.sanitizeRecords(data)
               }
             }
           }
 
           data.first = function () {
-            return (data.recs && Array.isArray(data.recs) && data.recs.length > 0 ? data.recs[0] : null) 
+            return (data.recs && Array.isArray(data.recs) && data.recs.length > 0 ? data.recs[0] : null)
           }
           data.find = function (key, value) {
             var hit = null
@@ -87,17 +88,17 @@ function _ajax () {
             return hit
           }
           data.length = function () {
-            return (data.recs && Array.isArray(data.recs) ? data.recs.length : 0) 
+            return (data.recs && Array.isArray(data.recs) ? data.recs.length : 0)
           }
 
-          fulfill(data)
+          resolve(data)
         })
         .fail(function (jqXHR, textStatus, errorThrown) {
-          if (jqXHR.responseJSON) {
-            if (data.redirect) {
-              return window.location.href = data.redirect
-            }
-          }
+          // if (jqXHR.responseJSON) {
+          //  if (data.redirect) {
+          //    return window.location.href = data.redirect
+          //  }
+          // }
           reject(errorThrown)
           console.log(errorThrown)
         })
@@ -108,18 +109,18 @@ function _ajax () {
 // sometimes a request is made for an html snippet but json is returned
 // this is why dataType is commented out here b/c the calling function isn't certain what type of data will return
 _ajax.prototype.get = function (options) {
-    options.type = 'GET'
-    options.contentType = 'application/json; charset=UTF-8'
-    options.data = JSON.stringify(options.data)
-    return this.ajax(options)
+  options.type = 'GET'
+  options.contentType = 'application/json; charset=UTF-8'
+  options.data = JSON.stringify(options.data)
+  return this.ajax(options)
 }
 
 _ajax.prototype.getJSON = function (options) {
-    options.type = 'GET'
-    options.dataType = 'json'
-    options.contentType = 'application/json; charset=UTF-8'
-    options.data = JSON.stringify(options.data)
-    return this.ajax(options)
+  options.type = 'GET'
+  options.dataType = 'json'
+  options.contentType = 'application/json; charset=UTF-8'
+  options.data = JSON.stringify(options.data)
+  return this.ajax(options)
 }
 
 _ajax.prototype.postJSON = function (options) {
@@ -152,9 +153,9 @@ var _ = window._
  BootstrapDialog.TYPE_DANGER
  */
 
-var _dialogs = function() {}
+var _dialogs = function () {}
 
-_dialogs.prototype.showMessage = function(options) {
+_dialogs.prototype.showMessage = function (options) {
   options = _.merge({
     type: BootstrapDialog.TYPE_DEFAULT,
     title: '',
@@ -171,13 +172,13 @@ _dialogs.prototype.showMessage = function(options) {
     buttons: [{
       label: options.buttonCloseName,
       action: function (dialogRef) {
-        dialogRef.close();
+        dialogRef.close()
       }
     }]
-  });
-};
+  })
+}
 
-_dialogs.prototype.showMessageChoice = function(options) {
+_dialogs.prototype.showMessageChoice = function (options) {
   options = _.merge({
     type: BootstrapDialog.TYPE_DEFAULT,
     title: '',
@@ -205,7 +206,7 @@ _dialogs.prototype.showMessageChoice = function(options) {
         if (!options.onButtonLeftClick) {
           dialogRef.close()
         } else {
-          options.onButtonLeftClick(function(err) {
+          options.onButtonLeftClick(function (err) {
             if (!err) {
               dialogRef.close()
             }
@@ -221,7 +222,7 @@ _dialogs.prototype.showMessageChoice = function(options) {
         if (!options.onButtonRightClick) {
           dialogRef.close()
         } else {
-          options.onButtonRightClick(function(err) {
+          options.onButtonRightClick(function (err) {
             if (!err) {
               dialogRef.close()
             }
@@ -241,8 +242,8 @@ _dialogs.prototype.showMessageChoice = function(options) {
   })
 }
 
-_dialogs.prototype.handleError = function(options) {
-  //this.dialogs.handleError({log: 'failed to retrieve login dialog form: ' + err, title: 'Unknown error', message: 'An unknown communications error occurred while retrieving the login form. Please check your connection settings and try again.'})
+_dialogs.prototype.handleError = function (options) {
+  // this.dialogs.handleError({log: 'failed to retrieve login dialog form: ' + err, title: 'Unknown error', message: 'An unknown communications error occurred while retrieving the login form. Please check your connection settings and try again.'})
   options = _.merge({log: null, title: '', message: null, errs: null}, options)
 
   if (options.log) {
@@ -253,14 +254,13 @@ _dialogs.prototype.handleError = function(options) {
     if (Array.isArray(options.errs) && options.errs.length > 0 && options.errs[0]) {
       var arrHtml = []
 
-      _.each(options.errs, function(err, index) {
+      _.each(options.errs, function (err, index) {
         if (err.message && zzb.types.isNonEmptyString(err.message)) {
           arrHtml.push(zzb.strings.format('<div>{0}</div>', err.message))
         }
       })
 
       if (arrHtml.length > 0) {
-
         if (!options.message) {
           options.message = ''
         }
@@ -295,10 +295,9 @@ var _ = window._
 // _forms
 // ---------------------------------------------------
 
-var _forms = function() {}
+var _forms = function () {}
 
 var renderHtml_Popover = function (errs, options) {
-
   var arrHtml = []
   var arrPopOver = []
 
@@ -311,8 +310,7 @@ var renderHtml_Popover = function (errs, options) {
     }
   }
 
-  _.each(errs, function(err, index) {
-
+  _.each(errs, function (err, index) {
     if (!err.field) {
       err.field = '_system'
     }
@@ -327,7 +325,7 @@ var renderHtml_Popover = function (errs, options) {
       }
 
       // only once
-      if (index == 0) {
+      if (index === 0) {
         arrHtml.push(zzb.strings.format('<span class="glyphicon {0} {1}"></span>', typeFormat.glyph, typeFormat.textClass))
       }
 
@@ -344,23 +342,23 @@ var afterHtmlAdded_Popover = function (reho) {
   if (reho.$elem && reho.$elem.length > 0) {
     if (reho && reho.contentPopOver && zzb.types.isNonEmptyString(reho.contentPopOver)) {
       reho.$elem.popover({
-         trigger:'hover',
-         animation: false,
-         content: reho.contentPopOver
-      });
+        trigger: 'hover',
+        animation: false,
+        content: reho.contentPopOver
+      })
     }
   }
 }
 
-_forms.prototype.displayUIErrors = function(options, callback) {
-
-  options = _.merge({selector: null, $form: null,
+_forms.prototype.displayUIErrors = function (options, callback) {
+  options = _.merge({selector: null,
+    $form: null,
     selectorField: '.zzb-form-field',
     attrFieldname: 'zzb-fieldname',
     // selectorLabel: '.zzb-form-field-label', // not used
     // selectorValue: '.zzb-form-field-value', // not used
     selectorError: '.zzb-form-field-error',
-    errs: null, 
+    errs: null,
     err: null,
     hideWhenNoError: false, // this always shows the 'success' checkmark
     typeFormats: {
@@ -374,10 +372,9 @@ _forms.prototype.displayUIErrors = function(options, callback) {
     handleSystemErrors: null
   }, options)
 
-  var success = false;
+  var success = false
 
   if (options.renderErrorHtml) {
-    
     if (options.$form) {
       options.selector = null // not required
     } else if (options.selector) {
@@ -385,13 +382,13 @@ _forms.prototype.displayUIErrors = function(options, callback) {
     }
 
     if (!options.$form || options.$form.length === 0) {
-      return callback && callback(success);
+      return callback && callback(success)
     }
 
-    if (options.err && !Array.isArray(options.err)){
+    if (options.err && !Array.isArray(options.err)) {
       options.errs = [zzb.rob.createError(options.err)]
       options.err = null
-    } else if (options.errs && !Array.isArray(options.errs)){
+    } else if (options.errs && !Array.isArray(options.errs)) {
       options.errs = [zzb.rob.createError(options.errs)]
       options.err = null
     }
@@ -416,7 +413,7 @@ _forms.prototype.displayUIErrors = function(options, callback) {
 
       if (zzb.types.isEmptyString(fieldname)) {
         console.log('discovered an error field and its parent field (eg zzb-form-field) but the fieldname attribute is empty (eg zzb-fieldname="")')
-        return true        
+        return true
       }
 
       if (fieldname === '_system') {
@@ -454,32 +451,6 @@ _forms.prototype.displayUIErrors = function(options, callback) {
   callback && callback(success)
 }
 
-
-/*
-self.forms.toListFromErrors = function(errs) {
-  var arrHtml = [];
-
-  if (errs && Array.isArray(errs)) {
-    var arrHtmlSystem = [];
-    arrHtml.push('<ul class="panelErrorList">')
-    _.each(errs, function(err) {
-      if (err.field === '_system') {
-        arrHtmlSystem.push(err.message)
-      } else if (err.field) {
-        arrHtml.push(_.formatArr('<li><strong>{0}</strong>:  {1}</li>', _.capitalize(err.field.toLowerCase()), err.message))
-      } else {
-        arrHtmlSystem.push(err.message)
-      }
-    });
-    if (arrHtmlSystem.length > 0) {
-      arrHtml.push(_.formatArr('<li><strong>System Errors</strong>:  {0}</li>', arrHtmlSystem.join(' ')))
-    }
-    arrHtml.push('</ul>')
-  }
-
-  return arrHtml.join('');
-};*/
-
 exports.forms = _forms
 
 },{}],4:[function(require,module,exports){
@@ -490,7 +461,7 @@ var _ = window._
 // rob (Return Object)
 // ---------------------------------------------------
 
-var _rob = function() {}
+var _rob = function () {}
 
 // reduce the error array to an object
 _rob.prototype.toObject = function (errs) {
@@ -528,7 +499,7 @@ function mergeErrorDefaults (options) {
       case 'notice':
       case 'info':
       case 'debug':
-        options.isErr = false      
+        options.isErr = false
         break
       default:
         options.isErr = true
@@ -536,7 +507,7 @@ function mergeErrorDefaults (options) {
     }
   }
 
-  return options  
+  return options
 }
 
 // Creates a single ROB error object from an object (eg existing error) or from a string
@@ -544,7 +515,7 @@ function mergeErrorDefaults (options) {
 var createError = function (options1, options2) {
   if (!options1) {
     return mergeErrorDefaults()
-  } 
+  }
   if (zzb.types.isNonEmptyString(options1)) {
     return mergeErrorDefaults(_.merge({message: options1}, options2))
   } else if (!Array.isArray(options1) && zzb.types.isObject(options1)) {
@@ -563,7 +534,7 @@ _rob.prototype.sanitizeErrors = function (errs) {
   if (!errs) {
     return newErrs
   }
-  
+
   if (!Array.isArray(errs)) {
     newErrs = [createError(errs)]
   } else if (errs.length > 0) {
@@ -583,8 +554,72 @@ _rob.prototype.sanitizeRecords = function (recs) {
   }
   if (!Array.isArray(recs)) {
     return [recs]
-  } 
+  }
   return recs
+}
+
+_rob.prototype.toListErrs = function (errs, defaultFormat, fieldsTemplate, systemTemplate) {
+  var arrFields = []
+  var arrSystem = []
+
+  defaultFormat = defaultFormat || 'text'
+
+  function getSystem (err) {
+    if (systemTemplate) {
+      return zzb.strings.format(systemTemplate, err.message)
+    } else {
+      if (defaultFormat === 'html') {
+        return zzb.strings.format('<li>{0}</li>', err.message)
+      } else {
+        return zzb.strings.format('System: {0}', err.message)
+      }
+    }
+  }
+
+  function getField (err) {
+    var title = err.title
+    if (!err.title) {
+      title = err.field // _.capitalize(
+    }
+    if (fieldsTemplate) {
+      return zzb.strings.format(fieldsTemplate, title, err.message)
+    } else {
+      if (defaultFormat === 'html') {
+        return zzb.strings.format('<li><strong>{0}</strong>: {1}</li>', title, err.message)
+      } else {
+        return zzb.strings.format('{0}: {1}', title, err.message)
+      }
+    }
+  }
+
+  if (errs && Array.isArray(errs) && errs.length > 0) {
+    _.each(errs, function (err) {
+      if (err.system === '_system') {
+        arrSystem.push(getSystem(err))
+      } else if (err.field) {
+        arrSystem.push(getField(err))
+      } else {
+        arrSystem.push(getSystem(err))
+      }
+    })
+  }
+
+  return {
+    system: arrSystem,
+    fields: arrFields,
+    hasSystemErrors: function () {
+      return (this.system && this.system.length > 0)
+    },
+    hasFieldErrors: function () {
+      return (this.fields && this.fields.length > 0)
+    },
+    combined: function () {
+      return this.system.concat(this.fields)
+    },
+    hasErrors: function () {
+      return (this.hasSystemErrors() && this.hasFieldErrors())
+    }
+  }
 }
 
 exports.rob = _rob
@@ -608,7 +643,7 @@ var _ = window._
 // example status (aka zzbStatus)
 //   {user: {isLoggedIn: false, username: null, roles: {}}, page: {path: '/'}
 
-var _status = function() {
+var _status = function () {
   this.zzbStatus = null
 }
 
@@ -626,11 +661,11 @@ _status.prototype.get = function (options, callback) {
     var tmpStatus = null
 
     // Try local storage first (if top-level page supports it) -> this function will delete it, if found
-    if (typeof(Storage) !== "undefined" && sessionStorage.zzbStatus) {
+    if (typeof Storage !== 'undefined' && sessionStorage.zzbStatus) {
       try {
         // using sessionStorage (not localStorage)
         tmpStatus = JSON.parse(sessionStorage.getItem('zzbStatus'))
-      } catch(err) {
+      } catch (err) {
         console.log('unable to parse zzbStatus from sessionStorage: ' + err)
       }
 
@@ -646,14 +681,14 @@ _status.prototype.get = function (options, callback) {
     if ($('#zzbStatus').length > 0 && zzb.types.isNonEmptyString($('#zzbStatus').attr('status'))) {
       try {
         tmpStatus = JSON.parse($('#zzbStatus').attr('status'))
-      } catch(err) {
+      } catch (err) {
         console.log('unable to parse zzbStatus from embedded attribute in #zzbStatus: ' + err)
       }
       if (tmpStatus) {
         this.zzbStatus = tmpStatus
         return callback && callback(null, this.zzbStatus)
       }
-    }    
+    }
   }
 
   // not in session storage? (best) try a server-side call to '/zzb/status'
@@ -663,14 +698,13 @@ _status.prototype.get = function (options, callback) {
   // remember newbies that inside .then() that "this" refrences the .then() function, so using "that" is a workaround
   var that = this
 
-  zzb.ajax.postJSON(
-  {
+  zzb.ajax.postJSON({
     url: '/zzb/status',
     data: options
   })
-  .then(function(rob){
+  .then(function (rob) {
     if (rob.errs) {
-      callback && callback(rob.errs, tmpStatus);
+      callback && callback(rob.errs, tmpStatus)
     } else {
       if (setSelf) {
         that.zzbStatus = rob.one()
@@ -678,7 +712,7 @@ _status.prototype.get = function (options, callback) {
       callback && callback(null, rob.one())
     }
   })
-  .catch(function(err){
+  .catch(function (err) {
     console.log('failed to retrieve zzbStatus: using defaults')
     callback && callback(zzb.types.sanitizeErrors(err), tmpStatus)
   })
@@ -694,38 +728,41 @@ var _ = window._
 // strings
 // ---------------------------------------------------
 
-var _strings = function() {}
+var _strings = function () {}
 
 //  ValueError :: String -> Error
-var formatValueError = function(message) {
-  var err = new Error(message);
-  err.name = 'ValueError';
-  return err;
-};
+var formatValueError = function (message) {
+  var err = new Error(message)
+  err.name = 'ValueError'
+  return err
+}
 
 //  defaultTo :: a,a? -> a
-var formatDefaultTo = function(x, y) {
-  return y == null ? x : y;
-};
+var formatDefaultTo = function (x, y) {
+  return y == null ? x : y
+}
 
-var formatLookup = function(obj, path) {
+var formatLookup = function (obj, path) {
   if (!/^\d+$/.test(path[0])) {
-    path = ['0'].concat(path);
+    path = ['0'].concat(path)
   }
   for (var idx = 0; idx < path.length; idx += 1) {
-    var key = path[idx];
-    obj = typeof obj[key] === 'function' ? obj[key]() : obj[key];
+    var key = path[idx]
+    obj = typeof obj[key] === 'function' ? obj[key]() : obj[key]
   }
-  return obj;
-};
+  return obj
+}
 
 // https://github.com/davidchambers/string-format
 // create :: Object -> String,*... -> String
-var formatString = function(transformers) {
-  return function(template) {
-    var args = Array.prototype.slice.call(arguments, 1);
-    var idx = 0;
-    var state = 'UNDEFINED';
+// zzb.strings.format('{0}, you have {1} mushroom{2}', 'Piggy', 2, 's')
+// zzb.strings.format('{0}, you have {1} mushroom{2}', ['Piggy', 2, 's'])
+// zzb.strings.format('{name}, you have {number} mushroom{ending}', {name: 'Piggy', number: 2, ending: 's'})
+var formatString = function (transformers) {
+  return function (template) {
+    var args = Array.prototype.slice.call(arguments, 1)
+    var idx = 0
+    var state = 'UNDEFINED'
 
     if (Array.isArray(args) && args.length > 0 && Array.isArray(args[0])) {
       var tmpArr = args[0].map(function (s) {
@@ -736,38 +773,38 @@ var formatString = function(transformers) {
 
     return template.replace(
       /([{}])\1|[{](.*?)(?:!(.+?))?[}]/g,
-      function(match, literal, key, xf) {
+      function (match, literal, key, xf) {
         if (literal != null) {
-          return literal;
+          return literal
         }
         if (key.length > 0) {
           if (state === 'IMPLICIT') {
             throw formatValueError('cannot switch from ' +
-              'implicit to explicit numbering');
+              'implicit to explicit numbering')
           }
-          state = 'EXPLICIT';
+          state = 'EXPLICIT'
         } else {
           if (state === 'EXPLICIT') {
             throw formatValueError('cannot switch from ' +
-              'explicit to implicit numbering');
+              'explicit to implicit numbering')
           }
-          state = 'IMPLICIT';
-          key = String(idx);
-          idx += 1;
+          state = 'IMPLICIT'
+          key = String(idx)
+          idx += 1
         }
-        var value = formatDefaultTo('', formatLookup(args, key.split('.')));
+        var value = formatDefaultTo('', formatLookup(args, key.split('.')))
 
         if (xf == null) {
-          return value;
+          return value
         } else if (Object.prototype.hasOwnProperty.call(transformers, xf)) {
-          return transformers[xf](value);
+          return transformers[xf](value)
         } else {
-          throw formatValueError('no transformer named "' + xf + '"');
+          throw formatValueError('no transformer named "' + xf + '"')
         }
       }
-    );
-  };
-};
+    )
+  }
+}
 
 _strings.prototype.format = formatString({})
 
@@ -786,17 +823,16 @@ _strings.prototype.format = formatString({})
  * @param options
  * @returns {String} a merging of object with the supplied template
 **/
-_strings.prototype.formatEmpty = function(template) {
+_strings.prototype.formatEmpty = function (template) {
   var args = Array.prototype.slice.call(arguments, 1)
   if (Array.isArray(args)) {
     return template.replace(/{(\d+)}/g, function (match, number) {
-      return typeof args[number] != 'undefined'
+      return typeof args[number] !== 'undefined'
         ? args[number]
         : '' // match
-        
     })
   } else {
-    return template.replace(/{((?:(?=([^{}]+|{{[^}]*}}))\2)*)}/g, function(match, key) {
+    return template.replace(/{((?:(?=([^{}]+|{{[^}]*}}))\2)*)}/g, function (match, key) {
       // console.log(match + '  ' + key)
       return (args.length > 0 && args[0][key]) ? args[0][key] : '' // match
     })
@@ -818,7 +854,7 @@ _strings.prototype.formatEmpty = function(template) {
  * @param ifMoreCharCount
  * @returns {String}
  */
-_strings.prototype.appendIfMoreThan = function(str, charsToAppend, ifMoreCharCount) {
+_strings.prototype.appendIfMoreThan = function (str, charsToAppend, ifMoreCharCount) {
   return ((str && (str.length > ifMoreCharCount)) ? str.substring(0, ifMoreCharCount) + charsToAppend : str)
 }
 
@@ -838,11 +874,11 @@ _strings.prototype.appendIfMoreThan = function(str, charsToAppend, ifMoreCharCou
  * @param arr
  * @returns {String}
  */
-_strings.prototype.joinArrToCommas = function(arr, fieldName) {
+_strings.prototype.joinArrToCommas = function (arr, fieldName) {
   if (!arr || !Array.isArray(arr) || arr.length === 0) {
     return ''
   }
-  return arr.map(arr, function(obj, idx){
+  return arr.map(arr, function (obj, idx) {
     var comma = ''
     if (idx < (arr.index - 1)) {
       comma = ''
@@ -871,7 +907,7 @@ _strings.prototype.joinArrToCommas = function(arr, fieldName) {
  * @param ifMoreCharCount
  * @returns {String}
  */
-_strings.prototype.toPlural = function(word, number, options) {
+_strings.prototype.toPlural = function (word, number, options) {
   options = _.merge({forcePlural: false, suffix: null}, options)
 
   if ((number === 1 || number === -1) && !options.forcePlural) {
@@ -889,7 +925,7 @@ exports.strings = _strings
 
 },{}],7:[function(require,module,exports){
 // client or server
-var _ = window._
+// var _ = require('lodash')
 
 // ---------------------------------------------------
 // types
@@ -897,23 +933,23 @@ var _ = window._
 
 function _types () {}
 
-_types.prototype.escapeJqueryId = function(id, prefix) {
+_types.prototype.escapeJqueryId = function (id, prefix) {
   // ref: https://learn.jquery.com/using-jquery-core/faq/how-do-i-select-an-element-by-an-id-that-has-characters-used-in-css-notation/
   prefix = (prefix == null ? '#' : prefix)
-  return prefix + id.replace( /(:|\.|\[|\]|,)/g, "\\$1" )
+  return prefix + id.replace(/(:|\.|\[|\]|,)/g, '\\$1')
 }
 
 // http://stackoverflow.com/questions/23252173/get-html-escaped-text-from-textarea-with-jquery
-_types.prototype.escapeHtml = function(unsafe) {
+_types.prototype.escapeHtml = function (unsafe) {
   if (!unsafe) {
     return ''
   } else {
     return unsafe
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;")
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;')
   }
 }
 
@@ -930,7 +966,7 @@ _types.prototype.isObject = function (o) {
 }
 
 _types.prototype.isNumber = function (o) {
-  return !isNaN(o - 0) && o !== null && o !== "" && o !== false
+  return !isNaN(o - 0) && o !== null && o !== '' && o !== false
 }
 
 _types.prototype.isNonEmptyString = function (s) {
@@ -969,6 +1005,7 @@ _types.prototype.compare = function (x, y, isDesc) {
 }
 
 exports.types = _types
+
 },{}],8:[function(require,module,exports){
 // client or server
 var _ = window._
@@ -977,7 +1014,7 @@ var _ = window._
 // _uib (UI Bootstrap)
 // ---------------------------------------------------
 
-var _uib = function() {}
+var _uib = function () {}
 
 /**
  * zzb.uib.createPanelGroup
@@ -988,7 +1025,7 @@ var _uib = function() {}
 _uib.prototype.createPanelGroup = function (options) {
   options = _.merge({id: zzb.uuid.newV4(), classPanelGroup: '', innerHtml: ''}, options)
   var template = '<div id="panelGroup_{id}" class="panel-group {classPanelGroup}">{innerHtml}</div>'
-  return zzb.strings.format(template, options) // _.formatObj(template, uie);
+  return zzb.strings.format(template, options) // _.formatObj(template, uie)
 }
 
 /**
@@ -1000,7 +1037,7 @@ _uib.prototype.createPanelGroup = function (options) {
 _uib.prototype.createPanelBody = function (options) {
   options = _.merge({id: zzb.uuid.newV4(), classPanelBody: '', innerHtml: ''}, options)
   var template = '<div id="panelBody_{id}" class="panel-body {classPanelBody}">{innerHtml}</div>'
-  return zzb.strings.format(template, options) // _.formatObj(template, uie);
+  return zzb.strings.format(template, options) // _.formatObj(template, uie)
 }
 
 /**
@@ -1012,19 +1049,24 @@ _uib.prototype.createPanelBody = function (options) {
  * @returns {String}
  */
 _uib.prototype.createPanel = function (options) {
-  options = _.merge({id: zzb.uuid.newV4(), className: '', attributesExtra: '',
-    classPanelHeading: '', name: '',
-    classPanelBody: '', innerHtml: ''}, options)
+  options = _.merge({id: zzb.uuid.newV4(),
+    className: '',
+    attributesExtra: '',
+    classPanelHeading: '',
+    name: '',
+    classPanelBody: '',
+    innerHtml: ''
+  }, options)
 
-  var template = '<div id="panel_{id}" class="panel panel-default {className}" {attributesExtra}>'
-                  + '<div class="panel-heading {classPanelHeading}>">'
-                    + '{name}'
-                  + '</div>'
-                  + '<div id="panelBody_{id}" class="panel-body {classPanelBody}">'
-                    + this.createPanelBody(options) //'<div class="panel-body">{innerHtml}</div>'
-                  + '</div>'
-                + '</div>'
-  return zzb.strings.format(template, options) // _.formatObj(template, uie);
+  var template = '<div id="panel_{id}" class="panel panel-default {className}" {attributesExtra}>' +
+                  '<div class="panel-heading {classPanelHeading}>">' +
+                    '{name}' +
+                  '</div>' +
+                  '<div id="panelBody_{id}" class="panel-body {classPanelBody}">' +
+                    this.createPanelBody(options) + // '<div class="panel-body">{innerHtml}</div>'
+                  '</div>' +
+                '</div>'
+  return zzb.strings.format(template, options) // _.formatObj(template, uie)
 }
 
 /**
@@ -1037,35 +1079,42 @@ _uib.prototype.createPanel = function (options) {
  * @returns {String}
  */
 _uib.prototype.createPanelCollapsible = function (options) {
-  options = _.merge({id: zzb.uuid.newV4(), className: '', attributesExtra: '', name: '',
-    classPanelBody: '', innerHtml: '', 
-    isPanelCollapsed: false, classNamePanelCollapsed: '',
-    titleHtmlExtra: '', titleHtmlExtraRight: ''}, options)
+  options = _.merge({id: zzb.uuid.newV4(),
+    className: '',
+    attributesExtra: '',
+    name: '',
+    classPanelBody: '',
+    innerHtml: '',
+    isPanelCollapsed: false,
+    classNamePanelCollapsed: '',
+    titleHtmlExtra: '',
+    titleHtmlExtraRight: ''
+  }, options)
 
   if (options.isPanelCollapsed) {
-    options._panelCollapsedClass1 ='collapsed';
-    options._panelCollapsedClass2 ='';
+    options._panelCollapsedClass1 = 'collapsed'
+    options._panelCollapsedClass2 = ''
   } else {
-    options._panelCollapsedClass1 ='';
-    options._panelCollapsedClass2 ='in';
+    options._panelCollapsedClass1 = ''
+    options._panelCollapsedClass2 = 'in'
   }
 
-  var template = '<div id="panel_{id}" class="panel panel-default {className}" {attributesExtra}>'
-                  + '<div class="panel-heading">'
-                    + '<h4 class="panel-title">'
-                      + '{titleHtmlExtra}<a data-toggle="collapse" data-target="#panelCollapse_{id}" href="#panelCollapse_{id}" class="{_panelCollapsedClass1}{classNamePanelCollapsed}">'
-                        + '{name}'
-                      + '</a> {titleHtmlExtraRight}'
-                    + '</h4>'
-                  + '</div>'
-                  + '<div id="panelCollapse_{id}" class="panel-collapse collapse {_panelCollapsedClass2}">'
-                    + this.createPanelBody(options) //'<div class="panel-body">{innerHtml}</div>'
-                  + '</div>'
-                + '</div>'
+  var template = '<div id="panel_{id}" class="panel panel-default {className}" {attributesExtra}>' +
+                  '<div class="panel-heading">' +
+                    '<h4 class="panel-title">' +
+                      '{titleHtmlExtra}<a data-toggle="collapse" data-target="#panelCollapse_{id}" href="#panelCollapse_{id}" class="{_panelCollapsedClass1}{classNamePanelCollapsed}">' +
+                        '{name}' +
+                      '</a> {titleHtmlExtraRight}' +
+                    '</h4>' +
+                  '</div>' +
+                  '<div id="panelCollapse_{id}" class="panel-collapse collapse {_panelCollapsedClass2}">' +
+                    this.createPanelBody(options) + // '<div class="panel-body">{innerHtml}</div>'
+                  '</div>' +
+                '</div>'
 
-  //var test = _.formatObj(template, uie);
-  //console.log(test)
-  //return test;
+  // var test = _.formatObj(template, uie)
+  // console.log(test)
+  // return test
   return zzb.strings.format(template, options) // _.formatObj(template, uie)
 }
 
@@ -1079,32 +1128,39 @@ _uib.prototype.createPanelCollapsible = function (options) {
  * @returns {String}
  */
 _uib.prototype.createPanelCollapsibleBegin = function (options) {
-  options = _.merge({id: zzb.uuid.newV4(), className: '', attributesExtra: '', name: '',
-    classPanelBody: '', innerHtml: '', 
-    isPanelCollapsed: false, classNamePanelCollapsed: '',
-    titleHtmlExtra: '', titleHtmlExtraRight: ''}, options)
+  options = _.merge({id: zzb.uuid.newV4(),
+    className: '',
+    attributesExtra: '',
+    name: '',
+    classPanelBody: '',
+    innerHtml: '',
+    isPanelCollapsed: false,
+    classNamePanelCollapsed: '',
+    titleHtmlExtra: '',
+    titleHtmlExtraRight: ''
+  }, options)
 
   if (options.isPanelCollapsed) {
-    options._panelCollapsedClass1 ='collapsed';
-    options._panelCollapsedClass2 ='';
+    options._panelCollapsedClass1 = 'collapsed'
+    options._panelCollapsedClass2 = ''
   } else {
-    options._panelCollapsedClass1 ='';
-    options._panelCollapsedClass2 ='in';
+    options._panelCollapsedClass1 = ''
+    options._panelCollapsedClass2 = 'in'
   }
 
-  var template = '<div class="panel panel-default {className}" id="panel_{id}" {attributesExtra}>'
-                  + '<div class="panel-heading">'
-                    + '<h4 class="panel-title">'
-                      + '{titleHtmlExtra}<a data-toggle="collapse" data-target="#panelCollapse_{id}" href="#panelCollapse_{id}" class="{_panelCollapsedClass1}{classNamePanelCollapsed}">'
-                      + '{name}'
-                      + '</a> {titleHtmlExtraRight}'
-                    + '</h4>'
-                  + '</div>'
-                  + '<div id="panelCollapse_{id}" class="panel-collapse collapse {_panelCollapsedClass2}">'
-                    + '<div class="panel-body" id="panelBody_{id}">'
+  var template = '<div class="panel panel-default {className}" id="panel_{id}" {attributesExtra}>' +
+                    '<div class="panel-heading">' +
+                      '<h4 class="panel-title">' +
+                        '{titleHtmlExtra}<a data-toggle="collapse" data-target="#panelCollapse_{id}" href="#panelCollapse_{id}" class="{_panelCollapsedClass1}{classNamePanelCollapsed}">' +
+                        '{name}' +
+                        '</a> {titleHtmlExtraRight}' +
+                      '</h4>' +
+                    '</div>' +
+                    '<div id="panelCollapse_{id}" class="panel-collapse collapse {_panelCollapsedClass2}">' +
+                  '<div class="panel-body" id="panelBody_{id}">'
 
   return zzb.strings.format(template, options) // _.formatObj(template, uie)
-};
+}
 
 /**
  * zzb.uib.createPanelEnd
@@ -1112,10 +1168,11 @@ _uib.prototype.createPanelCollapsibleBegin = function (options) {
  * @returns {String}
  */
 _uib.prototype.createPanelCollapsibleEnd = function () {
-  return '</div></div></div>';
-};
+  return '</div></div></div>'
+}
 
 exports.uib = _uib
+
 },{}],9:[function(require,module,exports){
 // client or server
 var _ = window._
@@ -1145,7 +1202,7 @@ _uuid.prototype.newV4 = function () {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
     var r = (d + _.random(16)) % 16 | 0
     d = Math.floor(d / 16)
-    return (c == 'x' ? r : (r & 0x3 | 0x8)).toString(16)
+    return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16)
   })
 }
 
@@ -1228,7 +1285,7 @@ function zzNode (parent, data, pkField, parentField) {
   if (!this.parent) {
     this.parent = null
   } else {
-    if (this.parent.getId() != this.data[parentField]) {
+    if (this.parent.getId() !== this.data[parentField]) {
       this.data[parentField] = this.parent.getId()
       this.isDirty = true
     }
@@ -1237,19 +1294,19 @@ function zzNode (parent, data, pkField, parentField) {
   // any children go here
   this.children = []
 
-  this.getData = function() {
+  this.getData = function () {
     return this.data
   }
 
-  this.getId = function() {
+  this.getId = function () {
     return this.data[pkField]
   }
 
-  this.getParent = function() {
+  this.getParent = function () {
     return this.parent
   }
 
-  this.getRoot = function() {
+  this.getRoot = function () {
     if (this.parent === null) {
       return this
     } else {
@@ -1257,41 +1314,40 @@ function zzNode (parent, data, pkField, parentField) {
     }
   }
 
-  this.removeChild = function(targetId) {
+  this.removeChild = function (targetId) {
     if (this.children.length > 0) {
-      var index = _.findIndex(this.children, function(obj){return obj.getId() === targetId})
+      var index = _.findIndex(this.children, function (obj) { return obj.getId() === targetId })
       if (index > -1) {
         this.children.splice(index, 1)
       }
     }
   }
 
-  this.addChild = function(data, newPKField, newParentField) {
+  this.addChild = function (data, newPKField, newParentField) {
     // already been added?
     var $this = this
-    var child = _.find(this.children, function(ch) {
+    var child = _.find(this.children, function (ch) {
       return ch.getId() === data[$this.pkField]
     })
     // nope
     if (!child) {
       // instead of "new zzNode", using a generic constructor
       child = new this.nodeConstructor(this, data,
-        (newPKField ? newPKField : this.pkField),
-        (newParentField ? newParentField : this.parentField)
+        newPKField || this.pkField,
+        newParentField || this.parentField
       )
       this.children.push(child)
     }
     return child
   }
 
-  this.findChild = function(targetId, doSearchItems) {
+  this.findChild = function (targetId, doSearchItems) {
     var hit = null
-    if (this.getId() === targetId){
+    if (this.getId() === targetId) {
       hit = this
-    }
-    else {
+    } else {
       if (doSearchItems && this.items.length > 0) {
-        _.each(this.items, function(item){
+        _.each(this.items, function (item) {
           if (item.getId() === targetId) {
             hit = item
             return false
@@ -1299,7 +1355,7 @@ function zzNode (parent, data, pkField, parentField) {
         })
       }
       if (!hit && this.children.length > 0) {
-        _.each(this.children, function(ch){
+        _.each(this.children, function (ch) {
           hit = ch.findChild(targetId, doSearchItems)
           if (hit) {
             return false
@@ -1317,14 +1373,14 @@ function zzNode (parent, data, pkField, parentField) {
   // not the parent but the designated owning object
   this.itemOwner = null
 
-  this.getItemOwner = function() {
+  this.getItemOwner = function () {
     return this.itemOwner
   }
 
-  this.addItem = function(data, newPKField, newParentField) {
+  this.addItem = function (data, newPKField, newParentField) {
     // already been added?
     var $this = this
-    var item = _.find(this.items, function(it) {
+    var item = _.find(this.items, function (it) {
       return it.getId() === data[$this.pkField]
     })
     // nope
@@ -1337,19 +1393,19 @@ function zzNode (parent, data, pkField, parentField) {
     return item
   }
 
-  this.removeItem = function(targetId) {
+  this.removeItem = function (targetId) {
     if (this.items.length > 0) {
-      var index = _.findIndex(this.items, function(obj){return obj.getId() === targetId})
+      var index = _.findIndex(this.items, function (obj) { return obj.getId() === targetId })
       if (index > -1) {
         this.items.splice(index, 1)
       }
     }
   }
 
-  this.findItem = function(targetId) {
+  this.findItem = function (targetId) {
     var hit = null
     if (this.items.length > 0) {
-      _.each(this.items, function(item) {
+      _.each(this.items, function (item) {
         if (item.getId() === targetId) {
           hit = item
           return false
@@ -1357,7 +1413,7 @@ function zzNode (parent, data, pkField, parentField) {
       })
     }
     if (!hit && this.children.length > 0) {
-      _.each(this.children, function(ch){
+      _.each(this.children, function (ch) {
         hit = ch.findItem(targetId)
         if (hit) {
           return false
@@ -1367,7 +1423,7 @@ function zzNode (parent, data, pkField, parentField) {
     return hit
   }
 
-  this.sortChildren = function(fn, noDeepSort) {
+  this.sortChildren = function (fn, noDeepSort) {
     if (!fn) {
       return
     }
@@ -1381,14 +1437,14 @@ function zzNode (parent, data, pkField, parentField) {
     }
   }
 
-  this.sortItems = function(fn, fnChildren, noDeepSort) {
+  this.sortItems = function (fn, fnChildren, noDeepSort) {
     if (!fn) {
       return
     }
     if (this.items.length > 0) {
       this.items.sort(fn)
       if (fnChildren) {
-        _.each(this.items, function(item){
+        _.each(this.items, function (item) {
           if (!noDeepSort) {
             item.sortChildren(fnChildren, noDeepSort)
           }
@@ -1397,7 +1453,7 @@ function zzNode (parent, data, pkField, parentField) {
     }
   }
 
-  this.getLevelDeep = function() {
+  this.getLevelDeep = function () {
     var level = 0
     if (this.parent) {
       level = 1
@@ -1406,30 +1462,30 @@ function zzNode (parent, data, pkField, parentField) {
     return level
   }
 
-  this.branchCallFunction = function(fn, startRootFirst, tryItemOwner) {
+  this.branchCallFunction = function (fn, startRootFirst, tryItemOwner) {
     if (!startRootFirst) {
       fn && fn(this)
     }
     if (this.parent) {
-      this.parent.branchCallFunction(fn,startRootFirst,tryItemOwner)
+      this.parent.branchCallfunction(fn, startRootFirst, tryItemOwner)
     }
     if (tryItemOwner && this.itemOwner) {
-      this.itemOwner.branchCallFunction(fn, startRootFirst, tryItemOwner)
+      this.itemOwner.branchCallfunction(fn, startRootFirst, tryItemOwner)
     }
     if (startRootFirst) {
       fn && fn(this)
     }
   }
 
-  this.branchCallFunctionChildren = function(fn, tryItems) {
+  this.branchCallFunctionChildren = function (fn, tryItems) {
     fn && fn(this)
     if (this.children.length > 0) {
-      _.each(this.children, function(ch){
+      _.each(this.children, function (ch) {
         ch.branchCallFunctionChildren(fn, tryItems)
       })
     }
     if (tryItems && this.items.length > 0) {
-      _.each(this.items, function(item) {
+      _.each(this.items, function (item) {
         item.branchCallFunctionChildren(fn, tryItems)
       })
     }
@@ -1437,6 +1493,7 @@ function zzNode (parent, data, pkField, parentField) {
 }
 
 module.exports.zzNode = zzNode
+
 },{}],11:[function(require,module,exports){
 if (typeof jQuery === 'undefined') {
   throw new Error('zazzy-browser\'s JavaScript requires jQuery. jQuery must be included before zazzy-browser\'s JavaScript.')
@@ -1456,13 +1513,14 @@ if (typeof _ === 'undefined') {
   } else if (typeof global !== 'undefined') {
     global.zzb = factory()
   } else if (typeof define === 'function' && define.amd) {
-    define(factory);
+    define(factory)
   } else if (typeof module === 'object' && module.exports) {
-    module.exports = factory();
+    module.exports = factory()
   } else {
-     throw new Error('could not locate global cache object in which to create zzb')
+    throw new Error('could not locate global cache object in which to create zzb')
   }
-}(this, (function () { 'use strict';
+}(this, (function () {
+  'use strict'
 
   // ---------------------------------------------------
   // zzNode
