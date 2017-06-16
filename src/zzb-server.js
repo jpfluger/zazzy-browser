@@ -30,6 +30,12 @@ exports.zzbLoader = function (options) {
   // always gets a copy b/c referenced libs depends on it
   global['zzb'] = new _zzb()
 
+  if (options.plugins && Array.isArray(options.plugins)) {
+    _.each(options.plugins, function (plugin) {
+      global['zzb'][plugin.name] = new plugin.class()
+    })
+  }
+
   if (global[options.name] && options.overwriteCached) {
     global[options.name].zzNode = _zzNode
     global[options.name].types = new _types()
@@ -38,6 +44,14 @@ exports.zzbLoader = function (options) {
     global[options.name].rob = new _rob()
   } else {
     global[options.name] = global['zzb']
+  }
+
+  if (options.plugins && Array.isArray(options.plugins)) {
+    _.each(options.plugins, function (plugin) {
+      if (plugin.addToNonZZB) {
+        global[options.name][plugin.name] = new plugin.class()        
+      }
+    })
   }
 
   return global[options.name]
