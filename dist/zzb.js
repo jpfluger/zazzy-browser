@@ -1,5 +1,5 @@
 //! zzb.js
-//! version: 0.2.9
+//! version: 0.2.10
 //! author(s): Jaret Pfluger
 //! license: MIT
 //! https://github.com/jpfluger/zazzy-browser
@@ -8,7 +8,7 @@
 var $ = window.$
 
 // client or server
-var _ = window._
+// var _ = require('lodash')
 
 // ---------------------------------------------------
 // _ajax
@@ -32,9 +32,11 @@ function _ajax () {
           // ?
           // if (jqXHR.status != '200') {}
 
+          var rob = zzb.rob.newROB()
+
           if (!jqXHR.responseJSON) {
             // html or some other data type was returned
-            data = {recs: [data]}
+            rob.recs = [data]
           } else {
             // always redirect, if present
             if (data.redirect && data.redirect.length > 0) {
@@ -72,23 +74,10 @@ function _ajax () {
                 data.recs = zzb.rob.sanitizeRecords(data)
               }
             }
-          }
 
-          data.first = function () {
-            return (data.recs && Array.isArray(data.recs) && data.recs.length > 0 ? data.recs[0] : null)
-          }
-          data.find = function (key, value) {
-            var hit = null
-            _.each(data.recs, function (rec) {
-              if (rec && zzb.types.isObject(rec) && !Array.isArray(rec) && rec[key] === value) {
-                hit = rec
-                return false
-              }
-            })
-            return hit
-          }
-          data.length = function () {
-            return (data.recs && Array.isArray(data.recs) ? data.recs.length : 0)
+            rob.errs = data.errs
+            rob.recs = data.recs
+            rob.fields = data.fields
           }
 
           resolve(data)
@@ -462,6 +451,39 @@ var _ = window._
 // ---------------------------------------------------
 
 var _rob = function () {}
+
+_rob.prototype.newROB = function (options) {
+  return _.merge({
+    errs: null,
+    recs: [],
+    fields: [],
+    hasErrors: function () {
+      return (this.errs && Array.isArray(this.errs) && this.errs > 0)
+    },
+    hasFields: function () {
+      return (this.fields && Array.isArray(this.fields) && this.fields > 0)
+    },
+    hasRecords: function () {
+      return (this.recs && Array.isArray(this.recs) && this.recs > 0)
+    },
+    first: function () {
+      return (this.recs && Array.isArray(this.recs) && this.recs.length > 0 ? this.recs[0] : null)
+    },
+    find: function (key, value) {
+      var hit = null
+      _.each(this.recs, function (rec) {
+        if (rec && zzb.types.isObject(rec) && !Array.isArray(rec) && rec[key] === value) {
+          hit = rec
+          return false
+        }
+      })
+      return hit
+    },
+    length: function () {
+      return (this.recs && Array.isArray(this.recs) ? this.recs.length : 0)
+    }
+  }, options)
+}
 
 // reduce the error array to an object
 _rob.prototype.toObject = function (errs) {
@@ -1519,7 +1541,7 @@ if (typeof _ === 'undefined') {
   } else {
     throw new Error('could not locate global cache object in which to create zzb')
   }
-}(this, (function () {
+}(this, function () {
   'use strict'
 
   // ---------------------------------------------------
@@ -1609,6 +1631,6 @@ if (typeof _ === 'undefined') {
   _zzb.prototype.status = new _status() // {types: _types, ajax: _ajax})
 
   return new _zzb()
-})))
+}))
 
 },{"./ajax.js":1,"./dialogs.js":2,"./forms.js":3,"./rob.js":4,"./status.js":5,"./strings.js":6,"./types.js":7,"./uib.js":8,"./uuid.js":9,"./zzNode.js":10}]},{},[11]);
