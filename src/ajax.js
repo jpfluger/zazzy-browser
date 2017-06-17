@@ -2,7 +2,7 @@
 var $ = require('jQuery')
 
 // client or server
-var _ = require('lodash')
+// var _ = require('lodash')
 
 // ---------------------------------------------------
 // _ajax
@@ -26,9 +26,11 @@ function _ajax () {
           // ?
           // if (jqXHR.status != '200') {}
 
+          var rob = zzb.rob.newROB()
+
           if (!jqXHR.responseJSON) {
             // html or some other data type was returned
-            data = {recs: [data]}
+            rob.recs = [data]
           } else {
             // always redirect, if present
             if (data.redirect && data.redirect.length > 0) {
@@ -66,23 +68,10 @@ function _ajax () {
                 data.recs = zzb.rob.sanitizeRecords(data)
               }
             }
-          }
 
-          data.first = function () {
-            return (data.recs && Array.isArray(data.recs) && data.recs.length > 0 ? data.recs[0] : null)
-          }
-          data.find = function (key, value) {
-            var hit = null
-            _.each(data.recs, function (rec) {
-              if (rec && zzb.types.isObject(rec) && !Array.isArray(rec) && rec[key] === value) {
-                hit = rec
-                return false
-              }
-            })
-            return hit
-          }
-          data.length = function () {
-            return (data.recs && Array.isArray(data.recs) ? data.recs.length : 0)
+            rob.errs = data.errs
+            rob.recs = data.recs
+            rob.fields = data.fields
           }
 
           resolve(data)

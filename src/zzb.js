@@ -22,7 +22,7 @@ if (typeof _ === 'undefined') {
   } else {
     throw new Error('could not locate global cache object in which to create zzb')
   }
-}(this, (function () {
+}(this, function () {
   'use strict'
 
   // ---------------------------------------------------
@@ -112,4 +112,4 @@ if (typeof _ === 'undefined') {
   _zzb.prototype.status = new _status() // {types: _types, ajax: _ajax})
 
   return new _zzb()
-})))
+}))

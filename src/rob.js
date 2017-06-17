@@ -7,6 +7,39 @@ var _ = require('lodash')
 
 var _rob = function () {}
 
+_rob.prototype.newROB = function (options) {
+  return _.merge({
+    errs: null,
+    recs: [],
+    fields: [],
+    hasErrors: function () {
+      return (this.errs && Array.isArray(this.errs) && this.errs > 0)
+    },
+    hasFields: function () {
+      return (this.fields && Array.isArray(this.fields) && this.fields > 0)
+    },
+    hasRecords: function () {
+      return (this.recs && Array.isArray(this.recs) && this.recs > 0)
+    },
+    first: function () {
+      return (this.recs && Array.isArray(this.recs) && this.recs.length > 0 ? this.recs[0] : null)
+    },
+    find: function (key, value) {
+      var hit = null
+      _.each(this.recs, function (rec) {
+        if (rec && zzb.types.isObject(rec) && !Array.isArray(rec) && rec[key] === value) {
+          hit = rec
+          return false
+        }
+      })
+      return hit
+    },
+    length: function () {
+      return (this.recs && Array.isArray(this.recs) ? this.recs.length : 0)
+    }
+  }, options)
+}
+
 // reduce the error array to an object
 _rob.prototype.toObject = function (errs) {
   if (!errs || !Array.isArray(errs)) {

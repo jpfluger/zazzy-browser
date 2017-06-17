@@ -49,7 +49,7 @@ exports.zzbLoader = function (options) {
   if (options.plugins && Array.isArray(options.plugins)) {
     _.each(options.plugins, function (plugin) {
       if (plugin.addToNonZZB) {
-        global[options.name][plugin.name] = new plugin.class()        
+        global[options.name][plugin.name] = new plugin.class()
       }
     })
   }
