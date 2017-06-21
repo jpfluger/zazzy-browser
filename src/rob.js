@@ -13,13 +13,13 @@ _rob.prototype.newROB = function (options) {
     recs: [],
     fields: [],
     hasErrors: function () {
-      return (this.errs && Array.isArray(this.errs) && this.errs > 0)
+      return (this.errs && Array.isArray(this.errs) && this.errs.length > 0)
     },
     hasFields: function () {
-      return (this.fields && Array.isArray(this.fields) && this.fields > 0)
+      return (this.fields && Array.isArray(this.fields) && this.fields.length > 0)
     },
     hasRecords: function () {
-      return (this.recs && Array.isArray(this.recs) && this.recs > 0)
+      return (this.recs && Array.isArray(this.recs) && this.recs.length > 0)
     },
     first: function () {
       return (this.recs && Array.isArray(this.recs) && this.recs.length > 0 ? this.recs[0] : null)
