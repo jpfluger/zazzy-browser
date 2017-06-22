@@ -21,6 +21,9 @@ _rob.prototype.newROB = function (options) {
     hasRecords: function () {
       return (this.recs && Array.isArray(this.recs) && this.recs.length > 0)
     },
+    isEmpty: function () {
+      return this.hasRecords() && this.first() === null
+    },
     first: function () {
       return (this.recs && Array.isArray(this.recs) && this.recs.length > 0 ? this.recs[0] : null)
     },
