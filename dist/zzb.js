@@ -1,5 +1,5 @@
 //! zzb.js
-//! version: 0.2.12
+//! version: 0.2.13
 //! author(s): Jaret Pfluger
 //! license: MIT
 //! https://github.com/jpfluger/zazzy-browser
@@ -465,6 +465,9 @@ _rob.prototype.newROB = function (options) {
     },
     hasRecords: function () {
       return (this.recs && Array.isArray(this.recs) && this.recs.length > 0)
+    },
+    isEmpty: function () {
+      return this.hasRecords() && this.first() === null
     },
     first: function () {
       return (this.recs && Array.isArray(this.recs) && this.recs.length > 0 ? this.recs[0] : null)
