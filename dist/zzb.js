@@ -467,7 +467,7 @@ _rob.prototype.newROB = function (options) {
       return (this.recs && Array.isArray(this.recs) && this.recs.length > 0)
     },
     isEmpty: function () {
-      return this.hasRecords() && this.first() === null
+      return !this.hasRecords() || (this.hasRecords() && this.first() === null)
     },
     first: function () {
       return (this.recs && Array.isArray(this.recs) && this.recs.length > 0 ? this.recs[0] : null)
