@@ -1,5 +1,5 @@
 //! zzb.js
-//! version: 0.2.14
+//! version: 0.2.15
 //! author(s): Jaret Pfluger
 //! license: MIT
 //! https://github.com/jpfluger/zazzy-browser
@@ -286,7 +286,7 @@ var _ = window._
 
 var _forms = function () {}
 
-var renderHtml_Popover = function (errs, options) {
+var renderHtmlPopover = function (errs, options) {
   var arrHtml = []
   var arrPopOver = []
 
@@ -327,7 +327,7 @@ var renderHtml_Popover = function (errs, options) {
   return {html: arrHtml.join(' '), contentPopOver: arrPopOver.join('  ')}
 }
 
-var afterHtmlAdded_Popover = function (reho) {
+var afterHtmlAddedPopover = function (reho) {
   if (reho.$elem && reho.$elem.length > 0) {
     if (reho && reho.contentPopOver && zzb.types.isNonEmptyString(reho.contentPopOver)) {
       reho.$elem.popover({
@@ -356,8 +356,8 @@ _forms.prototype.displayUIErrors = function (options, callback) {
       success: {glyph: 'glyphicon-ok', textClass: 'text-success', bgClass: null},
       default: null
     },
-    renderErrorHtml: renderHtml_Popover,
-    afterHtmlAdded: afterHtmlAdded_Popover,
+    renderErrorHtml: renderHtmlPopover,
+    afterHtmlAdded: afterHtmlAddedPopover,
     handleSystemErrors: null
   }, options)
 
@@ -443,6 +443,115 @@ _forms.prototype.displayUIErrors = function (options, callback) {
 exports.forms = _forms
 
 },{}],4:[function(require,module,exports){
+// client or server
+var _ = window._
+
+// ---------------------------------------------------
+// perms (Permission Keys)
+// ---------------------------------------------------
+
+var _perms = function () {}
+
+_perms.prototype.getPO = function (pos, key) {
+  var po = pos[key]
+
+  if (po) {
+    return po
+  }
+
+  return this.getPermObject(key + ':')
+}
+
+_perms.prototype.getPermObjectFromPermkeys = function (permkeys) {
+  var pos = {}
+  var self = this
+
+  if (Array.isArray(permkeys)) {
+    _.each(permkeys, function (permkey) {
+      var po = self.getPermObject(permkey)
+      if (po.key) {
+        pos[po.key] = po
+      }
+    })
+  } else if (zzb.types.isObject(permkeys)) {
+    _.forOwn(permkeys, function (perm, key) {
+      if (!perm) {
+        perm = ''
+      }
+      var po = null
+        if (perm.indexOf(':') < 0) {
+        po = self.getPermObject(key + ':' + perm)
+      } else {
+        po = self.getPermObject(perm)
+      }
+      if (po && po.key) {
+        pos[po.key] = po
+      }
+    })
+  }
+
+  return pos
+}
+
+_perms.prototype.getPermObject = function (permkey) {
+  var po = {key: null, perm: null, attr: {}, toPermkey: function () { return this.key + ':' + this.perm }}
+
+  if (!permkey || !zzb.types.isNonEmptyString(permkey)) {
+    po.attr = this.getPermAttributes()
+    return po
+  }
+
+  if (permkey.indexOf(':') <= 0) {
+    po.key = permkey
+    po.perm = ''
+    po.attr = this.getPermAttributes()
+    return po
+  }
+
+  var split = permkey.split(':')
+  po.key = split[0]
+  po.perm = split[1]
+  po.attr = this.getPermAttributes(po.toPermkey())
+
+  return po
+}
+
+var reCRUDX = new RegExp('^[CRUDX]*$')
+
+_perms.prototype.getPermAttributes = function (permkey) {
+  // CRUDX
+  var attr = {canRead: false, canCreate: false, canUpdate: false, canDelete: false, canExecute: false}
+
+  if (!permkey || !zzb.types.isNonEmptyString(permkey)) {
+    return attr
+  }
+
+  if (permkey.indexOf(':') >= 0) {
+    permkey = permkey.split(':')[1]
+  }
+
+  permkey = permkey.trim().toUpperCase()
+
+  if (permkey.length === 0) {
+    return attr
+  }
+
+  if (!reCRUDX.test(permkey)) {
+    return attr
+  }
+
+  attr.canRead = permkey.indexOf('C') >= 0
+  attr.canCreate = permkey.indexOf('R') >= 0
+  attr.canUpdate = permkey.indexOf('U') >= 0
+  attr.canDelete = permkey.indexOf('D') >= 0
+  attr.canExecute = permkey.indexOf('X') >= 0
+
+  return attr
+}
+
+exports.perms = _perms
+
+},{}],5:[function(require,module,exports){
 // client or server
 var _ = window._
 
@@ -649,7 +758,7 @@ _rob.prototype.toListErrs = function (errs, defaultFormat, fieldsTemplate, syste
 
 exports.rob = _rob
 
-},{}],5:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 // client only
 var $ = window.$
 
@@ -745,7 +854,7 @@ _status.prototype.get = function (options, callback) {
 
 exports.status = _status
 
-},{}],6:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 // client or server
 var _ = window._
 
@@ -948,7 +1057,7 @@ _strings.prototype.toPlural = function (word, number, options) {
 
 exports.strings = _strings
 
-},{}],7:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 // client or server
 // var _ = require('lodash')
 
@@ -1031,7 +1140,7 @@ _types.prototype.compare = function (x, y, isDesc) {
 
 exports.types = _types
 
-},{}],8:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 // client or server
 var _ = window._
 
@@ -1198,7 +1307,7 @@ _uib.prototype.createPanelCollapsibleEnd = function () {
 
 exports.uib = _uib
 
-},{}],9:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 // client or server
 var _ = window._
 
@@ -1267,7 +1376,7 @@ _uuid.prototype.isValid = function (uuid) {
 
 exports.uuid = _uuid
 
-},{}],10:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 // client or server
 var _ = window._
 
@@ -1357,7 +1466,7 @@ function zzNode (parent, data, pkField, parentField) {
     // nope
     if (!child) {
       // instead of "new zzNode", using a generic constructor
-      child = new this.nodeConstructor(this, data,
+      child = this.nodeConstructor(this, data,
         newPKField || this.pkField,
         newParentField || this.parentField
       )
@@ -1519,7 +1628,7 @@ function zzNode (parent, data, pkField, parentField) {
 
 module.exports.zzNode = zzNode
 
-},{}],11:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 if (typeof jQuery === 'undefined') {
   throw new Error('zazzy-browser\'s JavaScript requires jQuery. jQuery must be included before zazzy-browser\'s JavaScript.')
 }
@@ -1589,6 +1698,12 @@ if (typeof _ === 'undefined') {
   var _dialogs = require('./dialogs.js').dialogs
 
   // ---------------------------------------------------
+  // _perms (Permission Keys)
+  // ---------------------------------------------------
+
+  var _perms = require('./perms.js').perms
+
+  // ---------------------------------------------------
   // _rob (Return Object)
   // ---------------------------------------------------
 
@@ -1626,6 +1741,8 @@ if (typeof _ === 'undefined') {
   _zzb.prototype.forms = new _forms() // {types: _types, strings: _strings, uuid: _uuid, rob: _rob, dialogs: _dialogs})
   // dialog functions
   _zzb.prototype.dialogs = new _dialogs() // {strings: _strings, types: _types})
+  // _perms
+  _zzb.prototype.perms = new _perms() // {types: _types})
   // rob (==return object)
   _zzb.prototype.rob = new _rob() // {types: _types})
   // ajax helpers with promises
@@ -1636,4 +1753,4 @@ if (typeof _ === 'undefined') {
   return new _zzb()
 }))
 
-},{"./ajax.js":1,"./dialogs.js":2,"./forms.js":3,"./rob.js":4,"./status.js":5,"./strings.js":6,"./types.js":7,"./uib.js":8,"./uuid.js":9,"./zzNode.js":10}]},{},[11]);
+},{"./ajax.js":1,"./dialogs.js":2,"./forms.js":3,"./perms.js":4,"./rob.js":5,"./status.js":6,"./strings.js":7,"./types.js":8,"./uib.js":9,"./uuid.js":10,"./zzNode.js":11}]},{},[12]);
