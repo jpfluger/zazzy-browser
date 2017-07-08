@@ -87,7 +87,7 @@ function zzNode (parent, data, pkField, parentField) {
     // nope
     if (!child) {
       // instead of "new zzNode", using a generic constructor
-      child = new this.nodeConstructor(this, data,
+      child = this.nodeConstructor(this, data,
         newPKField || this.pkField,
         newParentField || this.parentField
       )

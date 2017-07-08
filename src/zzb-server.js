@@ -5,6 +5,7 @@ var _types = require('./types.js').types
 var _uuid = require('./uuid.js').uuid
 var _strings = require('./strings.js').strings
 var _rob = require('./rob.js').rob
+var _perms = require('./perms.js').perms
 
 // designed to work with a nodejs server
 // Uses only those zzb features not dependent on jquery/BootstrapDialog
@@ -26,6 +27,7 @@ exports.zzbLoader = function (options) {
   _zzb.prototype.uuid = new _uuid()
   _zzb.prototype.strings = new _strings()
   _zzb.prototype.rob = new _rob()
+  _zzb.prototype.perms = new _perms()
 
   // always gets a copy b/c referenced libs depends on it
   global['zzb'] = new _zzb()
@@ -42,6 +44,7 @@ exports.zzbLoader = function (options) {
     global[options.name].uuid = new _uuid()
     global[options.name].strings = new _strings()
     global[options.name].rob = new _rob()
+    global[options.name].perms = new _perms()
   } else {
     global[options.name] = global['zzb']
   }

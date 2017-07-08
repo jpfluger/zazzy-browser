@@ -10,7 +10,7 @@ var _ = require('lodash')
 
 var _forms = function () {}
 
-var renderHtml_Popover = function (errs, options) {
+var renderHtmlPopover = function (errs, options) {
   var arrHtml = []
   var arrPopOver = []
 
@@ -51,7 +51,7 @@ var renderHtml_Popover = function (errs, options) {
   return {html: arrHtml.join(' '), contentPopOver: arrPopOver.join('  ')}
 }
 
-var afterHtmlAdded_Popover = function (reho) {
+var afterHtmlAddedPopover = function (reho) {
   if (reho.$elem && reho.$elem.length > 0) {
     if (reho && reho.contentPopOver && zzb.types.isNonEmptyString(reho.contentPopOver)) {
       reho.$elem.popover({
@@ -80,8 +80,8 @@ _forms.prototype.displayUIErrors = function (options, callback) {
       success: {glyph: 'glyphicon-ok', textClass: 'text-success', bgClass: null},
       default: null
     },
-    renderErrorHtml: renderHtml_Popover,
-    afterHtmlAdded: afterHtmlAdded_Popover,
+    renderErrorHtml: renderHtmlPopover,
+    afterHtmlAdded: afterHtmlAddedPopover,
     handleSystemErrors: null
   }, options)
 

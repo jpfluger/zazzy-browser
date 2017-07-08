@@ -67,6 +67,12 @@ if (typeof _ === 'undefined') {
   var _dialogs = require('./dialogs.js').dialogs
 
   // ---------------------------------------------------
+  // _perms (Permission Keys)
+  // ---------------------------------------------------
+
+  var _perms = require('./perms.js').perms
+
+  // ---------------------------------------------------
   // _rob (Return Object)
   // ---------------------------------------------------
 
@@ -104,6 +110,8 @@ if (typeof _ === 'undefined') {
   _zzb.prototype.forms = new _forms() // {types: _types, strings: _strings, uuid: _uuid, rob: _rob, dialogs: _dialogs})
   // dialog functions
   _zzb.prototype.dialogs = new _dialogs() // {strings: _strings, types: _types})
+  // _perms
+  _zzb.prototype.perms = new _perms() // {types: _types})
   // rob (==return object)
   _zzb.prototype.rob = new _rob() // {types: _types})
   // ajax helpers with promises
