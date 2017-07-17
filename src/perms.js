@@ -34,7 +34,7 @@ _perms.prototype.getPermObjectFromPermkeys = function (permkeys) {
         perm = ''
       }
       var po = null
-        if (perm.indexOf(':') < 0) {
+      if (perm.indexOf(':') < 0) {
         po = self.getPermObject(key + ':' + perm)
       } else {
         po = self.getPermObject(perm)
@@ -48,7 +48,7 @@ _perms.prototype.getPermObjectFromPermkeys = function (permkeys) {
   return pos
 }
 
-_perms.prototype.getPermObject = function (permkey) {
+_perms.prototype.getPermObject = function (permkey, available) {
   var po = {key: null, perm: null, attr: {}, toPermkey: function () { return this.key + ':' + this.perm }}
 
   if (!permkey || !zzb.types.isNonEmptyString(permkey)) {
@@ -66,7 +66,22 @@ _perms.prototype.getPermObject = function (permkey) {
   var split = permkey.split(':')
   po.key = split[0]
   po.perm = split[1]
-  po.attr = this.getPermAttributes(po.toPermkey())
+
+  po.perm = po.perm.trim().toUpperCase()
+
+  if (po.perm.length > 0) {
+    // remove any permissions from the default that are not available
+    if (available && zzb.types.isNonEmptyString(available)) {
+      available = available.trim().toUpperCase()
+      for (var mm = po.perm.length - 1; mm >= 0; mm--) {
+        if (available.indexOf(po.perm[mm]) < 0) {
+          po.perm = po.perm.replace(po.perm[mm], '')
+        }
+      }
+    }
+  }
+
+  po.attr = this.getPermAttributes(po.toPermkey(), available)
 
   return po
 }

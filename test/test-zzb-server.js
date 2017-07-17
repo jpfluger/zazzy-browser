@@ -1,4 +1,4 @@
-/* global describe, it, zzs, expect */
+/* global describe, it, zzs */
 var zzbLoader = require('../src/zzb-server.js').zzbLoader
 var expect = require('chai').expect
 
@@ -73,12 +73,28 @@ describe('Validate zzb-server defaults', function () {
   describe('Is loaded: perms', function () {
     // attr = [canRead, canCreate, canUpdate, canDelete, canExecute]
     var permObj1 = {
-        module1: 'C',
-        module2: 'CRUDX',
-        module3: ''
-      }
+      module1: 'C',
+      module2: 'CRUDX',
+      module3: ''
+    }
     var permArr1 = ['module1:C', 'module2:CRUDX', 'module3']
 
+    it('should create one perm object', function (done) {
+      var pos = zzb.perms.getPermObject('test:CRUDX')
+      expect(pos).to.not.equal(null)
+      expect(pos.key).to.equal('test')
+      expect(pos.perm).to.equal('CRUDX')
+      expect(pos.toPermkey()).to.equal('test:CRUDX')
+      done()
+    })
+    it('should create one perm object minus available', function (done) {
+      var pos = zzb.perms.getPermObject('test:CRUDX', 'C')
+      expect(pos).to.not.equal(null)
+      expect(pos.key).to.equal('test')
+      expect(pos.perm).to.equal('C')
+      expect(pos.toPermkey()).to.equal('test:C')
+      done()
+    })
     it('should create three permkeys from object', function (done) {
       var pos = zzb.perms.getPermObjectFromPermkeys(permObj1)
       expect(pos).to.not.equal(null)
