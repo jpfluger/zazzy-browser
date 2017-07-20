@@ -1,5 +1,5 @@
 //! zzb.js
-//! version: 0.2.18
+//! version: 0.2.19
 //! author(s): Jaret Pfluger
 //! license: MIT
 //! https://github.com/jpfluger/zazzy-browser
@@ -612,6 +612,66 @@ _perms.prototype.getPermAttributes = function (permkey) {
   attr.canExecute = permkey.indexOf('X') >= 0
 
   return attr
+}
+
+_perms.prototype.hasMatch = function (permkey, target) {
+  if (!permkey || !target) {
+    return false
+  }
+
+  var po = permkey
+  if (zzb.types.isNonEmptyString(permkey)) {
+    po = this.getPermObject(permkey)
+  }
+
+  if (!zzb.types.isObject(po) || !po.key || !po.perm || po.perm.length === 0) {
+    return false
+  }
+
+  var tp = null
+  if (zzb.types.isNonEmptyString(target)) {
+    tp = this.getPermObject(target)
+  } else if (Array.isArray(target)) {
+    var self = this
+    _.each(target, function (item) {
+      if (zzb.types.isNonEmptyString(item)) {
+        item = self.getPermObject(item)
+      }
+      if (item.key === po.key) {
+        tp = item
+        return false
+      }
+    })
+  } else {
+    if (!zzb.types.isObject(target)) {
+      return false
+    }
+    if (target.key) {
+      tp = target
+    } else {
+      if (!target[po.key]) {
+        return false
+      } else {
+        if (zzb.types.isNonEmptyString(target[po.key])) {
+          tp = this.getPermObject(po.key + ':' + target[po.key])
+        } else {
+          tp = target[po.key]
+        }
+      }
+    }
+  }
+
+  if (!tp || !tp.key || !tp.perm || !tp.perm.length === 0) {
+    return false
+  }
+
+  for (var ii = 0; ii < tp.perm.length; ii++) {
+    if (po.perm.indexOf(tp.perm[ii]) >= 0) {
+      return true
+    }
+  }
+
+  return false
 }
 
 exports.perms = _perms
