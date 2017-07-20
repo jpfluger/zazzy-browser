@@ -127,6 +127,56 @@ describe('Validate zzb-server defaults', function () {
       expect(pos.toPermkey()).to.equal('test:C')
       done()
     })
+    it('should match (test:C) using pos', function (done) {
+      var pos = zzb.perms.getPermObject('test:C', 'CRUDX', 'test:UD')
+      expect(zzb.perms.hasMatch('test:C', pos)).to.equal(true)
+      done()
+    })
+    it('should match (test:C) using string', function (done) {
+      expect(zzb.perms.hasMatch('test:C', 'test:CUD')).to.equal(true)
+      done()
+    })
+    it('should match (test:C) using object of pos', function (done) {
+      expect(zzb.perms.hasMatch('module1:C', zzb.perms.getPermObjectFromPermkeys(permObj1))).to.equal(true)
+      done()
+    })
+    it('should match (test:C) using object of strings', function (done) {
+      expect(zzb.perms.hasMatch('module1:C', permObj1)).to.equal(true)
+      done()
+    })
+    it('should match (test:C) using array of pos', function (done) {
+      expect(zzb.perms.hasMatch('module1:C', zzb.perms.getPermObjectFromPermkeys(permArr1))).to.equal(true)
+      done()
+    })
+    it('should match (test:C) using array of string', function (done) {
+      expect(zzb.perms.hasMatch('module1:C', permArr1)).to.equal(true)
+      done()
+    })
+    it('should not match (test:X)', function (done) {
+      var pos = zzb.perms.getPermObject('test:C', 'CRUDX', 'test:UD')
+      expect(zzb.perms.hasMatch('test:X', pos)).to.equal(false)
+      done()
+    })
+    it('should not match (test:C) using string', function (done) {
+      expect(zzb.perms.hasMatch('test:C', 'test:X')).to.equal(false)
+      done()
+    })
+    it('should not match (test:X) using object of pos', function (done) {
+      expect(zzb.perms.hasMatch('module1:X', zzb.perms.getPermObjectFromPermkeys(permObj1))).to.equal(false)
+      done()
+    })
+    it('should not match (test:X) using object of strings', function (done) {
+      expect(zzb.perms.hasMatch('module1:X', permObj1)).to.equal(false)
+      done()
+    })
+    it('should not match (test:X) using array of pos', function (done) {
+      expect(zzb.perms.hasMatch('module1:X', zzb.perms.getPermObjectFromPermkeys(permArr1))).to.equal(false)
+      done()
+    })
+    it('should not match (test:X) using array of string', function (done) {
+      expect(zzb.perms.hasMatch('module1:X', permArr1)).to.equal(false)
+      done()
+    })
     it('should create three permkeys from object', function (done) {
       var pos = zzb.perms.getPermObjectFromPermkeys(permObj1)
       expect(pos).to.not.equal(null)
