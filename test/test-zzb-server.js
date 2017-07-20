@@ -111,6 +111,14 @@ describe('Validate zzb-server defaults', function () {
       expect(pos.toPermkey()).to.equal('test:CUD')
       done()
     })
+    it('should create one perm object (test:CUD) merged with existing minus available and duplicate perm (UUDD)', function (done) {
+      var pos = zzb.perms.getPermObject('test:C', 'CRUDX', 'test:UUDD')
+      expect(pos).to.not.equal(null)
+      expect(pos.key).to.equal('test')
+      expect(pos.perm).to.equal('CUD')
+      expect(pos.toPermkey()).to.equal('test:CUD')
+      done()
+    })
     it('should create one perm object (test:C) merged with existing minus available', function (done) {
       var pos = zzb.perms.getPermObject('test:CRUDX', 'C', 'test:UD')
       expect(pos).to.not.equal(null)
