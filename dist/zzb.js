@@ -1,5 +1,5 @@
 //! zzb.js
-//! version: 0.2.19
+//! version: 0.2.20
 //! author(s): Jaret Pfluger
 //! license: MIT
 //! https://github.com/jpfluger/zazzy-browser
@@ -80,7 +80,7 @@ function _ajax () {
             rob.fields = data.fields
           }
 
-          resolve(data)
+          resolve(rob)
         })
         .fail(function (jqXHR, textStatus, errorThrown) {
           // if (jqXHR.responseJSON) {
