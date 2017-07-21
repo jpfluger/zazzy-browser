@@ -74,7 +74,7 @@ function _ajax () {
             rob.fields = data.fields
           }
 
-          resolve(data)
+          resolve(rob)
         })
         .fail(function (jqXHR, textStatus, errorThrown) {
           // if (jqXHR.responseJSON) {
