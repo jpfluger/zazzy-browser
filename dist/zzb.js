@@ -148,7 +148,7 @@ ZazzyDialog.getButtonDefaults = function(options) {
   var button = {
     id: null, 
     type: ZazzyDialog.TYPE_NONE,
-    name: '', 
+    label: '', 
     className: '', 
     action: null, 
     isDismiss: false,
@@ -204,19 +204,22 @@ ZazzyDialog.getButtonPreset = function (preset, order, max) {
 
   switch(preset) {
     case 'button-close':
-        button.name = 'Close';
+        button.label = 'Close';
         break;
     case 'button-ok':
-        button.name = 'Ok';
+        button.label = 'Ok';
         break;
+    case 'button-accept':
+        button.label = 'Accept';
+        break
     case 'button-yes':
-        button.name = 'Yes';
+        button.label = 'Yes';
         break;
     case 'button-no':
-        button.name = 'No';
+        button.label = 'No';
         break
     case 'button-cancel':
-        button.name = 'Cancel';
+        button.label = 'Cancel';
         break
     default:
         button = null
@@ -339,7 +342,7 @@ ZazzyDialog.prototype.create$Modal = function () {
           dialog.close()
         };
       }
-      $modal.find('.modal-header button.close').attr('aria-label', button.name)
+      $modal.find('.modal-header button.close').attr('aria-label', button.label)
     } 
 
     if (!ZazzyDialog.isTypeNone(button.type)) {
@@ -350,7 +353,7 @@ ZazzyDialog.prototype.create$Modal = function () {
       }
     }
 
-    var $button = $(zzb.strings.format('<button id="{id}" type="button" class="btn {className}">{name}</button>', button));
+    var $button = $(zzb.strings.format('<button id="{id}" type="button" class="btn {className}">{label}</button>', button));
     $button.data('button', button);
 
     // Button action (eg onClick)
@@ -452,11 +455,29 @@ _dialogs.prototype.showMessage = function (options) {
 
 _dialogs.prototype.showMessageChoice = function (options) {
 
-  alert('showMessageChoice');
+  var dialog = zzb.dialogs.modal(_.merge({
+    type: ZazzyDialog.TYPE_NONE,
+    buttons: [
+      ZazzyDialog.BUTTON_CANCEL,
+      ZazzyDialog.getButtonDefaults({type: ZazzyDialog.TYPE_PRIMARY, label: 'Accept', action: function(dialog, ev) {
+          dialog.close()
+        }
+      })
+    ]
+  }, options))
 
-  /*
+  dialog.open()
+
+/*
+  if (dialog.defaultOptions.buttons.length > 0) {
+    if (dialog.defaultOptions.buttons)
+  }
+      isDismiss: false,
+
+
+
   options = _.merge({
-    type: BootstrapDialog.TYPE_DEFAULT,
+    type: ZazzyDialog.TYPE_NONE,
     title: '',
     message: '',
     cssClass: '',
@@ -555,7 +576,7 @@ _dialogs.prototype.handleError = function (options) {
   if (options.message) {
     this.showMessage({type: ZazzyDialog.TYPE_DANGER,
       title: options.title,
-      message: options.message})
+      body: options.message})
   }
 }
 
