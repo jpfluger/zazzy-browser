@@ -148,11 +148,11 @@ ZazzyDialog.prototype.getButtonPreset = function (preset) {
         break;
     case 'BUTTON_NO':
         button.name = 'No';
-        button.autoDismiss = dismiss
+        button.action = dismiss
         break
     case 'BUTTON_CANCEL':
         button.name = 'Cancel';
-        button.autoDismiss = dismiss
+        button.action = dismiss
         break
     default:
         button = null
