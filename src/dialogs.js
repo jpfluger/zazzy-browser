@@ -345,43 +345,47 @@ _dialogs.prototype.showMessageChoice = function (options) {
 }
 
 _dialogs.prototype.handleError = function (options) {
+
+  var template = '<div class="zzb-dialog-errors">{errors}</div>'
+               + '<div class="zzb-dialog-message">{message}</div>';
+
   // this.dialogs.handleError({log: 'failed to retrieve login dialog form: ' + err, title: 'Unknown error', message: 'An unknown communications error occurred while retrieving the login form. Please check your connection settings and try again.'})
-  options = _.merge({log: null, title: '', message: null, errs: null}, options)
+  options = _.merge({
+    log: null, 
+    type: ZazzyDialog.TYPE_DANGER, 
+    title: '', 
+    body: template, 
+    message: '', 
+    errs: null, 
+    errors: '', 
+    buttons: [
+      ZazzyDialog.getButtonDefaults({type: ZazzyDialog.TYPE_DANGER, label: 'Ok', action: function(dialog, ev) {
+          dialog.close()
+        }
+      })
+    ]
+  }, options)
 
   if (options.log) {
     console.log(options.log)
   }
 
-  if (options.errs) {
-    if (Array.isArray(options.errs) && options.errs.length > 0 && options.errs[0]) {
-      var arrHtml = []
+  if (!zzb.types.isNonEmptyString(options.errors)) {
+    if (zzb.types.isArray(options.errs)) {
+        var arrHtml = []
 
-      _.each(options.errs, function (err, index) {
-        if (err.message && zzb.types.isNonEmptyString(err.message)) {
-          arrHtml.push(zzb.strings.format('<div>{0}</div>', err.message))
-        }
-      })
+        _.each(options.errs, function (err, index) {
+          if (err.message && zzb.types.isNonEmptyString(err.message)) {
+            arrHtml.push(zzb.strings.format('<div class="zzb-dialog-error-item">{0}</div>', err.message))
+          }
+        })
 
-      if (arrHtml.length > 0) {
-        if (!options.message) {
-          options.message = ''
-        }
-
-        if (options.errIntro) {
-          options.message += ' ' + options.errIntro
-        }
-
-        // this allows for a custom message to be prefixed, like: <strong>Error!</strong>
-        options.message += ' ' + arrHtml.join('')
+        options.errors = arrHtml.join('\n')
       }
-    }
   }
 
-  if (options.message) {
-    this.showMessage({type: ZazzyDialog.TYPE_DANGER,
-      title: options.title,
-      body: options.message})
-  }
+  options.body = zzb.strings.format(options.body, options),
+  this.showMessage(options)
 }
 
 exports.dialogs = _dialogs

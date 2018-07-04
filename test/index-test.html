@@ -478,7 +478,8 @@ body {
         });
 
         // zzb.dialogs.showMessage({title: 'test', body: 'content here', type:zzb.dialogs.ZazzyDialog.TYPE_DARK})
-        zzb.dialogs.showMessageChoice({title: 'test', body: 'content here'})
+        // zzb.dialogs.showMessageChoice({title: 'test', body: 'content here'})
+        zzb.dialogs.handleError({title: 'test error', errs: [{err: 'this is a message'}], message: 'this is a test in the body'})
 
         // var dialog = zzb.dialogs.modal({title:'test', body: 'here is some text', buttons: [zzb.dialogs.ZazzyDialog.BUTTON_NO, zzb.dialogs.ZazzyDialog.BUTTON_YES]})
         // dialog.open();
