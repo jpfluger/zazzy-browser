@@ -477,10 +477,10 @@ body {
             // $('#leftSidebar a[aria-expanded=false]').attr('aria-expanded', 'true');
         });
 
+        zzb.dialogs.showMessage({title: 'test', body: 'content here', type:zzb.dialogs.ZazzyDialog.TYPE_DARK})
 
-        // var dialog = zzb.dialogs.modal({title:'test', body: 'here is some text', buttons: [zzb.dialogs.BUTTON_CLOSE]})
-        var dialog = zzb.dialogs.modal({title:'test', body: 'here is some text', buttons: [zzb.dialogs.BUTTON_NO, zzb.dialogs.BUTTON_YES]})
-        dialog.open();
+        // var dialog = zzb.dialogs.modal({title:'test', body: 'here is some text', buttons: [zzb.dialogs.ZazzyDialog.BUTTON_NO, zzb.dialogs.ZazzyDialog.BUTTON_YES]})
+        // dialog.open();
     });
 
     function compensateFixedNavBar() {
