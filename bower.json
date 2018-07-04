@@ -1,7 +1,7 @@
 {
   "name": "zazzy-browser",
   "license": "MIT",
-  "description": "General-purpose browser functions used as building-blocks to create Bootstrap v3 websites and assist in client-server communications.",
+  "description": "General-purpose browser functions used as building-blocks to create Bootstrap v4 websites and assist in client-server communications.",
   "homepage": "https://github.com/jpfluger/zazzy-browser",
   "authors": [
     "Jaret Pfluger <japes@aberlorn.com>"
@@ -16,8 +16,8 @@
     "zazzy"
   ],
   "dependencies": {
-    "jquery": "1.9.1 - 3",
-    "bootstrap-dialog": "^1.0",
+    "jquery": ">=3",
+    "bootstrap4-fs-modal": "^1.0",
     "lodash": "^4.0"
   },
   "ignore": [

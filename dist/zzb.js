@@ -1,9 +1,9 @@
 //! zzb.js
-//! version: 0.2.20
+//! version: 1.0.0
 //! author(s): Jaret Pfluger
 //! license: MIT
 //! https://github.com/jpfluger/zazzy-browser
-(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+(function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 // client only
 var $ = window.$
 
@@ -123,11 +123,244 @@ _ajax.prototype.postJSON = function (options) {
 exports.ajax = _ajax
 
 },{}],2:[function(require,module,exports){
-// client only
-var BootstrapDialog = window.BootstrapDialog
+// css styling for modal uses bootstrap4-fs-modal
+// https://github.com/keaukraine/bootstrap4-fs-modal
 
 // client or server
 var _ = window._
+
+// ---------------------------------------------------
+// BootstrapDialog
+// refined port of https://github.com/nakupanda/bootstrap3-dialog (MIT LICENSE)
+// ---------------------------------------------------
+
+var ZazzyDialog = function (options) {
+
+    this.defaultOptions = _.merge({
+        id: zzb.uuid.newV4(),
+        className: '',
+        title: '',
+        body: '',
+        buttons: [],
+        onShow: null,
+        onShown: null,
+        onHide: null,
+        onHidden: null
+    }, options);
+
+    this.defaultOptions.onShow = typeof options.onShow == 'function' ? options.onShow : function () {};
+    this.defaultOptions.onShown = typeof options.onShown == 'function' ? options.onShown : function () {};
+    this.defaultOptions.onHide = typeof options.onHide == 'function' ? options.onHide : function () {};
+    this.defaultOptions.onHidden = typeof options.onHidden == 'function' ? options.onHidden : function () {};
+};
+
+ZazzyDialog.prototype.getId = function () {
+  if (!(zzb.types.isNonEmptyString(this.defaultOptions.id))) {
+    this.defaultOptions.id = zzb.uuid.newV4();
+  }
+  return this.defaultOptions.id
+}
+
+ZazzyDialog.prototype.getClassName = function () {
+  if (!(zzb.types.isNonEmptyString(this.defaultOptions.className))) {
+    this.defaultOptions.className = '';
+  }
+  return this.defaultOptions.className
+}
+
+ZazzyDialog.prototype.getTitle = function () {
+  if (!(zzb.types.isNonEmptyString(this.defaultOptions.title))) {
+    this.defaultOptions.title = '';
+  }
+  return this.defaultOptions.title
+}
+
+ZazzyDialog.prototype.getBody = function () {
+  if (!(zzb.types.isNonEmptyString(this.defaultOptions.body))) {
+    this.defaultOptions.body = '';
+  }
+  return this.defaultOptions.body
+}
+
+ZazzyDialog.prototype.create$Modal = function () {
+
+  var options = {
+    id: this.getId(),
+    arialabel: 'arialabel' + this.getId(),
+    className: this.getClassName(),
+    title: this.getTitle(),
+    body: this.getBody()
+  };
+
+  var template = '<div class="modal fade modal-fullscreen {cssClass}" id="{id}" tabindex="-1" role="dialog" aria-labelledby="{arialabel}" aria-hidden="true">'
+                 + '<div class="modal-dialog" role="document">'
+                   + '<div class="modal-content">'
+                     + '<div class="modal-header">'
+                       + '<h5 class="modal-title" id="{arialabel}">{title}</h5>'
+                         + '<button type="button" class="close" data-dismiss="modal" aria-label="Close">'
+                           + '<span aria-hidden="true">&times;</span>'
+                         + '</button>'
+                       + '</div>'
+                      + '<div class="modal-body">{body}</div>'
+                      + '<div class="modal-footer">'
+                      + '</div>'
+                    + '</div>'
+                  + '</div>'
+                + '</div>';
+
+  var $modal = $(zzb.strings.format(template, options))
+
+  if (!(Array.isArray(this.defaultOptions.buttons))) {
+    this.defaultOptions.buttons = [];
+  }
+
+  var self = this;
+
+  _.each(this.defaultOptions.buttons, function (button, ii) {
+
+    if (zzb.types.isNonEmptyString(button)) {
+      button = self.getButtonPreset(button)
+    }
+
+    if (!(zzb.types.isObject(button))) {
+      return // continue
+    }
+
+    if (!(zzb.types.isNonEmptyString(button.id))) {
+      button.id = 'button-' + ii + '-' + self.getId()
+    }
+
+    var $button = $(zzb.strings.format('<button id="{id}" type="button" class="btn btn-default {className}">{name}</button>', button));
+    $button.data('button', button);
+
+    // Button action (eg onClick)
+    $button.on('click', {dialog: self, $button: $button, button: button}, function (event) {
+        var dialog = event.data.dialog;
+        var $button = event.data.$button;
+        var button = $button.data('button');
+        if (typeof button.action === 'function') {
+            return button.action.call($button, dialog, event);
+        }
+    });
+
+    if ($modal.find('.modal-footer > button').length > 0) {
+      $button.insertAfter($modal.find('.modal-footer > button').last())
+    } else {
+      $modal.find('.modal-footer').append($button)
+    }
+  });
+
+  return $modal;
+}
+
+ZazzyDialog.prototype.getButtonPreset = function (preset) {
+  var button = {id: null, name: '', className: '', action: null};
+
+  var dismiss = function(dialog, ev) {
+    dialog.close()
+  };
+
+  switch(preset) {
+    case 'BUTTON_CLOSE':
+        button.name = 'Close';
+        button.action = dismiss
+        break;
+    case 'BUTTON_OK':
+        button.name = 'Ok';
+        break;
+    case 'BUTTON_YES':
+        button.name = 'Yes';
+        break;
+    case 'BUTTON_NO':
+        button.name = 'No';
+        button.autoDismiss = dismiss
+        break
+    case 'BUTTON_CANCEL':
+        button.name = 'Cancel';
+        button.autoDismiss = dismiss
+        break
+    default:
+        button = null
+  }
+
+  return button
+}
+
+ZazzyDialog.prototype.open = function () {
+
+  if (!this.$modal) {
+    this.$modal = this.create$Modal()
+    var self = this
+
+    this.$modal.appendTo('body');
+
+    // https://getbootstrap.com/docs/4.0/components/modal/#events
+    this.$modal.on('show.bs.modal', function (ev) {
+      self.onShow.call(self, ev);
+    });
+    this.$modal.on('shown.bs.modal', function (ev) {
+      self.onShown.call(self, ev);
+    });
+    this.$modal.on('hide.bs.modal', function (ev) {
+      self.onHide.call(self, ev);
+    });
+    this.$modal.on('hidden.bs.modal', function (ev) {
+      self.onHidden.call(self, ev);
+    });
+  }
+
+  this.$modal.modal('show');
+}
+
+ZazzyDialog.prototype.onShow = function (ev) {
+  this.defaultOptions.onShow(ev, this, this.$modal)
+}
+
+ZazzyDialog.prototype.onShown = function (ev) {
+  this.defaultOptions.onShown(ev, this, this.$modal)
+}
+
+ZazzyDialog.prototype.onHide = function (ev) {
+  this.defaultOptions.onHide(ev, this, this.$modal)
+}
+
+ZazzyDialog.prototype.onHidden = function (ev) {
+  this.defaultOptions.onHidden(ev, this, this.$modal)
+}
+
+ZazzyDialog.prototype.close = function () {
+  this.$modal.modal('hide');
+}
+
+ZazzyDialog.prototype.hide = function () {
+  // delete dialog from the body
+  this.$modal.modal('hide');
+  this.$modal.modal('dispose');
+  if ($('#' + this.getId()).length > 0) {
+    $('#' + this.getId()).remove();    
+  }
+  this.$modal = null;
+}
+
+
+/**
+ *  Some constants.
+ZazzyDialog.BUTTON_CLOSE = 'BUTTON_CLOSE';
+ZazzyDialog.BUTTON_OK = 'BUTTON_OK';
+ZazzyDialog.BUTTON_YES= 'BUTTON_YES';
+ZazzyDialog.BUTTON_NO = 'BUTTON_NO';
+ZazzyDialog.BUTTON_CANCEL = 'BUTTON_CANCEL';
+ */
+
+/*
+ZazzyDialog.NAMESPACE = 'zzb-bootstrap-dialog';
+ZazzyDialog.TYPE_DEFAULT = 'type-default';
+ZazzyDialog.TYPE_INFO = 'type-info';
+ZazzyDialog.TYPE_PRIMARY = 'type-primary';
+ZazzyDialog.TYPE_SUCCESS = 'type-success';
+ZazzyDialog.TYPE_WARNING = 'type-warning';
+ZazzyDialog.TYPE_DANGER = 'type-danger';
+*/
 
 // ---------------------------------------------------
 // _dialogs
@@ -142,7 +375,17 @@ var _ = window._
  BootstrapDialog.TYPE_DANGER
  */
 
-var _dialogs = function () {}
+var _dialogs = function () {
+  this.BUTTON_CLOSE = 'BUTTON_CLOSE';
+  this.BUTTON_OK = 'BUTTON_OK';
+  this.BUTTON_YES= 'BUTTON_YES';
+  this.BUTTON_NO = 'BUTTON_NO';
+  this.BUTTON_CANCEL = 'BUTTON_CANCEL';  
+}
+
+_dialogs.prototype.modal = function (options) {
+  return new ZazzyDialog(options)
+}
 
 _dialogs.prototype.showMessage = function (options) {
   options = _.merge({
@@ -153,6 +396,8 @@ _dialogs.prototype.showMessage = function (options) {
     onShown: null
   }, options)
 
+  alert('showMessage');
+  /*
   BootstrapDialog.show({
     type: options.type,
     title: options.title,
@@ -164,10 +409,14 @@ _dialogs.prototype.showMessage = function (options) {
         dialogRef.close()
       }
     }]
-  })
+  })*/
 }
 
 _dialogs.prototype.showMessageChoice = function (options) {
+
+  alert('showMessageChoice');
+
+  /*
   options = _.merge({
     type: BootstrapDialog.TYPE_DEFAULT,
     title: '',
@@ -229,6 +478,7 @@ _dialogs.prototype.showMessageChoice = function (options) {
     onshown: options.onShown,
     buttons: options.buttons
   })
+  */
 }
 
 _dialogs.prototype.handleError = function (options) {
@@ -351,9 +601,9 @@ _forms.prototype.displayUIErrors = function (options, callback) {
     err: null,
     hideWhenNoError: false, // this always shows the 'success' checkmark
     typeFormats: {
-      error: {glyph: 'glyphicon-remove', textClass: 'text-danger', bgClass: null},
-      warning: {glyph: 'glyphicon-warning', textClass: 'text-warning', bgClass: null},
-      success: {glyph: 'glyphicon-ok', textClass: 'text-success', bgClass: null},
+      error: {glyph: 'glyphicon-remove', textClass: 'text-danger', bgClass: null}, // feather-x  <i class="material-icons">close</i>
+      warning: {glyph: 'glyphicon-warning', textClass: 'text-warning', bgClass: null}, // feather-alert-triangle    <i class="material-icons">warning</i>
+      success: {glyph: 'glyphicon-ok', textClass: 'text-success', bgClass: null}, // feather-check     <i class="material-icons">done</i>
       default: null
     },
     renderErrorHtml: renderHtmlPopover,
@@ -1756,10 +2006,6 @@ module.exports.zzNode = zzNode
 },{}],12:[function(require,module,exports){
 if (typeof jQuery === 'undefined') {
   throw new Error('zazzy-browser\'s JavaScript requires jQuery. jQuery must be included before zazzy-browser\'s JavaScript.')
-}
-
-if (typeof BootstrapDialog === 'undefined') {
-  throw new Error('zazzy-browser\'s JavaScript requires BootstrapDialog. BootstrapDialog must be included before zazzy-browser\'s JavaScript.')
 }
 
 if (typeof _ === 'undefined') {

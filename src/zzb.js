@@ -2,10 +2,6 @@ if (typeof jQuery === 'undefined') {
   throw new Error('zazzy-browser\'s JavaScript requires jQuery. jQuery must be included before zazzy-browser\'s JavaScript.')
 }
 
-if (typeof BootstrapDialog === 'undefined') {
-  throw new Error('zazzy-browser\'s JavaScript requires BootstrapDialog. BootstrapDialog must be included before zazzy-browser\'s JavaScript.')
-}
-
 if (typeof _ === 'undefined') {
   throw new Error('zazzy-browser\'s JavaScript requires lodash. lodash must be included before zazzy-browser\'s JavaScript.')
 }

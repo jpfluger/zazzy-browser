@@ -75,9 +75,9 @@ _forms.prototype.displayUIErrors = function (options, callback) {
     err: null,
     hideWhenNoError: false, // this always shows the 'success' checkmark
     typeFormats: {
-      error: {glyph: 'glyphicon-remove', textClass: 'text-danger', bgClass: null},
-      warning: {glyph: 'glyphicon-warning', textClass: 'text-warning', bgClass: null},
-      success: {glyph: 'glyphicon-ok', textClass: 'text-success', bgClass: null},
+      error: {glyph: 'glyphicon-remove', textClass: 'text-danger', bgClass: null}, // feather-x  <i class="material-icons">close</i>
+      warning: {glyph: 'glyphicon-warning', textClass: 'text-warning', bgClass: null}, // feather-alert-triangle    <i class="material-icons">warning</i>
+      success: {glyph: 'glyphicon-ok', textClass: 'text-success', bgClass: null}, // feather-check     <i class="material-icons">done</i>
       default: null
     },
     renderErrorHtml: renderHtmlPopover,

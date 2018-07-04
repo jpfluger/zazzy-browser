@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html >
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TEST</title>
+  <base target="_self">
+  <meta name="description" content="Codeply is a free online editor for Web developers and designers with code sample snippets." />
+  <meta name="google" value="notranslate">
+  
+  <!--stylesheets / link tags loaded here
+
+https://css-tricks.com/snippets/css/a-guide-to-flexbox/
+
+  -->
+
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB" crossorigin="anonymous">
+  <link href="fs-modal.css" rel="stylesheet">
+  <!--
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">-->
+
+  <style type="text/css">
+/*@import "https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700";*/
+html {
+  height: 100%;
+}
+body {
+  height: 100%;
+  overflow: hidden;
+  margin: 0px;
+  display: flex;
+}
+.panel-column {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  max-width:25%;
+  min-width:25%;
+  padding-top:4rem;
+}
+.panel-column-header {
+  flex-shrink: 0;
+  background-color: #333;
+  color: white;
+  padding: 20px;
+}
+.panel-column-header ul{
+  display: inline-flex;
+  list-style: none;
+  margin: 0;
+}
+.panel-column-container {
+  flex-grow: 1;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+#panelDocGroups {
+  /*flex-shrink: 0;*/
+  background-color: white;
+}
+#panelDocViewer {
+  background-color: #f3f3f3;
+}
+#panelDocEditor {
+  /*flex-shrink: 0;*/
+  background-color: yellow;
+}
+#panelDocControls {
+  background-color: cyan;
+}
+
+
+/* ---------------------------------------------------
+    LEFT SIDEBAR STYLE
+----------------------------------------------------- */
+
+#leftSidebar {
+    width: 250px;
+    position: fixed;
+    top: 0;
+    left: -250px;
+    height: 100vh;
+    z-index: 999;
+    background: #7386D5;
+    color: #fff;
+    transition: all 0.3s;
+    overflow-y: auto;
+    box-shadow: 3px 3px 3px rgba(0, 0, 0, 0.2);
+    /*font-family: 'Poppins', sans-serif;*/
+}
+
+#leftSidebar.active {
+    left: 0;
+}
+
+#leftSidebarDismiss {
+    width: 35px;
+    height: 35px;
+    line-height: 35px;
+    text-align: center;
+    background: #7386D5;
+    border:1px solid #000;
+    position: relative;
+    float:right;
+    top: 10px;
+    right: 10px;
+    cursor: pointer;
+    -webkit-transition: all 0.3s;
+    -o-transition: all 0.3s;
+    transition: all 0.3s;
+}
+
+#leftSidebarDismiss:hover {
+    background: #fff;
+    color: #7386D5;
+}
+
+#leftSidebar .leftSidebar-header {
+    padding: 20px;
+    background: #6d7fcc;
+}
+
+#leftSidebar ul.components {
+    padding: 20px 0;
+    border-bottom: 1px solid #47748b;
+}
+
+#leftSidebar ul p {
+    color: #fff;
+    padding: 10px;
+    /*font-family: 'Poppins', sans-serif;*/
+}
+
+#leftSidebar ul li a {
+    padding: 10px;
+    font-size: 1.1em;
+    display: block;
+    color: #fff;
+}
+
+#leftSidebar ul li a:hover {
+    color: #7386D5;
+    background: #fff;
+}
+
+#leftSidebar ul li.active>a, #leftSidebar a[aria-expanded="true"] {
+    color: #fff;
+    background: #6d7fcc;
+}
+
+#leftSidebar a[data-toggle="collapse"] {
+    position: relative;
+}
+
+#leftSidebar .dropdown-toggle::after {
+    display: block;
+    position: absolute;
+    top: 50%;
+    right: 20px;
+    transform: translateY(-50%);
+}
+
+#leftSidebar ul ul a {
+    font-size: 0.9em !important;
+    padding-left: 30px !important;
+    background: #6d7fcc;
+}
+
+#leftSidebar ul.CTAs {
+    padding: 20px;
+}
+
+#leftSidebar ul.CTAs a {
+    text-align: center;
+    font-size: 0.9em !important;
+    display: block;
+    border-radius: 5px;
+    margin-bottom: 5px;
+}
+
+#leftSidebar a.download {
+    background: #fff;
+    color: #7386D5;
+}
+
+#leftSidebar a.article, #leftSidebar a.article:hover {
+    background: #6d7fcc !important;
+    color: #fff !important;
+}
+
+</style>
+
+<!-- dc1.n26.tigsus.com--->
+
+</head>
+<body >
+
+    <nav id="main-navbar" class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+      <a id="leftSidebarCollapse" class="navbar-brand" href="#">Fixed navbar</a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarCollapse">
+        <ul class="navbar-nav mr-auto">
+          <li class="nav-item active">
+            <a id="tester" class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#">Link</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link disabled" href="#">Disabled</a>
+          </li>
+        </ul>
+        <form class="form-inline mt-2 mt-md-0">
+          <input class="form-control mr-sm-2" type="text" placeholder="Search" aria-label="Search">
+          <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+        </form>
+      </div>
+    </nav>
+
+    <!-- leftSidebar  -->
+    <nav id="leftSidebar" class="compensate-fixed-navbar-height">
+        <div id="leftSidebarDismiss">
+            <i class="fas fa-arrow-left"></i>
+        </div>
+
+        <div class="leftSidebar-header">
+            <h3>Bootstrap Sidebar</h3>
+        </div>
+
+        <ul class="list-unstyled components">
+            <p>Dummy Heading</p>
+            <li class="active">
+                <a href="#homeSubmenu" data-toggle="collapse" aria-expanded="false">Home</a>
+                <ul class="collapse list-unstyled" id="homeSubmenu">
+                    <li>
+                        <a href="#">Home 1</a>
+                    </li>
+                    <li>
+                        <a href="#">Home 2</a>
+                    </li>
+                    <li>
+                        <a href="#">Home 3</a>
+                    </li>
+                </ul>
+            </li>
+            <li>
+                <a href="#">About</a>
+                <a href="#pageSubmenu" data-toggle="collapse" aria-expanded="false">Pages</a>
+                <ul class="collapse list-unstyled" id="pageSubmenu">
+                    <li>
+                        <a href="#">Page 1</a>
+                    </li>
+                    <li>
+                        <a href="#">Page 2</a>
+                    </li>
+                    <li>
+                        <a href="#">Page 3</a>
+                    </li>
+                </ul>
+            </li>
+            <li>
+                <a href="#">Portfolio</a>
+            </li>
+            <li>
+                <a href="#">Contact</a>
+            </li>
+        </ul>
+
+        <ul class="list-unstyled CTAs">
+            <li>
+                <a href="https://bootstrapious.com/tutorial/files/sidebar.zip" class="download">Download source</a>
+            </li>
+            <li>
+                <a href="https://bootstrapious.com/p/bootstrap-sidebar" class="article">Back to article</a>
+            </li>
+        </ul>
+        <!--
+        <p>test dsfadf asdfasdf a sdfas fasf</p>
+        <p>test dsfadf asdfasdf a sdfas fasf</p>
+        <p>test dsfadf asdfasdf a sdfas fasf</p>
+        <p>test dsfadf asdfasdf a sdfas fasf</p>
+        <p>test dsfadf asdfasdf a sdfas fasf</p>
+        <p>test dsfadf asdfasdf a sdfas fasf</p>
+        <p>test dsfadf asdfasdf a sdfas fasf</p>
+        <p>test dsfadf asdfasdf a sdfas fasf</p>
+        <p>test dsfadf asdfasdf a sdfas fasf</p>
+        <p>test dsfadf asdfasdf a sdfas fasf</p>
+        <p>test dsfadf asdfasdf a sdfas fasf</p>
+        <p>test dsfadf asdfasdf a sdfas fasf</p>
+        <p>test dsfadf asdfasdf a sdfas fasf</p>
+        <p>test dsfadf asdfasdf a sdfas fasf</p>
+        <p>test dsfadf asdfasdf a sdfas fasf</p>
+        <p>test dsfadf asdfasdf a sdfas fasf</p>
+        <p>test dsfadf asdfasdf a sdfas fasf</p>
+        <p>test dsfadf asdfasdf a sdfas fasf</p>
+        <p>test dsfadf asdfasdf a sdfas fasf</p>
+        <p>test dsfadf asdfasdf a sdfas fasf</p>
+        <p>test dsfadf asdfasdf a sdfas fasf</p>-->
+    </nav>
+
+<!--<main role="main" class="container-fluid px-0 compensate-fixed-navbar-height">-->
+<main role="main" class="container compensate-fixed-navbar-height">
+        <div class="">
+            <div class="panel-column-header">
+                <ul>
+                    <li>one</li>
+                    <li>two</li>
+                    <li>three</li>
+                    <li>four</li>
+                </ul>
+            </div>
+            <div class="panel-column-container">
+
+        <p class="lead">
+          <a href="#" id="buttonAbout" action="about" class="btn btn-lg btn-secondary" data-toggle="modal" data-target="#modalAbout">About</a>
+        </p>
+
+                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis quam massa, ornare at turpis quis, varius pulvinar lorem. Morbi eleifend nisi eget viverra fermentum. Vivamus interdum dui quis orci placerat semper. Morbi lobortis ex sit amet risus cursus pharetra. Interdum et malesuada fames ac ante ipsum primis in faucibus. Etiam luctus leo augue, non facilisis nunc aliquam sed. Aliquam erat volutpat. Nam laoreet cursus nunc, id tincidunt justo. Nullam elit magna, finibus at aliquam ut, blandit vel magna. Phasellus ullamcorper urna a leo luctus vestibulum. Duis posuere leo ac lectus auctor, convallis aliquam odio gravida.</p>
+                <p>Sed porttitor turpis quis est pellentesque, in accumsan risus porta. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Maecenas quis elit sed felis dapibus sodales ut auctor nibh. Mauris dapibus diam in ante scelerisque ultrices. Nam tincidunt lorem vel ultricies sodales. Nullam facilisis placerat pulvinar. Nullam in arcu urna. Pellentesque tempus lorem et ligula viverra convallis. Integer id vehicula quam, sit amet dictum urna. Praesent pellentesque hendrerit risus non pharetra. In a libero finibus, hendrerit justo quis, consequat nunc. Sed iaculis efficitur nunc sagittis hendrerit. Praesent ligula augue, malesuada quis pretium semper, facilisis non quam. Phasellus ac placerat mi. Quisque ac fermentum tellus.</p>
+                <p>Duis facilisis aliquet neque, nec dignissim dolor venenatis non. Donec quis consectetur nibh. Ut ut purus in metus pellentesque feugiat non ut augue. Aenean at leo vulputate, viverra ligula ut, aliquam turpis. Cras nunc dui, sollicitudin quis lorem sit amet, auctor mollis libero. Integer non magna ipsum. Etiam ullamcorper urna tortor, nec tempor tortor elementum et. Donec placerat mi nisi, id rhoncus lacus sodales sed. Nullam lorem risus, sollicitudin non lacinia a, scelerisque et mauris. Vivamus nisi enim, egestas ac ante eu, molestie vestibulum felis. Praesent vitae dui tincidunt mi malesuada pharetra. Integer vehicula leo at laoreet tempor. In vestibulum rutrum tellus, eget suscipit orci egestas et. Vestibulum tincidunt aliquam dui, ac pharetra eros commodo ut. Sed tempus eget orci a laoreet. Donec gravida imperdiet congue.</p>
+                <p>Proin at iaculis velit, et finibus lorem. Aenean ac enim pretium, hendrerit nunc in, tincidunt mauris. Suspendisse congue ipsum nec libero sagittis pretium. Quisque vulputate sem est, in laoreet orci sagittis sed. Vestibulum in lectus eleifend, lacinia lectus in, maximus tortor. Mauris quis posuere arcu, nec hendrerit mauris. In pulvinar sodales rhoncus. In hac habitasse platea dictumst. Ut tempor mattis ligula sed dapibus.</p>
+                <p>Sed vel condimentum elit. Donec varius ex eget vestibulum egestas. Cras sed cursus massa, eget feugiat sapien. Cras maximus lectus mi, a rhoncus libero gravida quis. Fusce luctus malesuada elementum. Integer nec lectus convallis, ullamcorper orci eu, bibendum nisl. Cras hendrerit mi fringilla ante egestas pharetra. Ut sollicitudin suscipit turpis, eleifend pharetra nisl mollis sit amet. Nulla mauris elit, venenatis luctus dictum sit amet, aliquet nec leo. Fusce sed sapien libero. In lacus dui, porttitor tempus ullamcorper ac, laoreet id massa. Nulla facilisi.</p>
+                <p>Proin at iaculis velit, et finibus lorem. Aenean ac enim pretium, hendrerit nunc in, tincidunt mauris. Suspendisse congue ipsum nec libero sagittis pretium. Quisque vulputate sem est, in laoreet orci sagittis sed. Vestibulum in lectus eleifend, lacinia lectus in, maximus tortor. Mauris quis posuere arcu, nec hendrerit mauris. In pulvinar sodales rhoncus. In hac habitasse platea dictumst. Ut tempor mattis ligula sed dapibus.</p>
+                <p>Sed vel condimentum elit. Donec varius ex eget vestibulum egestas. Cras sed cursus massa, eget feugiat sapien. Cras maximus lectus mi, a rhoncus libero gravida quis. Fusce luctus malesuada elementum. Integer nec lectus convallis, ullamcorper orci eu, bibendum nisl. Cras hendrerit mi fringilla ante egestas pharetra. Ut sollicitudin suscipit turpis, eleifend pharetra nisl mollis sit amet. Nulla mauris elit, venenatis luctus dictum sit amet, aliquet nec leo. Fusce sed sapien libero. In lacus dui, porttitor tempus ullamcorper ac, laoreet id massa. Nulla facilisi.</p>
+                <p>Proin at iaculis velit, et finibus lorem. Aenean ac enim pretium, hendrerit nunc in, tincidunt mauris. Suspendisse congue ipsum nec libero sagittis pretium. Quisque vulputate sem est, in laoreet orci sagittis sed. Vestibulum in lectus eleifend, lacinia lectus in, maximus tortor. Mauris quis posuere arcu, nec hendrerit mauris. In pulvinar sodales rhoncus. In hac habitasse platea dictumst. Ut tempor mattis ligula sed dapibus.</p>
+                <p>Sed vel condimentum elit. Donec varius ex eget vestibulum egestas. Cras sed cursus massa, eget feugiat sapien. Cras maximus lectus mi, a rhoncus libero gravida quis. Fusce luctus malesuada elementum. Integer nec lectus convallis, ullamcorper orci eu, bibendum nisl. Cras hendrerit mi fringilla ante egestas pharetra. Ut sollicitudin suscipit turpis, eleifend pharetra nisl mollis sit amet. Nulla mauris elit, venenatis luctus dictum sit amet, aliquet nec leo. Fusce sed sapien libero. In lacus dui, porttitor tempus ullamcorper ac, laoreet id massa. Nulla facilisi.</p>
+                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis quam massa, ornare at turpis quis, varius pulvinar lorem. Morbi eleifend nisi eget viverra fermentum. Vivamus interdum dui quis orci placerat semper. Morbi lobortis ex sit amet risus cursus pharetra. Interdum et malesuada fames ac ante ipsum primis in faucibus. Etiam luctus leo augue, non facilisis nunc aliquam sed. Aliquam erat volutpat. Nam laoreet cursus nunc, id tincidunt justo. Nullam elit magna, finibus at aliquam ut, blandit vel magna. Phasellus ullamcorper urna a leo luctus vestibulum. Duis posuere leo ac lectus auctor, convallis aliquam odio gravida.</p>
+                <p>Sed porttitor turpis quis est pellentesque, in accumsan risus porta. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Maecenas quis elit sed felis dapibus sodales ut auctor nibh. Mauris dapibus diam in ante scelerisque ultrices. Nam tincidunt lorem vel ultricies sodales. Nullam facilisis placerat pulvinar. Nullam in arcu urna. Pellentesque tempus lorem et ligula viverra convallis. Integer id vehicula quam, sit amet dictum urna. Praesent pellentesque hendrerit risus non pharetra. In a libero finibus, hendrerit justo quis, consequat nunc. Sed iaculis efficitur nunc sagittis hendrerit. Praesent ligula augue, malesuada quis pretium semper, facilisis non quam. Phasellus ac placerat mi. Quisque ac fermentum tellus.</p>
+                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis quam massa, ornare at turpis quis, varius pulvinar lorem. Morbi eleifend nisi eget viverra fermentum. Vivamus interdum dui quis orci placerat semper. Morbi lobortis ex sit amet risus cursus pharetra. Interdum et malesuada fames ac ante ipsum primis in faucibus. Etiam luctus leo augue, non facilisis nunc aliquam sed. Aliquam erat volutpat. Nam laoreet cursus nunc, id tincidunt justo. Nullam elit magna, finibus at aliquam ut, blandit vel magna. Phasellus ullamcorper urna a leo luctus vestibulum. Duis posuere leo ac lectus auctor, convallis aliquam odio gravida.</p>
+                <p>Sed porttitor turpis quis est pellentesque, in accumsan risus porta. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Maecenas quis elit sed felis dapibus sodales ut auctor nibh. Mauris dapibus diam in ante scelerisque ultrices. Nam tincidunt lorem vel ultricies sodales. Nullam facilisis placerat pulvinar. Nullam in arcu urna. Pellentesque tempus lorem et ligula viverra convallis. Integer id vehicula quam, sit amet dictum urna. Praesent pellentesque hendrerit risus non pharetra. In a libero finibus, hendrerit justo quis, consequat nunc. Sed iaculis efficitur nunc sagittis hendrerit. Praesent ligula augue, malesuada quis pretium semper, facilisis non quam. Phasellus ac placerat mi. Quisque ac fermentum tellus.</p>
+            </div>
+        </div>
+</main>
+
+
+  <!--Modal-->
+    <div class="modal fade modal-fullscreen" id="modalAbout" tabindex="-1" role="dialog" aria-labelledby="modalAboutLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalAboutLabel">About</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>
+                        Aberlorn is currently involved in Microservices Programming, Cloud Solutions Architecture, Mobile App Development and Cybersecurity. 
+                        Past work includes Fortune 500 and` Energy Sector companies. 
+                    </p>
+                    <p>
+                        Aberlorn is the consulting company of <a target="_blank" href="https://github.com/jpfluger">Jaret Pfluger</a>. 
+                        He founded the company in 2001. 
+                        The flags represent the places Jaret has lived long-term which include China, Ukraine and Spain. 
+                        He resides in the United States. 
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js" integrity="sha384-smHYKdLADwkXOn1EmN1qk/HfnUcbVRZyYmZ4qpPea6sjB/pTJ0euyQp0Mk8ck+5T" crossorigin="anonymous"></script>
+  
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.10/lodash.min.js"></script>
+
+<script src="../dist/zzb.js"></script>
+
+
+  <script>
+
+    var topPanelDefaults = {
+        defaultId: 'panelDocGroups',
+        panels: [
+            {id: 'panelDocGroups', isShowing: true},
+            {id: 'panelDocViewer', isShowing: false},
+            {id: 'panelDocEditor', isShowing: false},
+            {id: 'panelDocControls', isShowing: false}
+        ]
+    };
+
+    var tpDefaults = null;
+
+    function setWidths() {
+        var count = 0
+        $.each(tpDefaults.panels, function(index, panel) {
+            if (panel.isShowing) {
+                count++
+            }
+        })
+
+        if (count == 0) {
+            $.each(tpDefaults.panels, function(index, panel) {
+                if (panel.id == tpDefaults.defaultId) {
+                    tpDefaults.panels[index].isShowing = true
+                    setDefaults()
+                    count++
+                    return false
+                }
+            })
+
+            if (count > 0) {
+                console.log('cannot locate topPanelDefaults.defaultId value of ' + topPanelDefaults.defaultId)
+            }
+        } else {
+            var percent = (1 / count) * 100
+            $('body > .panel-column').css('min-width', percent + '%')
+            $('body > .panel-column').css('max-width', percent+ '%')
+        }
+    }
+
+    function togglePanel(id, toggleState, doSetWidths) {
+        $.each(tpDefaults.panels, function(index, panel) {
+            if (panel.id == id) {
+                if (toggleState == true) {
+                    tpDefaults.panels[index].isShowing = true
+                } else if (toggleState == false) {
+                    tpDefaults.panels[index].isShowing = false
+                } else {
+                    // standard toggle
+                    tpDefaults.panels[index].isShowing = !tpDefaults.panels[index].isShowing
+                }
+                if (panel.isShowing) {
+                    $('#' + panel.id).addClass('d-none')
+                } else {
+                    $('#' + panel.id).removeClass('d-none')
+                }
+                return false
+            }
+        })
+
+        if (doSetWidths === true) {
+            setWidths()
+        }
+    }
+
+    function hidePanel(id) {
+        $.each(tpDefaults.panels, function(index, panel) {
+            if (panel.id == id) {
+                tpDefaults.panels[index].isShowing = true
+                $('#' + panel.id).removeClass('d-none')
+                return false
+            }
+        })
+    }
+
+    function getDefaults() {
+        return tpDefaults
+    }
+
+    function setDefaults(tpd) {
+        if (tpd !== undefined && tpd !== null) {
+            tpDefaults = tpd            
+        }
+        $.each(tpDefaults.panels, function(index, panel) {
+            togglePanel(panel.id, panel.isShowing, false)
+        })
+        setWidths(tpDefaults)
+    }
+
+    $(document).ready(function() {
+        $('#leftSidebarDismiss').on('click', function () {
+            $('#leftSidebar').removeClass('active');
+        });
+
+        $('#leftSidebarCollapse').on('click', function () {
+            $('#leftSidebar').addClass('active');
+            // $('#leftSidebar .collapse').addClass('show');
+            // $('#leftSidebar a[aria-expanded=false]').attr('aria-expanded', 'true');
+        });
+
+
+        var dialog = zzb.dialogs.modal({title:'test', body: 'here is some text', buttons: [zzb.dialogs.BUTTON_CLOSE]})
+        dialog.open();
+    });
+
+    function compensateFixedNavBar() {
+        $('body > .compensate-fixed-navbar-height').css('padding-top', parseInt($('#main-navbar').css("height")));
+    }
+    $(window).on('resize', function () {
+        compensateFixedNavBar();
+    });
+
+    $(window).on('load', function () {
+        compensateFixedNavBar();
+    });
+  </script>
+
+</body>
+</html>
