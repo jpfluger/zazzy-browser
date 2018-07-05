@@ -1,6 +1,6 @@
 {
   "name": "zazzy-browser",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A collection of general-purpose browser utilities used as higher-level building-blocks to create Bootstrap v4 websites and assist in client-server communications.",
   "engines": {
     "node": ">= 6.5.0"

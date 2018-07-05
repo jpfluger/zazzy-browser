@@ -135,13 +135,12 @@ var _ = window._
 // ---------------------------------------------------
 
 var ZazzyDialog = function (options) {
+  this.defaultOptions = ZazzyDialog.getDialogDefaults(options)
 
-    this.defaultOptions = ZazzyDialog.getDialogDefaults(options);
-
-    this.defaultOptions.onShow = typeof options.onShow == 'function' ? options.onShow : function () {};
-    this.defaultOptions.onShown = typeof options.onShown == 'function' ? options.onShown : function () {};
-    this.defaultOptions.onHide = typeof options.onHide == 'function' ? options.onHide : function () {};
-    this.defaultOptions.onHidden = typeof options.onHidden == 'function' ? options.onHidden : function () {};
+  this.defaultOptions.onShow = typeof options.onShow == 'function' ? options.onShow : function () {}
+  this.defaultOptions.onShown = typeof options.onShown == 'function' ? options.onShown : function () {}
+  this.defaultOptions.onHide = typeof options.onHide == 'function' ? options.onHide : function () {}
+  this.defaultOptions.onHidden = typeof options.onHidden == 'function' ? options.onHidden : function () {}
 };
 
 ZazzyDialog.getButtonDefaults = function(options) {
