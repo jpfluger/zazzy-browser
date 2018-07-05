@@ -33,4 +33,14 @@ Use gulp to generate javascript distribution files, including the minified versi
 $ gulp default
 ```
 
+## Testing
+
+For dialog testing, open `test/index-test.html` in a browser. You should see a dialog pop-up.
+
+Mocha tests can be run via `npm`.
+
+```bash
+$ npm test
+```
+
 ## [MIT Licensed](LICENSE)

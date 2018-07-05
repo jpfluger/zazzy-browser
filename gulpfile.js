@@ -67,20 +67,20 @@ gulp.task('dist-js', function (cb) {
   })
 
   appBundler
-  .bundle()
-  .pipe(source(paths.distJS))
-  .pipe(buffer())
-  .pipe(insert.prepend(pckInfo.join('\n')))
-  .pipe(gulp.dest('.'))
+    .bundle()
+    .pipe(source(paths.distJS))
+    .pipe(buffer())
+    .pipe(insert.prepend(pckInfo.join('\n')))
+    .pipe(gulp.dest('.'))
   cb()
 })
 
 gulp.task('minify-js', function (cb) {
   return gulp.src([paths.distJS], {base: '.'})
-      .pipe(concat(paths.minJS))
-      .pipe(uglify())
-      .pipe(insert.prepend(pckInfo.join('\n')))
-      .pipe(gulp.dest('.'))
+    .pipe(concat(paths.minJS))
+    .pipe(uglify())
+    .pipe(insert.prepend(pckInfo.join('\n')))
+    .pipe(gulp.dest('.'))
 })
 
 gulp.task('default', ['clean-js', 'lint-js', 'dist-js', 'minify-js'])
