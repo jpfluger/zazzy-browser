@@ -17,7 +17,6 @@
   ],
   "dependencies": {
     "jquery": ">=3",
-    "bootstrap4-fs-modal": "^1.0",
     "lodash": "^4.0"
   },
   "ignore": [

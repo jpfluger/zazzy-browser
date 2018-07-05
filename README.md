@@ -2,7 +2,9 @@
 
 A collection of general-purpose browser utilities used as higher-level building-blocks to create [Bootstrap v4](http://getbootstrap.com/) websites and assist in client-server communications. 
 
-Zazzy Browser depends on [jQuery](https://jquery.com/), [lodash](https://github.com/lodash/lodash) and [Bootstrap Mobile FullScreen Modal](https://github.com/keaukraine/bootstrap4-fs-modal). The last dependency is CSS only and not javascript.
+Zazzy Browser depends on [jQuery](https://jquery.com/), [lodash](https://github.com/lodash/lodash)
+
+Optional is [Bootstrap Mobile FullScreen Modal](https://github.com/keaukraine/bootstrap4-fs-modal) which is CSS only and not javascript. It gives a better look-and-feel to mobile dialogs.
 
 Include in your html page:
 
