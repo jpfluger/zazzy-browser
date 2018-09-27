@@ -58,7 +58,7 @@ _uuid.prototype.isV4 = function (uuid) {
  * Validates ANY version uuid string (eg v1 or v4)
  * @param {String} uuid - the uuid under test
  * @returns {Boolean} true if the uuid under test is a valid uuid
-**/
+ **/
 _uuid.prototype.isValid = function (uuid) {
   var re = /^([a-f\d]{8}(-[a-f\d]{4}){3}-[a-f\d]{12}?)$/i
   return re.test(uuid)

@@ -99,7 +99,7 @@ _strings.prototype.format = formatString({})
  * @param template
  * @param options
  * @returns {String} a merging of object with the supplied template
-**/
+ **/
 _strings.prototype.formatEmpty = function (template) {
   var args = Array.prototype.slice.call(arguments, 1)
   if (Array.isArray(args)) {

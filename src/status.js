@@ -75,20 +75,20 @@ _status.prototype.get = function (options, callback) {
     url: '/zzb/status',
     data: options
   })
-  .then(function (rob) {
-    if (rob.errs) {
-      callback && callback(rob.errs, tmpStatus)
-    } else {
-      if (setSelf) {
-        that.zzbStatus = rob.one()
+    .then(function (rob) {
+      if (rob.errs) {
+        callback && callback(rob.errs, tmpStatus)
+      } else {
+        if (setSelf) {
+          that.zzbStatus = rob.one()
+        }
+        callback && callback(null, rob.one())
       }
-      callback && callback(null, rob.one())
-    }
-  })
-  .catch(function (err) {
-    console.log('failed to retrieve zzbStatus: using defaults')
-    callback && callback(zzb.types.sanitizeErrors(err), tmpStatus)
-  })
+    })
+    .catch(function (err) {
+      console.log('failed to retrieve zzbStatus: using defaults')
+      callback && callback(zzb.types.sanitizeErrors(err), tmpStatus)
+    })
 }
 
 exports.status = _status

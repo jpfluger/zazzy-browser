@@ -168,14 +168,15 @@ ZazzyDialog.getDialogDefaults = function (options) {
     onShown: null,
     onHide: null,
     onHidden: null,
-    doVerticalCenter: true
+    doVerticalCenter: true,
+    doAutoDestroy: true
   }
   return (zzb.types.isObject(options) ? _.merge(dialog, options) : dialog)
 }
 
 ZazzyDialog.BUTTON_CLOSE = 'button-close'
 ZazzyDialog.BUTTON_OK = 'button-ok'
-ZazzyDialog.BUTTON_YES= 'button-yes'
+ZazzyDialog.BUTTON_YES = 'button-yes'
 ZazzyDialog.BUTTON_NO = 'button-no'
 ZazzyDialog.BUTTON_CANCEL = 'button-cancel'
 
@@ -378,8 +379,6 @@ ZazzyDialog.prototype.open = function () {
     this.$modal = this.create$Modal()
     var self = this
 
-    this.$modal.appendTo('body')
-
     // https://getbootstrap.com/docs/4.0/components/modal/#events
     this.$modal.on('show.bs.modal', function (ev) {
       self.onShow(ev)
@@ -396,6 +395,7 @@ ZazzyDialog.prototype.open = function () {
   }
 
   this.$modal.modal('show')
+  this.$modal.appendTo('body')
 }
 
 ZazzyDialog.prototype.onShow = function (ev) {
@@ -412,6 +412,9 @@ ZazzyDialog.prototype.onHide = function (ev) {
 
 ZazzyDialog.prototype.onHidden = function (ev) {
   this.defaultOptions.onHidden(ev, this, this.$modal)
+  if (this.defaultOptions.doAutoDestroy) {
+    this.$modal.remove()
+  }
 }
 
 ZazzyDialog.prototype.close = function () {
@@ -1097,8 +1100,8 @@ _rob.prototype.toListErrs = function (errs, defaultFormat, fieldsTemplate, syste
     _.each(errs, function (err) {
       if (err.system === '_system') {
         arrSystem.push(getSystem(err))
-      } else if (err.field) {
-        arrSystem.push(getField(err))
+      } else if (zzb.types.isNonEmptyString(err.field)) {
+        arrFields.push(getField(err))
       } else {
         arrSystem.push(getSystem(err))
       }

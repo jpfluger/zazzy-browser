@@ -50,13 +50,13 @@ _uib.prototype.createPanel = function (options) {
   }, options)
 
   var template = '<div id="panel_{id}" class="panel panel-default {className}" {attributesExtra}>' +
-                  '<div class="panel-heading {classPanelHeading}>">' +
-                    '{name}' +
-                  '</div>' +
-                  '<div id="panelBody_{id}" class="panel-body {classPanelBody}">' +
-                    this.createPanelBody(options) + // '<div class="panel-body">{innerHtml}</div>'
-                  '</div>' +
-                '</div>'
+    '<div class="panel-heading {classPanelHeading}>">' +
+    '{name}' +
+    '</div>' +
+    '<div id="panelBody_{id}" class="panel-body {classPanelBody}">' +
+    this.createPanelBody(options) + // '<div class="panel-body">{innerHtml}</div>'
+    '</div>' +
+    '</div>'
   return zzb.strings.format(template, options) // _.formatObj(template, uie)
 }
 
@@ -91,17 +91,17 @@ _uib.prototype.createPanelCollapsible = function (options) {
   }
 
   var template = '<div id="panel_{id}" class="panel panel-default {className}" {attributesExtra}>' +
-                  '<div class="panel-heading">' +
-                    '<h4 class="panel-title">' +
-                      '{titleHtmlExtra}<a data-toggle="collapse" data-target="#panelCollapse_{id}" href="#panelCollapse_{id}" class="{_panelCollapsedClass1}{classNamePanelCollapsed}">' +
-                        '{name}' +
-                      '</a> {titleHtmlExtraRight}' +
-                    '</h4>' +
-                  '</div>' +
-                  '<div id="panelCollapse_{id}" class="panel-collapse collapse {_panelCollapsedClass2}">' +
-                    this.createPanelBody(options) + // '<div class="panel-body">{innerHtml}</div>'
-                  '</div>' +
-                '</div>'
+    '<div class="panel-heading">' +
+    '<h4 class="panel-title">' +
+    '{titleHtmlExtra}<a data-toggle="collapse" data-target="#panelCollapse_{id}" href="#panelCollapse_{id}" class="{_panelCollapsedClass1}{classNamePanelCollapsed}">' +
+    '{name}' +
+    '</a> {titleHtmlExtraRight}' +
+    '</h4>' +
+    '</div>' +
+    '<div id="panelCollapse_{id}" class="panel-collapse collapse {_panelCollapsedClass2}">' +
+    this.createPanelBody(options) + // '<div class="panel-body">{innerHtml}</div>'
+    '</div>' +
+    '</div>'
 
   // var test = _.formatObj(template, uie)
   // console.log(test)
@@ -140,15 +140,15 @@ _uib.prototype.createPanelCollapsibleBegin = function (options) {
   }
 
   var template = '<div class="panel panel-default {className}" id="panel_{id}" {attributesExtra}>' +
-                    '<div class="panel-heading">' +
-                      '<h4 class="panel-title">' +
-                        '{titleHtmlExtra}<a data-toggle="collapse" data-target="#panelCollapse_{id}" href="#panelCollapse_{id}" class="{_panelCollapsedClass1}{classNamePanelCollapsed}">' +
-                        '{name}' +
-                        '</a> {titleHtmlExtraRight}' +
-                      '</h4>' +
-                    '</div>' +
-                    '<div id="panelCollapse_{id}" class="panel-collapse collapse {_panelCollapsedClass2}">' +
-                  '<div class="panel-body" id="panelBody_{id}">'
+    '<div class="panel-heading">' +
+    '<h4 class="panel-title">' +
+    '{titleHtmlExtra}<a data-toggle="collapse" data-target="#panelCollapse_{id}" href="#panelCollapse_{id}" class="{_panelCollapsedClass1}{classNamePanelCollapsed}">' +
+    '{name}' +
+    '</a> {titleHtmlExtraRight}' +
+    '</h4>' +
+    '</div>' +
+    '<div id="panelCollapse_{id}" class="panel-collapse collapse {_panelCollapsedClass2}">' +
+    '<div class="panel-body" id="panelBody_{id}">'
 
   return zzb.strings.format(template, options) // _.formatObj(template, uie)
 }

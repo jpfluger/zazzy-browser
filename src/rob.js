@@ -176,8 +176,8 @@ _rob.prototype.toListErrs = function (errs, defaultFormat, fieldsTemplate, syste
     _.each(errs, function (err) {
       if (err.system === '_system') {
         arrSystem.push(getSystem(err))
-      } else if (err.field) {
-        arrSystem.push(getField(err))
+      } else if (zzb.types.isNonEmptyString(err.field)) {
+        arrFields.push(getField(err))
       } else {
         arrSystem.push(getSystem(err))
       }

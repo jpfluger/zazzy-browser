@@ -43,14 +43,15 @@ ZazzyDialog.getDialogDefaults = function (options) {
     onShown: null,
     onHide: null,
     onHidden: null,
-    doVerticalCenter: true
+    doVerticalCenter: true,
+    doAutoDestroy: true
   }
   return (zzb.types.isObject(options) ? _.merge(dialog, options) : dialog)
 }
 
 ZazzyDialog.BUTTON_CLOSE = 'button-close'
 ZazzyDialog.BUTTON_OK = 'button-ok'
-ZazzyDialog.BUTTON_YES= 'button-yes'
+ZazzyDialog.BUTTON_YES = 'button-yes'
 ZazzyDialog.BUTTON_NO = 'button-no'
 ZazzyDialog.BUTTON_CANCEL = 'button-cancel'
 
@@ -171,20 +172,20 @@ ZazzyDialog.prototype.create$Modal = function () {
   }
 
   var template = '<div class="modal fade modal-fullscreen {cssClass}" id="{id}" tabindex="-1" role="dialog" aria-labelledby="{arialabel}" aria-hidden="true">' +
-                   '<div class="modal-dialog{classVerticalCenter}" role="document">' +
-                     '<div class="modal-content">' +
-                       '<div class="modal-header{classModalHeader}">' +
-                         '<h5 class="modal-title" id="{arialabel}">{title}</h5>' +
-                           '<button type="button" class="close" data-dismiss="modal" aria-label="Close">' +
-                             '<span aria-hidden="true">&times;</span>' +
-                           '</button>' +
-                         '</div>' +
-                        '<div class="modal-body">{body}</div>' +
-                        '<div class="modal-footer">' +
-                        '</div>' +
-                      '</div>' +
-                    '</div>' +
-                  '</div>'
+    '<div class="modal-dialog{classVerticalCenter}" role="document">' +
+    '<div class="modal-content">' +
+    '<div class="modal-header{classModalHeader}">' +
+    '<h5 class="modal-title" id="{arialabel}">{title}</h5>' +
+    '<button type="button" class="close" data-dismiss="modal" aria-label="Close">' +
+    '<span aria-hidden="true">&times;</span>' +
+    '</button>' +
+    '</div>' +
+    '<div class="modal-body">{body}</div>' +
+    '<div class="modal-footer">' +
+    '</div>' +
+    '</div>' +
+    '</div>' +
+    '</div>'
 
   var $modal = $(zzb.strings.format(template, options))
 
@@ -253,8 +254,6 @@ ZazzyDialog.prototype.open = function () {
     this.$modal = this.create$Modal()
     var self = this
 
-    this.$modal.appendTo('body')
-
     // https://getbootstrap.com/docs/4.0/components/modal/#events
     this.$modal.on('show.bs.modal', function (ev) {
       self.onShow(ev)
@@ -271,6 +270,7 @@ ZazzyDialog.prototype.open = function () {
   }
 
   this.$modal.modal('show')
+  this.$modal.appendTo('body')
 }
 
 ZazzyDialog.prototype.onShow = function (ev) {
@@ -287,6 +287,9 @@ ZazzyDialog.prototype.onHide = function (ev) {
 
 ZazzyDialog.prototype.onHidden = function (ev) {
   this.defaultOptions.onHidden(ev, this, this.$modal)
+  if (this.defaultOptions.doAutoDestroy) {
+    this.$modal.remove()
+  }
 }
 
 ZazzyDialog.prototype.close = function () {
@@ -344,7 +347,7 @@ _dialogs.prototype.showMessageChoice = function (options) {
 
 _dialogs.prototype.handleError = function (options) {
   var template = '<div class="zzb-dialog-errors">{errors}</div>' +
-                 '<div class="zzb-dialog-message">{message}</div>'
+    '<div class="zzb-dialog-message">{message}</div>'
 
   // this.dialogs.handleError({log: 'failed to retrieve login dialog form: ' + err, title: 'Unknown error', message: 'An unknown communications error occurred while retrieving the login form. Please check your connection settings and try again.'})
   options = _.merge({
