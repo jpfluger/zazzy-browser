@@ -1,5 +1,5 @@
 //! zzb.js
-//! version: 1.1.2
+//! version: 1.1.3
 //! author(s): Jaret Pfluger
 //! license: MIT
 //! https://github.com/jpfluger/zazzy-browser
@@ -297,20 +297,20 @@ ZazzyDialog.prototype.create$Modal = function () {
   }
 
   var template = '<div class="modal fade modal-fullscreen {cssClass}" id="{id}" tabindex="-1" role="dialog" aria-labelledby="{arialabel}" aria-hidden="true">' +
-                   '<div class="modal-dialog{classVerticalCenter}" role="document">' +
-                     '<div class="modal-content">' +
-                       '<div class="modal-header{classModalHeader}">' +
-                         '<h5 class="modal-title" id="{arialabel}">{title}</h5>' +
-                           '<button type="button" class="close" data-dismiss="modal" aria-label="Close">' +
-                             '<span aria-hidden="true">&times;</span>' +
-                           '</button>' +
-                         '</div>' +
-                        '<div class="modal-body">{body}</div>' +
-                        '<div class="modal-footer">' +
-                        '</div>' +
-                      '</div>' +
-                    '</div>' +
-                  '</div>'
+    '<div class="modal-dialog{classVerticalCenter}" role="document">' +
+    '<div class="modal-content">' +
+    '<div class="modal-header{classModalHeader}">' +
+    '<h5 class="modal-title" id="{arialabel}">{title}</h5>' +
+    '<button type="button" class="close" data-dismiss="modal" aria-label="Close">' +
+    '<span aria-hidden="true">&times;</span>' +
+    '</button>' +
+    '</div>' +
+    '<div class="modal-body">{body}</div>' +
+    '<div class="modal-footer">' +
+    '</div>' +
+    '</div>' +
+    '</div>' +
+    '</div>'
 
   var $modal = $(zzb.strings.format(template, options))
 
@@ -472,7 +472,7 @@ _dialogs.prototype.showMessageChoice = function (options) {
 
 _dialogs.prototype.handleError = function (options) {
   var template = '<div class="zzb-dialog-errors">{errors}</div>' +
-                 '<div class="zzb-dialog-message">{message}</div>'
+    '<div class="zzb-dialog-message">{message}</div>'
 
   // this.dialogs.handleError({log: 'failed to retrieve login dialog form: ' + err, title: 'Unknown error', message: 'An unknown communications error occurred while retrieving the login form. Please check your connection settings and try again.'})
   options = _.merge({
@@ -1206,20 +1206,20 @@ _status.prototype.get = function (options, callback) {
     url: '/zzb/status',
     data: options
   })
-  .then(function (rob) {
-    if (rob.errs) {
-      callback && callback(rob.errs, tmpStatus)
-    } else {
-      if (setSelf) {
-        that.zzbStatus = rob.one()
+    .then(function (rob) {
+      if (rob.errs) {
+        callback && callback(rob.errs, tmpStatus)
+      } else {
+        if (setSelf) {
+          that.zzbStatus = rob.one()
+        }
+        callback && callback(null, rob.one())
       }
-      callback && callback(null, rob.one())
-    }
-  })
-  .catch(function (err) {
-    console.log('failed to retrieve zzbStatus: using defaults')
-    callback && callback(zzb.types.sanitizeErrors(err), tmpStatus)
-  })
+    })
+    .catch(function (err) {
+      console.log('failed to retrieve zzbStatus: using defaults')
+      callback && callback(zzb.types.sanitizeErrors(err), tmpStatus)
+    })
 }
 
 exports.status = _status
@@ -1326,7 +1326,7 @@ _strings.prototype.format = formatString({})
  * @param template
  * @param options
  * @returns {String} a merging of object with the supplied template
-**/
+ **/
 _strings.prototype.formatEmpty = function (template) {
   var args = Array.prototype.slice.call(arguments, 1)
   if (Array.isArray(args)) {
@@ -1563,13 +1563,13 @@ _uib.prototype.createPanel = function (options) {
   }, options)
 
   var template = '<div id="panel_{id}" class="panel panel-default {className}" {attributesExtra}>' +
-                  '<div class="panel-heading {classPanelHeading}>">' +
-                    '{name}' +
-                  '</div>' +
-                  '<div id="panelBody_{id}" class="panel-body {classPanelBody}">' +
-                    this.createPanelBody(options) + // '<div class="panel-body">{innerHtml}</div>'
-                  '</div>' +
-                '</div>'
+    '<div class="panel-heading {classPanelHeading}>">' +
+    '{name}' +
+    '</div>' +
+    '<div id="panelBody_{id}" class="panel-body {classPanelBody}">' +
+    this.createPanelBody(options) + // '<div class="panel-body">{innerHtml}</div>'
+    '</div>' +
+    '</div>'
   return zzb.strings.format(template, options) // _.formatObj(template, uie)
 }
 
@@ -1604,17 +1604,17 @@ _uib.prototype.createPanelCollapsible = function (options) {
   }
 
   var template = '<div id="panel_{id}" class="panel panel-default {className}" {attributesExtra}>' +
-                  '<div class="panel-heading">' +
-                    '<h4 class="panel-title">' +
-                      '{titleHtmlExtra}<a data-toggle="collapse" data-target="#panelCollapse_{id}" href="#panelCollapse_{id}" class="{_panelCollapsedClass1}{classNamePanelCollapsed}">' +
-                        '{name}' +
-                      '</a> {titleHtmlExtraRight}' +
-                    '</h4>' +
-                  '</div>' +
-                  '<div id="panelCollapse_{id}" class="panel-collapse collapse {_panelCollapsedClass2}">' +
-                    this.createPanelBody(options) + // '<div class="panel-body">{innerHtml}</div>'
-                  '</div>' +
-                '</div>'
+    '<div class="panel-heading">' +
+    '<h4 class="panel-title">' +
+    '{titleHtmlExtra}<a data-toggle="collapse" data-target="#panelCollapse_{id}" href="#panelCollapse_{id}" class="{_panelCollapsedClass1}{classNamePanelCollapsed}">' +
+    '{name}' +
+    '</a> {titleHtmlExtraRight}' +
+    '</h4>' +
+    '</div>' +
+    '<div id="panelCollapse_{id}" class="panel-collapse collapse {_panelCollapsedClass2}">' +
+    this.createPanelBody(options) + // '<div class="panel-body">{innerHtml}</div>'
+    '</div>' +
+    '</div>'
 
   // var test = _.formatObj(template, uie)
   // console.log(test)
@@ -1653,15 +1653,15 @@ _uib.prototype.createPanelCollapsibleBegin = function (options) {
   }
 
   var template = '<div class="panel panel-default {className}" id="panel_{id}" {attributesExtra}>' +
-                    '<div class="panel-heading">' +
-                      '<h4 class="panel-title">' +
-                        '{titleHtmlExtra}<a data-toggle="collapse" data-target="#panelCollapse_{id}" href="#panelCollapse_{id}" class="{_panelCollapsedClass1}{classNamePanelCollapsed}">' +
-                        '{name}' +
-                        '</a> {titleHtmlExtraRight}' +
-                      '</h4>' +
-                    '</div>' +
-                    '<div id="panelCollapse_{id}" class="panel-collapse collapse {_panelCollapsedClass2}">' +
-                  '<div class="panel-body" id="panelBody_{id}">'
+    '<div class="panel-heading">' +
+    '<h4 class="panel-title">' +
+    '{titleHtmlExtra}<a data-toggle="collapse" data-target="#panelCollapse_{id}" href="#panelCollapse_{id}" class="{_panelCollapsedClass1}{classNamePanelCollapsed}">' +
+    '{name}' +
+    '</a> {titleHtmlExtraRight}' +
+    '</h4>' +
+    '</div>' +
+    '<div id="panelCollapse_{id}" class="panel-collapse collapse {_panelCollapsedClass2}">' +
+    '<div class="panel-body" id="panelBody_{id}">'
 
   return zzb.strings.format(template, options) // _.formatObj(template, uie)
 }
@@ -1738,7 +1738,7 @@ _uuid.prototype.isV4 = function (uuid) {
  * Validates ANY version uuid string (eg v1 or v4)
  * @param {String} uuid - the uuid under test
  * @returns {Boolean} true if the uuid under test is a valid uuid
-**/
+ **/
 _uuid.prototype.isValid = function (uuid) {
   var re = /^([a-f\d]{8}(-[a-f\d]{4}){3}-[a-f\d]{12}?)$/i
   return re.test(uuid)
