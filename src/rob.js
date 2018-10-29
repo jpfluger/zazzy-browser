@@ -12,6 +12,11 @@ _rob.prototype.newROB = function (options) {
     errs: null,
     recs: [],
     fields: [],
+    paginate: {
+      page: 0,
+      limit: 0,
+      count: 0
+    },
     hasErrors: function () {
       return (this.errs && Array.isArray(this.errs) && this.errs.length > 0)
     },

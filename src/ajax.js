@@ -59,7 +59,7 @@ function _ajax () {
             // Records are ALWAYS an array
             if (!data.ISROBRECS) {
               if (data.recs) {
-                data.recs = zzb.rob.sanitizeRecords(data.rec)
+                data.recs = zzb.rob.sanitizeRecords(data.recs)
               } else if (data.rec) {
                 data.recs = zzb.rob.sanitizeRecords(data.rec)
                 data.rec = null
@@ -67,6 +67,10 @@ function _ajax () {
                 // pass in self
                 data.recs = zzb.rob.sanitizeRecords(data)
               }
+            }
+
+            if (data.paginate) {
+              rob.paginate = data.paginate
             }
 
             rob.errs = data.errs
