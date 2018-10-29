@@ -1,5 +1,5 @@
 //! zzb.js
-//! version: 1.1.3
+//! version: 1.1.4
 //! author(s): Jaret Pfluger
 //! license: MIT
 //! https://github.com/jpfluger/zazzy-browser
@@ -65,7 +65,7 @@ function _ajax () {
             // Records are ALWAYS an array
             if (!data.ISROBRECS) {
               if (data.recs) {
-                data.recs = zzb.rob.sanitizeRecords(data.rec)
+                data.recs = zzb.rob.sanitizeRecords(data.recs)
               } else if (data.rec) {
                 data.recs = zzb.rob.sanitizeRecords(data.rec)
                 data.rec = null
@@ -73,6 +73,10 @@ function _ajax () {
                 // pass in self
                 data.recs = zzb.rob.sanitizeRecords(data)
               }
+            }
+
+            if (data.paginate) {
+              rob.paginate = data.paginate
             }
 
             rob.errs = data.errs
@@ -936,6 +940,11 @@ _rob.prototype.newROB = function (options) {
     errs: null,
     recs: [],
     fields: [],
+    paginate: {
+      page: 0,
+      limit: 0,
+      count: 0
+    },
     hasErrors: function () {
       return (this.errs && Array.isArray(this.errs) && this.errs.length > 0)
     },
