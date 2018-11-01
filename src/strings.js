@@ -7,27 +7,10 @@ var _ = require('lodash')
 
 var _strings = function () {}
 
-//  ValueError :: String -> Error
-var formatValueError = function (message) {
+function ValueError (message) {
   var err = new Error(message)
   err.name = 'ValueError'
   return err
-}
-
-//  defaultTo :: a,a? -> a
-var formatDefaultTo = function (x, y) {
-  return y == null ? x : y
-}
-
-var formatLookup = function (obj, path) {
-  if (!/^\d+$/.test(path[0])) {
-    path = ['0'].concat(path)
-  }
-  for (var idx = 0; idx < path.length; idx += 1) {
-    var key = path[idx]
-    obj = typeof obj[key] === 'function' ? obj[key]() : obj[key]
-  }
-  return obj
 }
 
 // https://github.com/davidchambers/string-format
@@ -50,33 +33,48 @@ var formatString = function (transformers) {
 
     return template.replace(
       /([{}])\1|[{](.*?)(?:!(.+?))?[}]/g,
-      function (match, literal, key, xf) {
+      function (match, literal, _key, xf) {
         if (literal != null) {
           return literal
         }
+        var key = _key
         if (key.length > 0) {
           if (state === 'IMPLICIT') {
-            throw formatValueError('cannot switch from ' +
+            throw ValueError('cannot switch from ' +
               'implicit to explicit numbering')
           }
           state = 'EXPLICIT'
         } else {
           if (state === 'EXPLICIT') {
-            throw formatValueError('cannot switch from ' +
+            throw ValueError('cannot switch from ' +
               'explicit to implicit numbering')
           }
           state = 'IMPLICIT'
           key = String(idx)
           idx += 1
         }
-        var value = formatDefaultTo('', formatLookup(args, key.split('.')))
+
+        //  1.  Split the key into a lookup path.
+        //  2.  If the first path component is not an index, prepend '0'.
+        //  3.  Reduce the lookup path to a single result. If the lookup
+        //      succeeds the result is a singleton array containing the
+        //      value at the lookup path; otherwise the result is [].
+        //  4.  Unwrap the result by reducing with '' as the default value.
+        var path = key.split('.')
+        var value = (/^\d+$/.test(path[0]) ? path : ['0'].concat(path))
+          .reduce(function (maybe, key) {
+            return maybe.reduce(function (_, x) {
+              return x != null && key in Object(x) ? [typeof x[key] === 'function' ? x[key]() : x[key]] : []
+            }, [])
+          }, [args])
+          .reduce(function (_, x) { return x }, '')
 
         if (xf == null) {
           return value
         } else if (Object.prototype.hasOwnProperty.call(transformers, xf)) {
           return transformers[xf](value)
         } else {
-          throw formatValueError('no transformer named "' + xf + '"')
+          throw ValueError('no transformer named "' + xf + '"')
         }
       }
     )

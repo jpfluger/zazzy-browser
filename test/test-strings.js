@@ -38,7 +38,7 @@ describe('Validate zzb.string methods', function () {
       var err = null
       var compare = zzb.strings.format(sPigTemplateNumber, 'Piggy', 2, 's')
       if (compare !== sPig2) {
-        err = new Error('failed matcy from strings')
+        err = new Error('failed match from strings')
       }
       done(err)
     })
@@ -46,7 +46,7 @@ describe('Validate zzb.string methods', function () {
       var err = null
       var compare = zzb.strings.format(sPigTemplateNumber, ['Piggy', 2, 's'])
       if (compare !== sPig2) {
-        err = new Error('failed matcy from strings')
+        err = new Error('failed match from strings')
       }
       done(err)
     })
@@ -54,7 +54,7 @@ describe('Validate zzb.string methods', function () {
       var err = null
       var compare = zzb.strings.format(sPigTemplateNamed, {name: 'Piggy', number: 2, ending: 's'})
       if (compare !== sPig2) {
-        err = new Error('failed matcy from strings')
+        err = new Error('failed match from strings')
       }
       done(err)
     })
