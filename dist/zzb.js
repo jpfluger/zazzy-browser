@@ -1,5 +1,5 @@
 //! zzb.js
-//! version: 1.1.7
+//! version: 1.1.8
 //! author(s): Jaret Pfluger
 //! license: MIT
 //! https://github.com/jpfluger/zazzy-browser
