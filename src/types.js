@@ -60,6 +60,10 @@ _types.prototype.isFunction = function (fn) {
   return fn && getType.toString.call(fn) === '[object Function]'
 }
 
+_types.prototype.isBoolean = function (b) {
+  return (typeof b === 'boolean')
+}
+
 /**
  * compare
  *

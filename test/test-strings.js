@@ -32,6 +32,7 @@ describe('Validate zzb.string methods', function () {
   var sPig2 = 'Piggy, you have 2 mushrooms'
   var sPigTemplateNumber = '{0}, you have {1} mushroom{2}'
   var sPigTemplateNamed = '{name}, you have {number} mushroom{ending}'
+  var sPigTemplateNamedDeep = '{ob1.name}, you have {number} mushroom{ob2.objsub1.ending}'
 
   describe('zzb.strings.format', function () {
     it('should match template-number from strings', function (done) {
@@ -53,6 +54,14 @@ describe('Validate zzb.string methods', function () {
     it('should match template-named from object', function (done) {
       var err = null
       var compare = zzb.strings.format(sPigTemplateNamed, {name: 'Piggy', number: 2, ending: 's'})
+      if (compare !== sPig2) {
+        err = new Error('failed match from strings')
+      }
+      done(err)
+    })
+    it('should deep-match template-named from object', function (done) {
+      var err = null
+      var compare = zzb.strings.format(sPigTemplateNamedDeep, {ob1: {name: 'Piggy'}, number: 2, ob2: {objsub1: {ending: 's'}}})
       if (compare !== sPig2) {
         err = new Error('failed match from strings')
       }
