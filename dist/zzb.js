@@ -1,5 +1,5 @@
 //! zzb.js
-//! version: 1.1.6
+//! version: 1.1.7
 //! author(s): Jaret Pfluger
 //! license: MIT
 //! https://github.com/jpfluger/zazzy-browser
@@ -1495,6 +1495,10 @@ _types.prototype.isString = function (s) {
 _types.prototype.isFunction = function (fn) {
   var getType = {}
   return fn && getType.toString.call(fn) === '[object Function]'
+}
+
+_types.prototype.isBoolean = function (b) {
+  return (typeof b === 'boolean')
 }
 
 /**
