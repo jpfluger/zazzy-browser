@@ -1,5 +1,5 @@
 //! zzb.js
-//! version: 1.1.8
+//! version: 1.1.9
 //! author(s): Jaret Pfluger
 //! license: MIT
 //! https://github.com/jpfluger/zazzy-browser
@@ -54,8 +54,8 @@ function _ajax () {
                 data.errs = zzb.rob.sanitizeErrors(data.err)
                 data.err = null
               } else if (data.error) {
-                data.error = zzb.rob.sanitizeErrors(data.error)
-                data.error = null
+                data.errs = zzb.rob.sanitizeErrors(data.error)
+                data.err = null
               } else if (data.errs) {
                 data.errs = zzb.rob.sanitizeErrors(data.errs)
                 data.err = null
@@ -69,7 +69,7 @@ function _ajax () {
               } else if (data.rec) {
                 data.recs = zzb.rob.sanitizeRecords(data.rec)
                 data.rec = null
-              } else {
+              } else if (!Array.isArray(data.errs) || data.errs.length === 0) {
                 // pass in self
                 data.recs = zzb.rob.sanitizeRecords(data)
               }
