@@ -16,7 +16,7 @@
     "zazzy"
   ],
   "dependencies": {
-    "jquery": ">=3",
+    "jquery": ">=3.4",
     "lodash": "^4.0"
   },
   "ignore": [
