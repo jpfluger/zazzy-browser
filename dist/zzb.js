@@ -1,5 +1,5 @@
 //! zzb.js
-//! version: 1.1.13
+//! version: 1.1.14
 //! author(s): Jaret Pfluger
 //! license: MIT
 //! https://github.com/jpfluger/zazzy-browser
@@ -166,6 +166,7 @@ ZazzyDialog.getDialogDefaults = function (options) {
     type: ZazzyDialog.TYPE_NONE,
     className: '',
     extraAttributes: '',
+    noFade: false,
     title: '',
     body: '',
     buttons: [],
@@ -297,6 +298,11 @@ ZazzyDialog.prototype.create$Modal = function () {
     classModalHeader: ''
   }, this.defaultOptions)
 
+  options.classFade = 'fade'
+  if (zzb.types.isBoolean(options.noFade) && options.noFade === true) {
+    options.classFade = ''
+  }
+
   if (!ZazzyDialog.isTypeNone(this.defaultOptions.type)) {
     options.classModalHeader += ' alert-' + this.defaultOptions.type
   }
@@ -309,7 +315,7 @@ ZazzyDialog.prototype.create$Modal = function () {
     options.extraAttributes += ' data-keyboard="' + options.dataKeyboard + '"'
   }
 
-  var template = '<div class="modal fade modal-fullscreen {className}" {extraAttributes} id="{id}" tabindex="-1" role="dialog" aria-labelledby="{arialabel}" aria-hidden="true">' +
+  var template = '<div class="modal {classFade} modal-fullscreen {className}" {extraAttributes} id="{id}" tabindex="-1" role="dialog" aria-labelledby="{arialabel}" aria-hidden="true">' +
     '<div class="modal-dialog{classVerticalCenter}" role="document">' +
     '<div class="modal-content">' +
     '<div class="modal-header{classModalHeader}">' +
