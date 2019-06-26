@@ -36,6 +36,7 @@ ZazzyDialog.getDialogDefaults = function (options) {
     id: zzb.uuid.newV4(),
     type: ZazzyDialog.TYPE_NONE,
     className: '',
+    extraAttributes: '',
     title: '',
     body: '',
     buttons: [],
@@ -171,7 +172,15 @@ ZazzyDialog.prototype.create$Modal = function () {
     options.classModalHeader += ' alert-' + this.defaultOptions.type
   }
 
-  var template = '<div class="modal fade modal-fullscreen {className}" id="{id}" tabindex="-1" role="dialog" aria-labelledby="{arialabel}" aria-hidden="true">' +
+  if (zzb.types.isNonEmptyString(options.dataBackdrop)) {
+    options.extraAttributes += ' data-backdrop="' + options.dataBackdrop + '"'
+  }
+
+  if (zzb.types.isBoolean(options.dataKeyboard)) {
+    options.extraAttributes += ' data-keyboard="' + options.dataKeyboard + '"'
+  }
+
+  var template = '<div class="modal fade modal-fullscreen {className}" {extraAttributes} id="{id}" tabindex="-1" role="dialog" aria-labelledby="{arialabel}" aria-hidden="true">' +
     '<div class="modal-dialog{classVerticalCenter}" role="document">' +
     '<div class="modal-content">' +
     '<div class="modal-header{classModalHeader}">' +
