@@ -1,5 +1,5 @@
 //! zzb.js
-//! version: 1.1.11
+//! version: 1.1.12
 //! author(s): Jaret Pfluger
 //! license: MIT
 //! https://github.com/jpfluger/zazzy-browser
@@ -286,7 +286,7 @@ ZazzyDialog.prototype.getBody = function () {
 }
 
 ZazzyDialog.prototype.create$Modal = function () {
-  var options = {
+  var options = _.merge({
     id: this.getId(),
     arialabel: 'arialabel' + this.getId(),
     className: this.getClassName(),
@@ -294,13 +294,13 @@ ZazzyDialog.prototype.create$Modal = function () {
     body: this.getBody(),
     classVerticalCenter: (this.defaultOptions.doVerticalCenter ? ' modal-dialog-centered' : ''),
     classModalHeader: ''
-  }
+  }, this.defaultOptions)
 
   if (!ZazzyDialog.isTypeNone(this.defaultOptions.type)) {
     options.classModalHeader += ' alert-' + this.defaultOptions.type
   }
 
-  var template = '<div class="modal fade modal-fullscreen {cssClass}" id="{id}" tabindex="-1" role="dialog" aria-labelledby="{arialabel}" aria-hidden="true">' +
+  var template = '<div class="modal fade modal-fullscreen {className}" id="{id}" tabindex="-1" role="dialog" aria-labelledby="{arialabel}" aria-hidden="true">' +
     '<div class="modal-dialog{classVerticalCenter}" role="document">' +
     '<div class="modal-content">' +
     '<div class="modal-header{classModalHeader}">' +
