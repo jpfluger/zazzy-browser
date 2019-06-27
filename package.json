@@ -1,6 +1,6 @@
 {
   "name": "zazzy-browser",
-  "version": "1.1.15",
+  "version": "1.1.16",
   "description": "A collection of general-purpose browser utilities used as higher-level building-blocks to create Bootstrap v4 websites and assist in client-server communications.",
   "engines": {
     "node": ">= 6.5.0"
@@ -33,21 +33,21 @@
     "lodash": "^4.17.4"
   },
   "devDependencies": {
-    "mocha": "^5.2.0",
-    "standard": "^11.0.1",
+    "browserify": "^14.4.0",
+    "browserify-transform-tools": "^1.7.0",
     "chai": "^4.1.2",
-    "gulp": "^3.9.1",
-    "rimraf": "^2.6.1",
     "fs-extra": "^6.0.1",
-    "gulp-insert": "^0.5.0",
+    "gulp": "^3.9.1",
     "gulp-concat": "^2.6.1",
     "gulp-eslint": "^3.0.1",
-    "gulp-uglify": "^3.0.0",
-    "browserify": "^14.4.0",
-    "vinyl-source-stream": "^1.1.0",
+    "gulp-insert": "^0.5.0",
+    "gulp-uglify": "^3.0.2",
+    "js-yaml": ">=3.13.1",
+    "mocha": "^5.2.0",
+    "rimraf": "^2.6.3",
+    "standard": "^11.0.1",
     "vinyl-buffer": "^1.0.0",
-    "browserify-transform-tools": "^1.7.0",
-    "js-yaml": ">=3.13.1"
+    "vinyl-source-stream": "^1.1.0"
   },
   "standard": {
     "globals": [
