@@ -46,7 +46,14 @@ ZazzyDialog.getDialogDefaults = function (options) {
     onHide: null,
     onHidden: null,
     doVerticalCenter: true,
-    doAutoDestroy: true
+    doAutoDestroy: true,
+    underlay: {
+      isOn: false,
+      id: null,
+      className: '',
+      bg: '#838383',
+      opacity: 0.5
+    }
   }
   return (zzb.types.isObject(options) ? _.merge(dialog, options) : dialog)
 }
@@ -284,6 +291,32 @@ ZazzyDialog.prototype.open = function () {
     })
   }
 
+  if (zzb.types.isObject(this.defaultOptions.underlay) && this.defaultOptions.underlay.isOn === true) {
+    if (!zzb.types.isNonEmptyString(this.defaultOptions.underlay.id)) {
+      this.defaultOptions.underlay.id = 'zzbModalUnderlay'
+    }
+    var $underlay = $underlay = $('#' + this.defaultOptions.underlay.id)
+    if ($underlay.length === 0) {
+      var underlayAttributes = []
+      if (zzb.types.isNonEmptyString(this.defaultOptions.underlay.className)) {
+        underlayAttributes.push(' class="' + this.defaultOptions.underlay.className + '"')
+      } else {
+        underlayAttributes.push(' style="')
+        underlayAttributes.push('position:absolute;top:0;left:0;width:100%;height:100%;display:none;')
+        if (zzb.types.isNonEmptyString(this.defaultOptions.underlay.bg)) {
+          underlayAttributes.push('background-color:' + this.defaultOptions.underlay.bg + ';')
+          if (zzb.types.isNumber(this.defaultOptions.underlay.opacity)) {
+            underlayAttributes.push('opacity:' + this.defaultOptions.underlay.opacity + ';')
+          }
+        }
+        underlayAttributes.push('"')
+      }
+      $('<div id="' + this.defaultOptions.underlay.id + '" ' + underlayAttributes.join('') + '></div>').appendTo('body')
+      $underlay = $('#' + this.defaultOptions.underlay.id)
+    }
+    $underlay.show()
+  }
+
   this.$modal.modal('show')
   this.$modal.appendTo('body')
 }
@@ -309,15 +342,33 @@ ZazzyDialog.prototype.onHidden = function (ev) {
 
 ZazzyDialog.prototype.close = function () {
   this.$modal.modal('hide')
+  if (zzb.types.isObject(this.defaultOptions.underlay) && this.defaultOptions.underlay.isOn === true) {
+    if (zzb.types.isNonEmptyString(this.defaultOptions.underlay.id)) {
+      var $underlay = $underlay = $('#' + this.defaultOptions.underlay.id)
+      if ($underlay.length > 0) {
+        $underlay.hide()
+      }
+    }
+  }
 }
 
-ZazzyDialog.prototype.hide = function () {
+ZazzyDialog.prototype.destroy = function () {
   // delete dialog from the body
   this.$modal.modal('hide')
   this.$modal.modal('dispose')
   if ($('#' + this.getId()).length > 0) {
     $('#' + this.getId()).remove()
   }
+
+  if (zzb.types.isObject(this.defaultOptions.underlay) && this.defaultOptions.underlay.isOn === true) {
+    if (zzb.types.isNonEmptyString(this.defaultOptions.underlay.id)) {
+      var $underlay = $underlay = $('#' + this.defaultOptions.underlay.id)
+      if ($underlay.length > 0) {
+        $underlay.remove()
+      }
+    }
+  }
+
   this.$modal = null
 }
 
