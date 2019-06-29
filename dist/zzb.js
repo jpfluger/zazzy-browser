@@ -1,5 +1,5 @@
 //! zzb.js
-//! version: 1.1.16
+//! version: 1.1.17
 //! author(s): Jaret Pfluger
 //! license: MIT
 //! https://github.com/jpfluger/zazzy-browser
@@ -93,7 +93,9 @@ function _ajax () {
           //  }
           // }
           reject(errorThrown)
-          console.log(errorThrown)
+          if (options.NOFAILLOG === true) {
+            console.log(errorThrown)
+          }
         })
     })
   }

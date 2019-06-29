@@ -87,7 +87,9 @@ function _ajax () {
           //  }
           // }
           reject(errorThrown)
-          console.log(errorThrown)
+          if (options.NOFAILLOG === true) {
+            console.log(errorThrown)
+          }
         })
     })
   }
