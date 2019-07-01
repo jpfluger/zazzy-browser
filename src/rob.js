@@ -76,7 +76,7 @@ function mergeErrorDefaults (options) {
   // why we have isErr?
   //   server-side supports logger { emerg: 0, alert: 1, crit: 2, error: 3, warning: 4, notice: 5, info: 6, debug: 7 }
   //   of which numbers 0 to 3 are errors and > 4 are not
-  options = _.merge({type: 'error', message: null, field: '_system', stack: null, isErr: true}, options)
+  options = _.merge({type: 'error', message: null, field: '_system', stack: null, isErr: true, title: null}, options)
 
   if (options.isErr) {
     switch (options.type) {
@@ -190,7 +190,7 @@ _rob.prototype.toListErrs = function (errs, defaultFormat, fieldsTemplate, syste
       if (err.system === '_system') {
         arrSystem.push(getSystem(err))
       } else if (zzb.types.isNonEmptyString(err.field)) {
-        if (err.system === '_system') {
+        if (err.field === '_system') {
           arrSystem.push(getSystem(err))
         } else {
           arrFields.push(getField(err))
