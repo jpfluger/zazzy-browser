@@ -153,10 +153,14 @@ _rob.prototype.toListErrs = function (errs, defaultFormat, fieldsTemplate, syste
     if (systemTemplate) {
       return zzb.strings.format(systemTemplate, err.message)
     } else {
-      if (defaultFormat === 'html') {
-        return zzb.strings.format('<li>{0}</li>', err.message)
-      } else {
+      if (defaultFormat === 'html' || defaultFormat === 'html-list') {
+        return zzb.strings.format('<li class="zzb-rob-list-error-item">{0}</li>', err.message)
+      } else if (defaultFormat === 'html-list-label') {
+        return zzb.strings.format('<li class="zzb-rob-list-error-item"><span>{0}:</span> {1}</li>', 'System', err.message)
+      } else if (defaultFormat === 'label') {
         return zzb.strings.format('System: {0}', err.message)
+      } else {
+        return zzb.strings.format(err.message)
       }
     }
   }
@@ -169,10 +173,14 @@ _rob.prototype.toListErrs = function (errs, defaultFormat, fieldsTemplate, syste
     if (fieldsTemplate) {
       return zzb.strings.format(fieldsTemplate, title, err.message)
     } else {
-      if (defaultFormat === 'html') {
-        return zzb.strings.format('<li><strong>{0}</strong>: {1}</li>', title, err.message)
-      } else {
+      if (defaultFormat === 'html' || defaultFormat === 'html-list') {
+        return zzb.strings.format('<li class="zzb-rob-list-error-item">{0}</li>', err.message)
+      } else if (defaultFormat === 'html-list-label') {
+        return zzb.strings.format('<li class="zzb-rob-list-error-item"><span>{0}:</span> {1}</li>', title, err.message)
+      } else if (defaultFormat === 'label') {
         return zzb.strings.format('{0}: {1}', title, err.message)
+      } else {
+        return zzb.strings.format(err.message)
       }
     }
   }
@@ -182,7 +190,11 @@ _rob.prototype.toListErrs = function (errs, defaultFormat, fieldsTemplate, syste
       if (err.system === '_system') {
         arrSystem.push(getSystem(err))
       } else if (zzb.types.isNonEmptyString(err.field)) {
-        arrFields.push(getField(err))
+        if (err.system === '_system') {
+          arrFields.push(getField(err))
+        } else {
+          arrFields.push(getField(err))
+        }
       } else {
         arrSystem.push(getSystem(err))
       }
