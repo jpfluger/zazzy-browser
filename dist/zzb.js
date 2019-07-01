@@ -1,5 +1,5 @@
 //! zzb.js
-//! version: 1.1.18
+//! version: 1.1.19
 //! author(s): Jaret Pfluger
 //! license: MIT
 //! https://github.com/jpfluger/zazzy-browser
@@ -1187,7 +1187,7 @@ _rob.prototype.toListErrs = function (errs, defaultFormat, fieldsTemplate, syste
         arrSystem.push(getSystem(err))
       } else if (zzb.types.isNonEmptyString(err.field)) {
         if (err.system === '_system') {
-          arrFields.push(getField(err))
+          arrSystem.push(getSystem(err))
         } else {
           arrFields.push(getField(err))
         }
