@@ -1,5 +1,5 @@
 //! zzb.js
-//! version: 1.1.21
+//! version: 1.1.22
 //! author(s): Jaret Pfluger
 //! license: MIT
 //! https://github.com/jpfluger/zazzy-browser
@@ -1223,7 +1223,7 @@ _rob.prototype.toListErrs = function (errs) {
 _rob.prototype.renderListErrs = function (options) {
   options = _.merge({errs: [], format: 'text', defaultTitle: '', template: null}, options)
   var arr = []
-  if (zzb.isArrayHasRecords(options.errs)) {
+  if (zzb.types.isArrayHasRecords(options.errs)) {
     _.each(options.errs, function (err) {
       var title = ''
       if (zzb.types.isNonEmptyString(options.defaultTitle)) {

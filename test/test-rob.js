@@ -106,16 +106,17 @@ describe('Validate zzb.rob methods', function () {
     })
   })
 
+  var arrRobErrs = [
+    zzb.rob.createError({message: sPig}), // type === error
+    zzb.rob.createError({type: 'emerg', message: sPig}),
+    zzb.rob.createError({field: 'fieldABC', type: 'error', message: sPig}),
+    zzb.rob.createError({field: '_system', type: 'info', message: sPig}),
+    zzb.rob.createError({type: 'warn', message: sPig}),
+    zzb.rob.createError({field: 'fieldXYZ', type: 'info', message: sPig})
+  ]
+  var listErrs = zzb.rob.toListErrs(arrRobErrs)
+
   describe('zzb.rob.toListErrs', function () {
-    var arrRobErrs = [
-      zzb.rob.createError({message: sPig}), // type === error
-      zzb.rob.createError({type: 'emerg', message: sPig}),
-      zzb.rob.createError({field: 'fieldABC', type: 'error', message: sPig}),
-      zzb.rob.createError({field: '_system', type: 'info', message: sPig}),
-      zzb.rob.createError({type: 'warn', message: sPig}),
-      zzb.rob.createError({field: 'fieldXYZ', type: 'info', message: sPig})
-    ]
-    var listErrs = zzb.rob.toListErrs(arrRobErrs)
     it('should have errors/messages', function (done) {
       var err = null
       if (!listErrs.hasErrors()) {
@@ -165,6 +166,25 @@ describe('Validate zzb.rob methods', function () {
             break
           }
         }
+      }
+      done(err)
+    })
+  })
+
+  describe('zzb.rob.renderListErrs', function () {
+    it('should have string of format=text', function (done) {
+      var err = null
+      var messages = zzb.rob.renderListErrs({errs: listErrs.system})
+      if (!zzb.types.isNonEmptyString(messages)) {
+        err = new Error('no format of text generated')
+      }
+      done(err)
+    })
+    it('should have string of format=html-list', function (done) {
+      var err = null
+      var messages = zzb.rob.renderListErrs({errs: listErrs.system, format: 'html-list'})
+      if (!zzb.types.isNonEmptyString(messages)) {
+        err = new Error('no format of text generated')
       }
       done(err)
     })
