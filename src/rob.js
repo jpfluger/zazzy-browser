@@ -79,6 +79,13 @@ function mergeErrorDefaults (options) {
   options = _.merge({type: 'error', message: null, field: '_system', stack: null, isErr: true, title: null}, options)
 
   if (options.isErr) {
+    if (options.type === 'warn') {
+      options.type = 'warning'
+    } else if (options.type === 'err') {
+      options.type = 'error'
+    } else if (options.type === 'emerg') {
+      options.type = 'emergency'
+    }
     switch (options.type) {
       case 'warning':
       case 'notice':
@@ -143,60 +150,39 @@ _rob.prototype.sanitizeRecords = function (recs) {
   return recs
 }
 
-_rob.prototype.toListErrs = function (errs, defaultFormat, fieldsTemplate, systemTemplate) {
+_rob.prototype.toListErrs = function (errs) {
   var arrFields = []
   var arrSystem = []
 
-  defaultFormat = defaultFormat || 'text'
-
-  function getSystem (err) {
-    if (systemTemplate) {
-      return zzb.strings.format(systemTemplate, err.message)
-    } else {
-      if (defaultFormat === 'html' || defaultFormat === 'html-list') {
-        return zzb.strings.format('<li class="zzb-rob-list-error-item">{0}</li>', err.message)
-      } else if (defaultFormat === 'html-list-label') {
-        return zzb.strings.format('<li class="zzb-rob-list-error-item"><span>{0}:</span> {1}</li>', 'System', err.message)
-      } else if (defaultFormat === 'label') {
-        return zzb.strings.format('System: {0}', err.message)
-      } else {
-        return zzb.strings.format(err.message)
-      }
-    }
-  }
-
-  function getField (err) {
-    var title = err.title
-    if (!err.title) {
-      title = err.field // _.capitalize(
-    }
-    if (fieldsTemplate) {
-      return zzb.strings.format(fieldsTemplate, title, err.message)
-    } else {
-      if (defaultFormat === 'html' || defaultFormat === 'html-list') {
-        return zzb.strings.format('<li class="zzb-rob-list-error-item">{0}</li>', err.message)
-      } else if (defaultFormat === 'html-list-label') {
-        return zzb.strings.format('<li class="zzb-rob-list-error-item"><span>{0}:</span> {1}</li>', title, err.message)
-      } else if (defaultFormat === 'label') {
-        return zzb.strings.format('{0}: {1}', title, err.message)
-      } else {
-        return zzb.strings.format(err.message)
-      }
-    }
-  }
+  var arrSystemMessages = []
+  var arrFieldMessages = []
 
   if (errs && Array.isArray(errs) && errs.length > 0) {
     _.each(errs, function (err) {
-      if (err.system === '_system') {
-        arrSystem.push(getSystem(err))
-      } else if (zzb.types.isNonEmptyString(err.field)) {
-        if (err.field === '_system') {
-          arrSystem.push(getSystem(err))
+      if (err.isErr === true) {
+        if (err.system === '_system') {
+          arrSystem.push(err)
+        } else if (zzb.types.isNonEmptyString(err.field)) {
+          if (err.field === '_system') {
+            arrSystem.push(err)
+          } else {
+            arrFields.push(err)
+          }
         } else {
-          arrFields.push(getField(err))
+          arrSystem.push(err)
         }
       } else {
-        arrSystem.push(getSystem(err))
+        if (err.system === '_system') {
+          arrSystemMessages.push(err)
+        } else if (zzb.types.isNonEmptyString(err.field)) {
+          if (err.field === '_system') {
+            arrSystemMessages.push(err)
+          } else {
+            arrFieldMessages.push(err)
+          }
+        } else {
+          arrSystemMessages.push(err)
+        }
       }
     })
   }
@@ -204,19 +190,67 @@ _rob.prototype.toListErrs = function (errs, defaultFormat, fieldsTemplate, syste
   return {
     system: arrSystem,
     fields: arrFields,
+
+    systemMessages: arrSystemMessages,
+    fieldMessages: arrFieldMessages,
+
     hasSystemErrors: function () {
       return (this.system && this.system.length > 0)
     },
     hasFieldErrors: function () {
       return (this.fields && this.fields.length > 0)
     },
-    combined: function () {
+    combinedErrors: function () {
       return this.system.concat(this.fields)
     },
     hasErrors: function () {
-      return (this.hasSystemErrors() && this.hasFieldErrors())
+      return (this.hasSystemErrors() || this.hasFieldErrors())
+    },
+
+    hasSystemMessages: function () {
+      return (this.systemMessages && this.systemMessages.length > 0)
+    },
+    hasFieldMessages: function () {
+      return (this.fieldMessages && this.fieldMessages.length > 0)
+    },
+    combinedMessages: function () {
+      return this.systemMessages.concat(this.fieldMessages)
+    },
+    hasMessages: function () {
+      return (this.hasSystemMessages() || this.hasFieldMessages())
     }
   }
+}
+
+_rob.prototype.renderListErrs = function (options) {
+  options = _.merge({errs: [], format: 'text', defaultTitle: '', template: null}, options)
+  var arr = []
+  if (zzb.isArrayHasRecords(options.errs)) {
+    _.each(options.errs, function (err) {
+      var title = ''
+      if (zzb.types.isNonEmptyString(options.defaultTitle)) {
+        title = options.defaultTitle
+      } else if (zzb.types.isNonEmptyString(err.field)) {
+        title = err.field
+      }
+
+      if (options.template) {
+        arr.push(zzb.strings.format(options.template, title, err.message))
+      } else {
+        if (options.format === 'html' || options.format === 'html-list') {
+          arr.push(zzb.strings.format('<li class="zzb-rob-list-error-item">{0}</li>', err.message))
+        } else if (options.format === 'html-list-label') {
+          arr.push(zzb.strings.format('<li class="zzb-rob-list-error-item"><span>{0}:</span> {1}</li>', title, err.message))
+        } else if (options.format === 'label') {
+          arr.push(zzb.strings.format('{0}: {1}', title, err.message))
+        } else { // text
+          arr.push(zzb.strings.format(err.message))
+        }
+      }
+    })
+  }
+
+  return arr.join('')
 }
 
 exports.rob = _rob

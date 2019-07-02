@@ -20,8 +20,8 @@ describe('Validate zzb.rob methods', function () {
     it('should have type === emerg and isErr === true', function (done) {
       var err = null
       var robErr = zzb.rob.createError({type: 'emerg', message: sPig})
-      if (robErr.type !== 'emerg') {
-        err = new Error('robErr.type is not emerg but ' + robErr.type)
+      if (robErr.type !== 'emergency') {
+        err = new Error('robErr.type is not emergency but ' + robErr.type)
       } else if (robErr.isErr !== true) {
         err = new Error('robErr.isErr is false when it should be true')
       }
@@ -101,6 +101,70 @@ describe('Validate zzb.rob methods', function () {
         }
       } catch (ex) {
         // good :)
+      }
+      done(err)
+    })
+  })
+
+  describe('zzb.rob.toListErrs', function () {
+    var arrRobErrs = [
+      zzb.rob.createError({message: sPig}), // type === error
+      zzb.rob.createError({type: 'emerg', message: sPig}),
+      zzb.rob.createError({field: 'fieldABC', type: 'error', message: sPig}),
+      zzb.rob.createError({field: '_system', type: 'info', message: sPig}),
+      zzb.rob.createError({type: 'warn', message: sPig}),
+      zzb.rob.createError({field: 'fieldXYZ', type: 'info', message: sPig})
+    ]
+    var listErrs = zzb.rob.toListErrs(arrRobErrs)
+    it('should have errors/messages', function (done) {
+      var err = null
+      if (!listErrs.hasErrors()) {
+        err = new Error('zzb.rob.hasErrors() should have errors')
+      } else if (!listErrs.hasMessages()) {
+        err = new Error('zzb.rob.hasMessages() should have messages')
+      }
+      done(err)
+    })
+
+    it('should have 3 errors', function (done) {
+      var err = null
+      if (listErrs.combinedErrors().length !== 3) {
+        err = new Error('zzb.rob.combinedErrors() should equal 3 but instead has ' + listErrs.combinedErrors().length)
+      } else if (listErrs.system.length !== 2) {
+        err = new Error('zzb.rob.system length should be 2')
+      } else if (listErrs.fields.length !== 1) {
+        err = new Error('zzb.rob.fields length should be 1')
+      }
+      done(err)
+    })
+
+    it('should have 2 messages', function (done) {
+      var err = null
+      if (listErrs.combinedMessages().length !== 3) {
+        err = new Error('zzb.rob.combinedErrors() should equal 3 but instead has ' + listErrs.combinedMessages().length)
+      } else if (listErrs.systemMessages.length !== 2) {
+        err = new Error('zzb.rob.systemMessages length should be 2')
+      } else if (listErrs.fieldMessages.length !== 1) {
+        err = new Error('zzb.rob.fieldMessages length should be 1')
+      }
+      done(err)
+    })
+
+    it('should have correct message', function (done) {
+      var err = null
+      for (var kk = 0; kk < listErrs.combinedErrors(); kk++) {
+        if (listErrs.combinedErrors()[kk].message !== sPig) {
+          err = new Error('invalid message where at ' + kk + ' in combinedErrors()')
+          break
+        }
+      }
+      if (!err) {
+        for (var ii = 0; ii < listErrs.combinedErrors(); ii++) {
+          if (listErrs.combinedMessages()[ii].message !== sPig) {
+            err = new Error('invalid message where at ' + ii + ' in combinedErrors()')
+            break
+          }
+        }
       }
       done(err)
     })
