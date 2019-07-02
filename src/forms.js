@@ -125,8 +125,8 @@ _forms.prototype.displayUIErrors = function (options, callback) {
       options.fnDialogSystemErrors(zzb.rob.renderListErrs({errs: list.system, format: 'html-list'}), function () {
         runCallback()
       })
+      return // exit
     }
-    return // exit
   }
 
   // via inline
