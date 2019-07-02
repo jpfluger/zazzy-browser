@@ -1,5 +1,5 @@
 //! zzb.js
-//! version: 1.1.25
+//! version: 1.1.26
 //! author(s): Jaret Pfluger
 //! license: MIT
 //! https://github.com/jpfluger/zazzy-browser
@@ -753,6 +753,8 @@ _forms.prototype.displayUIErrors = function (options, callback) {
       options.fnDialogErrors(function () {
         runCallback()
       })
+    } else {
+      runCallback()
     }
   } else if (options.fnDialogSuccess && zzb.types.isFunction(options.fnDialogSuccess)) {
     options.fnDialogSuccess(function () {

@@ -158,6 +158,8 @@ _forms.prototype.displayUIErrors = function (options, callback) {
       options.fnDialogErrors(function () {
         runCallback()
       })
+    } else {
+      runCallback()
     }
   } else if (options.fnDialogSuccess && zzb.types.isFunction(options.fnDialogSuccess)) {
     options.fnDialogSuccess(function () {
