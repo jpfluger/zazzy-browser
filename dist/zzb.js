@@ -1,5 +1,5 @@
 //! zzb.js
-//! version: 1.1.23
+//! version: 1.1.24
 //! author(s): Jaret Pfluger
 //! license: MIT
 //! https://github.com/jpfluger/zazzy-browser
@@ -615,13 +615,13 @@ _forms.prototype.displayUIErrors = function (options, callback) {
     isTooltip: false, // requires a "parent" DOM object with relative positioning
     addIsValidCSS: false,
     selectorDisplaySystemMessage: '.zzb-form-display-system-message',
-    selectorDisplaySystemMessageList: '.zzb-form-display-system-message-list',
     // these three things lead to the same value of "listErrs"
     listErrs: null,
     errs: null,
     rob: null,
     // callbacks
     fnSystemErrorContent: null, // function(listContent)
+    fnDialogSystemErrors: null, // if this is used, then the inline selectorDisplaySystemMessage will not be used
     fnDialogErrors: null,
     fnDialogSuccess: null
   }, options)
@@ -648,6 +648,12 @@ _forms.prototype.displayUIErrors = function (options, callback) {
   } else {
     // eslint-disable-next-line standard/no-callback-literal
     return callback && callback(false, new Error('could not find the list of errors'))
+  }
+
+  var runCallback = function() {
+    // we are successful when we don't have errors
+    // eslint-disable-next-line standard/no-callback-literal
+    callback && callback(!list.hasErrors(), null)
   }
 
   var cssValid = 'is-valid '
@@ -708,7 +714,17 @@ _forms.prototype.displayUIErrors = function (options, callback) {
   // --------------------------------------
   // System Messages
 
-  // turn off
+  // via dialog
+  if (list.hasSystemErrors()) {
+    if (options.fnDialogSystemErrors && zzb.types.isFunction(options.fnDialogSystemErrors)) {
+      options.fnDialogSystemErrors(zzb.rob.renderListErrs({errs: list.system, format: 'html-list'}), function () {
+        runCallback()
+      })
+    }
+    return // exit
+  }
+
+  // via inline
   if (zzb.types.isNonEmptyString(options.selectorDisplaySystemMessage)) {
     var $sysDisplay = options.$form.find(options.selectorDisplaySystemMessage)
     if ($sysDisplay && $sysDisplay.length > 0) {
@@ -730,12 +746,6 @@ _forms.prototype.displayUIErrors = function (options, callback) {
         }
       }
     }
-  }
-
-  var runCallback = function() {
-    // we are successful when we don't have errors
-    // eslint-disable-next-line standard/no-callback-literal
-    callback && callback(!list.hasErrors(), null)
   }
 
   if (list.hasErrors()) {
