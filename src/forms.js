@@ -10,158 +10,152 @@ var _ = require('lodash')
 
 var _forms = function () {}
 
-var renderHtmlPopover = function (errs, options) {
-  var arrHtml = []
-  var arrPopOver = []
-
-  // assume success
-  if (!errs || errs.length === 0 || !errs[0]) {
-    if (options.hideWhenNoError) {
-      return {html: null, contentPopOver: null}
-    } else {
-      errs = [{type: 'success', message: null}]
-    }
-  }
-
-  _.each(errs, function (err, index) {
-    if (!err.field) {
-      err.field = '_system'
-    }
-
-    if (err.field === '_system') {
-      arrHtml.push(zzb.strings.format('<div>{0}</div>', err.message))
-    } else {
-      var typeFormat = options.typeFormats.error
-
-      if (err.type && options.typeFormats[err.type]) {
-        typeFormat = options.typeFormats[err.type]
-      }
-
-      // only once
-      if (index === 0) {
-        arrHtml.push(zzb.strings.format('<span class="glyphicon {0} {1}"></span>', typeFormat.glyph, typeFormat.textClass))
-      }
-
-      if (err.message && zzb.types.isNonEmptyString(err.message)) {
-        arrPopOver.push(err.message)
-      }
-    }
-  })
-
-  return {html: arrHtml.join(' '), contentPopOver: arrPopOver.join('  ')}
-}
-
-var afterHtmlAddedPopover = function (reho) {
-  if (reho.$elem && reho.$elem.length > 0) {
-    if (reho && reho.contentPopOver && zzb.types.isNonEmptyString(reho.contentPopOver)) {
-      reho.$elem.popover({
-        trigger: 'hover',
-        animation: false,
-        content: reho.contentPopOver
-      })
-    }
-  }
-}
-
 _forms.prototype.displayUIErrors = function (options, callback) {
-  options = _.merge({selector: null,
+  options = _.merge({
+    selector: null,
     $form: null,
     selectorField: '.zzb-form-field',
     attrFieldname: 'zzb-fieldname',
-    // selectorLabel: '.zzb-form-field-label', // not used
-    // selectorValue: '.zzb-form-field-value', // not used
-    selectorError: '.zzb-form-field-error',
+    selectorValidateMessage: '.zzb-form-field-validate-message',
+    isTooltip: false, // requires a "parent" DOM object with relative positioning
+    addIsValidCSS: false,
+    selectorDisplaySystemMessage: '.zzb-form-display-system-message',
+    selectorDisplaySystemMessageList: '.zzb-form-display-system-message-list',
+    // these three things lead to the same value of "listErrs"
+    listErrs: null,
     errs: null,
-    err: null,
-    hideWhenNoError: false, // this always shows the 'success' checkmark
-    typeFormats: {
-      error: {glyph: 'glyphicon-remove', textClass: 'text-danger', bgClass: null}, // feather-x  <i class="material-icons">close</i>
-      warning: {glyph: 'glyphicon-warning', textClass: 'text-warning', bgClass: null}, // feather-alert-triangle    <i class="material-icons">warning</i>
-      success: {glyph: 'glyphicon-ok', textClass: 'text-success', bgClass: null}, // feather-check     <i class="material-icons">done</i>
-      default: null
-    },
-    renderErrorHtml: renderHtmlPopover,
-    afterHtmlAdded: afterHtmlAddedPopover,
-    handleSystemErrors: null
+    rob: null,
+    // callbacks
+    fnSystemErrorContent: null, // function(listContent)
+    fnDialogErrors: null,
+    fnDialogSuccess: null
   }, options)
 
-  var success = false
+  if (zzb.types.isNonEmptyString(options.selector)) {
+    if ($(options.selector).length > 0) {
+      options.$form = $(options.selector)
+    }
+  }
 
-  if (options.renderErrorHtml) {
-    if (options.$form) {
-      options.selector = null // not required
-    } else if (options.selector) {
-      options.$form = $('selector')
+  if (options.$form && options.$form.length === 0) {
+    // eslint-disable-next-line standard/no-callback-literal
+    return callback && callback(false, new Error('could not select the form'))
+  }
+
+  var list = null
+
+  if (options.listErrs) {
+    list = options.listErrs
+  } else if (options.rob && options.rob.listErrs) {
+    list = options.rob.listErrs
+  } else if (options.errs) {
+    list = zzb.rob.toListErrs(options.errs)
+  } else {
+    // eslint-disable-next-line standard/no-callback-literal
+    return callback && callback(false, new Error('could not find the list of errors'))
+  }
+
+  var cssValid = 'is-valid '
+  var cssInvalid = 'is-invalid'
+
+  var cssMessageValid = 'valid-feedback'
+  var cssMessageInvalid = 'invalid-feedback'
+
+  if (options.isTooltip) {
+    cssMessageValid = 'valid-tooltip'
+    cssMessageInvalid = 'invalid-tooltip'
+  }
+
+  // no errors! :) ... but we need to show is-valid css, removing the invalids
+  var hasFieldErrors = list.hasFieldErrors()
+
+  // reset form... no validation errors
+  options.$form.find(options.selectorField).each(function (index, field) {
+    var $field = $(field)
+    var fieldname = $field.attr(options.attrFieldname)
+    var errField = null
+
+    if (zzb.types.isNonEmptyString(fieldname)) {
+      if (hasFieldErrors) {
+        _.each(list.fields, function (err) {
+          if (err.field === fieldname) {
+            errField = err
+            return false
+          }
+        })
+      }
+
+      var $message = options.$form.find(options.selectorValidateMessage + '[' + options.attrFieldname + "='" + fieldname + "']")
+
+      if ($message && $message.length > 0) {
+        if (errField) {
+          $message.html(errField.message)
+          $message.addClass(cssMessageInvalid)
+          $message.removeClass(cssMessageValid)
+        } else {
+          $message.addClass(cssMessageValid)
+          $message.removeClass(cssMessageInvalid)
+        }
+      }
     }
 
-    if (!options.$form || options.$form.length === 0) {
-      return callback && callback(success)
+    if (errField) {
+      $field.addClass(cssInvalid)
+      $field.removeClass(cssValid)
+    } else {
+      if (options.addIsValidCSS) {
+        $field.addClass(cssValid)
+      }
+      $field.removeClass(cssInvalid)
     }
+  })
 
-    if (options.err && !Array.isArray(options.err)) {
-      options.errs = [zzb.rob.createError(options.err)]
-      options.err = null
-    } else if (options.errs && !Array.isArray(options.errs)) {
-      options.errs = [zzb.rob.createError(options.errs)]
-      options.err = null
+  // --------------------------------------
+  // System Messages
+
+  // turn off
+  if (zzb.types.isNonEmptyString(options.selectorDisplaySystemMessage)) {
+    var $sysDisplay = options.$form.find(options.selectorDisplaySystemMessage)
+    if ($sysDisplay && $sysDisplay.length > 0) {
+      $sysDisplay.hide()
+      $sysDisplay.html('')
+
+      if (list.hasSystemErrors()) {
+        var messages = zzb.rob.renderListErrs({errs: list.system, format: 'html-list'})
+        if (zzb.types.isNonEmptyString(messages)) {
+          if (options.fnSystemErrorContent && zzb.types.isFunction(options.fnSystemErrorContent)) {
+            messages = options.fnSystemErrorContent(messages)
+          } else {
+            messages = '<ul>' + messages + '</ul>'
+          }
+          $sysDisplay.html(messages)
+          $sysDisplay.removeClass(cssMessageValid)
+          $sysDisplay.addClass(cssMessageInvalid)
+          $sysDisplay.show()
+        }
+      }
     }
+  }
 
-    var eo = zzb.rob.toObject(options.errs)
+  var runCallback = function() {
+    // we are successful when we don't have errors
+    // eslint-disable-next-line standard/no-callback-literal
+    callback && callback(!list.hasErrors(), null)
+  }
 
-    var handledSystem = false
-
-    // errors have pre-existing placeholders that are hidden
-    options.$form.find(options.selectorError).each(function (index, elemErr) {
-      var $elemErr = $(elemErr)
-
-      // what's the associated fieldname?
-      var $parent = $elemErr.closest(options.selectorField)
-
-      if ($parent.length === 0) {
-        console.log('discovered an error field but could not determine the field to which it belongs (eg zzb-form-field)')
-        return true
-      }
-
-      var fieldname = $parent.attr(options.attrFieldname)
-
-      if (zzb.types.isEmptyString(fieldname)) {
-        console.log('discovered an error field and its parent field (eg zzb-form-field) but the fieldname attribute is empty (eg zzb-fieldname="")')
-        return true
-      }
-
-      if (fieldname === '_system') {
-        handledSystem = true
-      }
-
-      // get a reho (returned error html object)
-      var reho = options.renderErrorHtml(eo[fieldname], options)
-
-      $elemErr.html(reho.html)
-
-      if (reho.html && zzb.types.isNonEmptyString(reho.html)) {
-        $elemErr.removeClass('hidden')
-      } else {
-        $elemErr.addClass('hidden')
-      }
-
-      reho.fieldname = fieldname
-      reho.$elem = $elemErr
-
-      options.afterHtmlAdded && options.afterHtmlAdded(reho)
+  if (list.hasErrors()) {
+    if (options.fnDialogErrors && zzb.types.isFunction(options.fnDialogErrors)) {
+      options.fnDialogErrors(function () {
+        runCallback()
+      })
+    }
+  } else if (options.fnDialogSuccess && zzb.types.isFunction(options.fnDialogSuccess)) {
+    options.fnDialogSuccess(function () {
+      runCallback()
     })
+  } else {
+    runCallback()
   }
-
-  if (!handledSystem && eo['_system']) {
-    if (eo['_system'].length > 0 && eo['_system'][0]) {
-      if (options.handleSystemErrors) {
-        options.handleSystemErrors(eo['_system'], options)
-      } else {
-        zzb.dialogs.handleError({errs: eo['_system']})
-      }
-    }
-  }
-
-  callback && callback(success)
 }
 
 exports.forms = _forms
