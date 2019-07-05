@@ -37,7 +37,7 @@ _forms.prototype.displayUIErrors = function (options, callback) {
     }
   }
 
-  if (options.$form && options.$form.length === 0) {
+  if (options.$form || options.$form.length === 0) {
     // eslint-disable-next-line standard/no-callback-literal
     return callback && callback(false, new Error('could not select the form'))
   }

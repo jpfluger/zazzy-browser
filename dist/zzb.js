@@ -1,5 +1,5 @@
 //! zzb.js
-//! version: 1.1.26
+//! version: 1.1.27
 //! author(s): Jaret Pfluger
 //! license: MIT
 //! https://github.com/jpfluger/zazzy-browser
@@ -632,7 +632,7 @@ _forms.prototype.displayUIErrors = function (options, callback) {
     }
   }
 
-  if (options.$form && options.$form.length === 0) {
+  if (options.$form || options.$form.length === 0) {
     // eslint-disable-next-line standard/no-callback-literal
     return callback && callback(false, new Error('could not select the form'))
   }
