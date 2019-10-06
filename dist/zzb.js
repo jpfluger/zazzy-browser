@@ -623,8 +623,7 @@ _forms.prototype.displayUIErrors = function (options, callback) {
     fnSystemErrorContent: null, // function(listContent)
     fnDialogSystemErrors: null, // if this is used, then the inline selectorDisplaySystemMessage will not be used
     fnDialogErrors: null,
-    fnDialogSuccess: null
-  }, options)
+    fnDialogSuccess: null}, options)
 
   if (zzb.types.isNonEmptyString(options.selector)) {
     if ($(options.selector).length > 0) {
@@ -632,7 +631,7 @@ _forms.prototype.displayUIErrors = function (options, callback) {
     }
   }
 
-  if (!options.$form || options.$form.length === 0) {
+  if ((options.$form === null) || (options.$form.length === 0)) {
     // eslint-disable-next-line standard/no-callback-literal
     return callback && callback(false, new Error('could not select the form'))
   }

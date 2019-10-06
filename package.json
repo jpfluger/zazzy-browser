@@ -30,24 +30,24 @@
   ],
   "dependencies": {
     "jquery": ">=3.4.0",
-    "lodash": "^4.17.4"
+    "lodash": "^4.17.15"
   },
   "devDependencies": {
     "browserify": "^14.4.0",
     "browserify-transform-tools": "^1.7.0",
     "chai": "^4.1.2",
-    "fs-extra": "^6.0.1",
-    "gulp": "^3.9.1",
+    "fs-extra": "^8.1.0",
+    "gulp": "^4.0.2",
     "gulp-concat": "^2.6.1",
-    "gulp-eslint": "^3.0.1",
+    "gulp-eslint": "^6.0.0",
     "gulp-insert": "^0.5.0",
     "gulp-uglify": "^3.0.2",
     "js-yaml": ">=3.13.1",
     "mocha": "^5.2.0",
     "rimraf": "^2.6.3",
-    "standard": "^11.0.1",
+    "standard": "^14.3.1",
     "vinyl-buffer": "^1.0.0",
-    "vinyl-source-stream": "^1.1.0"
+    "vinyl-source-stream": "^2.0.0"
   },
   "standard": {
     "globals": [
