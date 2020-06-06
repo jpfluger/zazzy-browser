@@ -95,7 +95,7 @@ _perms.prototype.mergePermkey = function (permkey, merge) {
 }
 
 _perms.prototype.getPermObject = function (permkey, available, merge) {
-  var po = {key: null, perm: null, attr: {}, toPermkey: function () { return this.key + ':' + this.perm }}
+  var po = { key: null, perm: null, attr: {}, toPermkey: function () { return this.key + ':' + this.perm } }
 
   if (merge || zzb.types.isNonEmptyString(merge)) {
     permkey = this.mergePermkey(permkey, merge)
@@ -140,7 +140,7 @@ var reCRUDX = new RegExp('^[CRUDX]*$')
 
 _perms.prototype.getPermAttributes = function (permkey) {
   // CRUDX
-  var attr = {canRead: false, canCreate: false, canUpdate: false, canDelete: false, canExecute: false}
+  var attr = { canRead: false, canCreate: false, canUpdate: false, canDelete: false, canExecute: false }
 
   if (!permkey || !zzb.types.isNonEmptyString(permkey)) {
     return attr

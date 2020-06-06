@@ -22,7 +22,7 @@ var _status = function () {
 
 // The status can be embedded in sessionStorage or an attribute otherwise tries an ajax call.
 _status.prototype.get = function (options, callback) {
-  options = _.merge({path: window.location.path, role: null})
+  options = _.merge({ path: window.location.path, role: null })
 
   var setSelf = (options.path === window.location.path && !options.role)
 
@@ -67,7 +67,7 @@ _status.prototype.get = function (options, callback) {
   // not in session storage? (best) try a server-side call to '/zzb/status'
   // REQUIRES (callback)
   // if err then returns defaults where isLoggedIn = false
-  tmpStatus = {user: {isLoggedIn: false, username: null}, page: {path: window.location.pathname}}
+  tmpStatus = { user: { isLoggedIn: false, username: null }, page: { path: window.location.pathname } }
   // remember newbies that inside .then() that "this" refrences the .then() function, so using "that" is a workaround
   var that = this
 

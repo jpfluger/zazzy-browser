@@ -14,7 +14,7 @@ var _uib = function () {}
  * @returns {String}
  */
 _uib.prototype.createPanelGroup = function (options) {
-  options = _.merge({id: zzb.uuid.newV4(), classPanelGroup: '', innerHtml: ''}, options)
+  options = _.merge({ id: zzb.uuid.newV4(), classPanelGroup: '', innerHtml: '' }, options)
   var template = '<div id="panelGroup_{id}" class="panel-group {classPanelGroup}">{innerHtml}</div>'
   return zzb.strings.format(template, options) // _.formatObj(template, uie)
 }
@@ -26,7 +26,7 @@ _uib.prototype.createPanelGroup = function (options) {
  * @returns {String}
  */
 _uib.prototype.createPanelBody = function (options) {
-  options = _.merge({id: zzb.uuid.newV4(), classPanelBody: '', innerHtml: ''}, options)
+  options = _.merge({ id: zzb.uuid.newV4(), classPanelBody: '', innerHtml: '' }, options)
   var template = '<div id="panelBody_{id}" class="panel-body {classPanelBody}">{innerHtml}</div>'
   return zzb.strings.format(template, options) // _.formatObj(template, uie)
 }
@@ -40,7 +40,8 @@ _uib.prototype.createPanelBody = function (options) {
  * @returns {String}
  */
 _uib.prototype.createPanel = function (options) {
-  options = _.merge({id: zzb.uuid.newV4(),
+  options = _.merge({
+    id: zzb.uuid.newV4(),
     className: '',
     attributesExtra: '',
     classPanelHeading: '',
@@ -70,7 +71,8 @@ _uib.prototype.createPanel = function (options) {
  * @returns {String}
  */
 _uib.prototype.createPanelCollapsible = function (options) {
-  options = _.merge({id: zzb.uuid.newV4(),
+  options = _.merge({
+    id: zzb.uuid.newV4(),
     className: '',
     attributesExtra: '',
     name: '',
@@ -119,7 +121,8 @@ _uib.prototype.createPanelCollapsible = function (options) {
  * @returns {String}
  */
 _uib.prototype.createPanelCollapsibleBegin = function (options) {
-  options = _.merge({id: zzb.uuid.newV4(),
+  options = _.merge({
+    id: zzb.uuid.newV4(),
     className: '',
     attributesExtra: '',
     name: '',

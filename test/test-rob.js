@@ -8,7 +8,7 @@ describe('Validate zzb.rob methods', function () {
   describe('Expected properties: createError (mimics but is non-Error type)', function () {
     it('should have default type === error and isErr === true', function (done) {
       var err = null
-      var robErr = zzb.rob.createError({message: sPig})
+      var robErr = zzb.rob.createError({ message: sPig })
       if (robErr.type !== 'error') {
         err = new Error('robErr.type is not error but ' + robErr.type)
       } else if (robErr.isErr !== true) {
@@ -19,7 +19,7 @@ describe('Validate zzb.rob methods', function () {
 
     it('should have type === emerg and isErr === true', function (done) {
       var err = null
-      var robErr = zzb.rob.createError({type: 'emerg', message: sPig})
+      var robErr = zzb.rob.createError({ type: 'emerg', message: sPig })
       if (robErr.type !== 'emergency') {
         err = new Error('robErr.type is not emergency but ' + robErr.type)
       } else if (robErr.isErr !== true) {
@@ -30,7 +30,7 @@ describe('Validate zzb.rob methods', function () {
 
     it('should have type === info and isErr === false', function (done) {
       var err = null
-      var robErr = zzb.rob.createError({type: 'info', message: sPig})
+      var robErr = zzb.rob.createError({ type: 'info', message: sPig })
       if (robErr.type !== 'info') {
         err = new Error('robErr.type is not info but ' + robErr.type)
       } else if (robErr.isErr !== false) {
@@ -41,7 +41,7 @@ describe('Validate zzb.rob methods', function () {
 
     it('should have correct message', function (done) {
       var err = null
-      var robErr = zzb.rob.createError({message: sPig})
+      var robErr = zzb.rob.createError({ message: sPig })
       if (robErr.message !== sPig) {
         err = new Error('robErr.message does not have the expected message')
       }
@@ -50,7 +50,7 @@ describe('Validate zzb.rob methods', function () {
 
     it('should have default stack trace of empty', function (done) {
       var err = null
-      var robErr = zzb.rob.createError({message: sPig})
+      var robErr = zzb.rob.createError({ message: sPig })
       if (zzb.types.isNonEmptyString(robErr.stack)) {
         err = new Error('robErr.stack exists when it should not')
       }
@@ -59,7 +59,7 @@ describe('Validate zzb.rob methods', function () {
 
     it('should have stack trace', function (done) {
       var err = null
-      var robErr = zzb.rob.createError({message: sPig, stack: (new Error()).stack})
+      var robErr = zzb.rob.createError({ message: sPig, stack: (new Error()).stack })
       if (!zzb.types.isNonEmptyString(robErr.stack)) {
         err = new Error('robErr.stack does not exist when it should')
       }
@@ -81,7 +81,7 @@ describe('Validate zzb.rob methods', function () {
 
     it('should create from string (non-object) and crit object', function (done) {
       var err = null
-      var robErr = zzb.rob.createError(sPig, {type: 'crit'})
+      var robErr = zzb.rob.createError(sPig, { type: 'crit' })
       if (robErr.type !== 'crit') {
         err = new Error('robErr.type is not warning but ' + robErr.type)
       } else if (robErr.isErr !== true) {
@@ -95,7 +95,7 @@ describe('Validate zzb.rob methods', function () {
     it('should throw err b/c createError param type unsupported', function (done) {
       var err = null
       try {
-        var robErr = zzb.rob.createError([{message: sPig}])
+        var robErr = zzb.rob.createError([{ message: sPig }])
         if (robErr) {
           err = new Error('robErr should not have been created')
         }
@@ -107,12 +107,12 @@ describe('Validate zzb.rob methods', function () {
   })
 
   var arrRobErrs = [
-    zzb.rob.createError({message: sPig}), // type === error
-    zzb.rob.createError({type: 'emerg', message: sPig}),
-    zzb.rob.createError({field: 'fieldABC', type: 'error', message: sPig}),
-    zzb.rob.createError({field: '_system', type: 'info', message: sPig}),
-    zzb.rob.createError({type: 'warn', message: sPig}),
-    zzb.rob.createError({field: 'fieldXYZ', type: 'info', message: sPig})
+    zzb.rob.createError({ message: sPig }), // type === error
+    zzb.rob.createError({ type: 'emerg', message: sPig }),
+    zzb.rob.createError({ field: 'fieldABC', type: 'error', message: sPig }),
+    zzb.rob.createError({ field: '_system', type: 'info', message: sPig }),
+    zzb.rob.createError({ type: 'warn', message: sPig }),
+    zzb.rob.createError({ field: 'fieldXYZ', type: 'info', message: sPig })
   ]
   var listErrs = zzb.rob.toListErrs(arrRobErrs)
 
@@ -174,7 +174,7 @@ describe('Validate zzb.rob methods', function () {
   describe('zzb.rob.renderListErrs', function () {
     it('should have string of format=text', function (done) {
       var err = null
-      var messages = zzb.rob.renderListErrs({errs: listErrs.system})
+      var messages = zzb.rob.renderListErrs({ errs: listErrs.system })
       if (!zzb.types.isNonEmptyString(messages)) {
         err = new Error('no format of text generated')
       }
@@ -182,7 +182,7 @@ describe('Validate zzb.rob methods', function () {
     })
     it('should have string of format=html-list', function (done) {
       var err = null
-      var messages = zzb.rob.renderListErrs({errs: listErrs.system, format: 'html-list'})
+      var messages = zzb.rob.renderListErrs({ errs: listErrs.system, format: 'html-list' })
       if (!zzb.types.isNonEmptyString(messages)) {
         err = new Error('no format of text generated')
       }

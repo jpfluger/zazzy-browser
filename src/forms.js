@@ -28,7 +28,8 @@ _forms.prototype.displayUIErrors = function (options, callback) {
     fnSystemErrorContent: null, // function(listContent)
     fnDialogSystemErrors: null, // if this is used, then the inline selectorDisplaySystemMessage will not be used
     fnDialogErrors: null,
-    fnDialogSuccess: null}, options)
+    fnDialogSuccess: null
+  }, options)
 
   if (zzb.types.isNonEmptyString(options.selector)) {
     if ($(options.selector).length > 0) {
@@ -121,7 +122,7 @@ _forms.prototype.displayUIErrors = function (options, callback) {
   // via dialog
   if (list.hasSystemErrors()) {
     if (options.fnDialogSystemErrors && zzb.types.isFunction(options.fnDialogSystemErrors)) {
-      options.fnDialogSystemErrors(zzb.rob.renderListErrs({errs: list.system, format: 'html-list'}), function () {
+      options.fnDialogSystemErrors(zzb.rob.renderListErrs({ errs: list.system, format: 'html-list' }), function () {
         runCallback()
       })
       return // exit
@@ -136,7 +137,7 @@ _forms.prototype.displayUIErrors = function (options, callback) {
       $sysDisplay.html('')
 
       if (list.hasSystemErrors()) {
-        var messages = zzb.rob.renderListErrs({errs: list.system, format: 'html-list'})
+        var messages = zzb.rob.renderListErrs({ errs: list.system, format: 'html-list' })
         if (zzb.types.isNonEmptyString(messages)) {
           if (options.fnSystemErrorContent && zzb.types.isFunction(options.fnSystemErrorContent)) {
             messages = options.fnSystemErrorContent(messages)

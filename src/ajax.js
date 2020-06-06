@@ -75,7 +75,7 @@ function _ajax () {
 
             rob.errs = data.errs
             rob.recs = data.recs
-            rob.fields = data.fields
+            rob.columns = data.columns
 
             rob.listErrs = zzb.rob.toListErrs(rob.errs)
           }

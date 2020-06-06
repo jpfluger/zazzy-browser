@@ -11,7 +11,7 @@ _rob.prototype.newROB = function (options) {
   return _.merge({
     errs: null,
     recs: [],
-    fields: [],
+    columns: [],
     paginate: {
       page: 0,
       limit: 0,
@@ -20,8 +20,8 @@ _rob.prototype.newROB = function (options) {
     hasErrors: function () {
       return (this.errs && Array.isArray(this.errs) && this.errs.length > 0)
     },
-    hasFields: function () {
-      return (this.fields && Array.isArray(this.fields) && this.fields.length > 0)
+    hasColumns: function () {
+      return (this.columns && Array.isArray(this.columns) && this.columns.length > 0)
     },
     hasRecords: function () {
       return (this.recs && Array.isArray(this.recs) && this.recs.length > 0)
@@ -51,7 +51,7 @@ _rob.prototype.newROB = function (options) {
 // reduce the error array to an object
 _rob.prototype.toObject = function (errs) {
   if (!errs || !Array.isArray(errs)) {
-    return {'_system': [errs]}
+    return { _system: [errs] }
   }
   var eo = {}
   _.each(errs, function (err) {
@@ -76,7 +76,7 @@ function mergeErrorDefaults (options) {
   // why we have isErr?
   //   server-side supports logger { emerg: 0, alert: 1, crit: 2, error: 3, warning: 4, notice: 5, info: 6, debug: 7 }
   //   of which numbers 0 to 3 are errors and > 4 are not
-  options = _.merge({type: 'error', message: null, field: '_system', stack: null, isErr: true, title: null}, options)
+  options = _.merge({ type: 'error', message: null, field: '_system', stack: null, isErr: true, title: null }, options)
 
   if (options.isErr) {
     if (options.type === 'warn') {
@@ -109,7 +109,7 @@ var createError = function (options1, options2) {
     return mergeErrorDefaults()
   }
   if (zzb.types.isNonEmptyString(options1)) {
-    return mergeErrorDefaults(_.merge({message: options1}, options2))
+    return mergeErrorDefaults(_.merge({ message: options1 }, options2))
   } else if (!Array.isArray(options1) && zzb.types.isObject(options1)) {
     return mergeErrorDefaults(options1)
   }
@@ -223,7 +223,7 @@ _rob.prototype.toListErrs = function (errs) {
 }
 
 _rob.prototype.renderListErrs = function (options) {
-  options = _.merge({errs: [], format: 'text', defaultTitle: '', template: null}, options)
+  options = _.merge({ errs: [], format: 'text', defaultTitle: '', template: null }, options)
   var arr = []
   if (zzb.types.isArrayHasRecords(options.errs)) {
     _.each(options.errs, function (err) {

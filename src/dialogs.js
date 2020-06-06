@@ -252,7 +252,7 @@ ZazzyDialog.prototype.create$Modal = function () {
     $button.data('button', button)
 
     // Button action (eg onClick)
-    $button.on('click', {dialog: self, $button: $button, button: button}, function (event) {
+    $button.on('click', { dialog: self, $button: $button, button: button }, function (event) {
       var dialog = event.data.dialog
       var $button = event.data.$button
       var button = $button.data('button')

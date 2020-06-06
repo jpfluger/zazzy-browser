@@ -61,7 +61,7 @@ describe('Validate zzb-server defaults', function () {
     it('should format string correctly using an object of strings', function (done) {
       var err = null
       var template = 'The {subject} smelled the {directObject}.'
-      var values = {subject: 'pig', directObject: 'mushrooms'}
+      var values = { subject: 'pig', directObject: 'mushrooms' }
       var newString = zzb.strings.format(template, values)
       if (newString !== sPig) {
         err = new Error('newString not equal to the control string')
@@ -260,7 +260,7 @@ describe('Validate zzb-server defaults', function () {
   describe('Is loaded: rob', function () {
     it('should createError', function (done) {
       var err = null
-      var robErr = zzb.rob.createError({message: sPig})
+      var robErr = zzb.rob.createError({ message: sPig })
       if (robErr.message !== sPig) {
         err = new Error('unexpected robErr.message')
       }
@@ -278,7 +278,7 @@ describe('Validate zzb-server defaults using zzs object (non-default)', function
     }
   }()
 
-  zzbLoader({name: 'zzs', overwriteCached: true})
+  zzbLoader({ name: 'zzs', overwriteCached: true })
 
   describe('Prior zzs function', function () {
     it('getPig is defined', function (done) {
@@ -344,7 +344,7 @@ describe('Validate zzb-server defaults using zzs object (non-default)', function
     it('should format string correctly using an object of strings', function (done) {
       var err = null
       var template = 'The {subject} smelled the {directObject}.'
-      var values = {subject: 'pig', directObject: 'mushrooms'}
+      var values = { subject: 'pig', directObject: 'mushrooms' }
       var newString = zzs.strings.format(template, values)
       if (newString !== sPig) {
         err = new Error('newString not equal to the control string')
@@ -356,7 +356,7 @@ describe('Validate zzb-server defaults using zzs object (non-default)', function
   describe('Is loaded: rob', function () {
     it('should createError', function (done) {
       var err = null
-      var robErr = zzs.rob.createError({message: sPig})
+      var robErr = zzs.rob.createError({ message: sPig })
       if (robErr.message !== sPig) {
         err = new Error('unexpected robErr.message')
       }

@@ -14,7 +14,7 @@ var _perms = require('./perms.js').perms
 //   the name of the global cache object to use
 
 exports.zzbLoader = function (options) {
-  options = _.merge({name: 'zzb', overwriteCached: false}, options)
+  options = _.merge({ name: 'zzb', overwriteCached: false }, options)
 
   // has it already been loaded yet?
   if (global[options.name] && !options.overwriteCached) {
@@ -30,11 +30,11 @@ exports.zzbLoader = function (options) {
   _zzb.prototype.perms = new _perms()
 
   // always gets a copy b/c referenced libs depends on it
-  global['zzb'] = new _zzb()
+  global.zzb = new _zzb()
 
   if (options.plugins && Array.isArray(options.plugins)) {
     _.each(options.plugins, function (plugin) {
-      global['zzb'][plugin.name] = new plugin.class()
+      global.zzb[plugin.name] = new plugin.class()
     })
   }
 
@@ -46,7 +46,7 @@ exports.zzbLoader = function (options) {
     global[options.name].rob = new _rob()
     global[options.name].perms = new _perms()
   } else {
-    global[options.name] = global['zzb']
+    global[options.name] = global.zzb
   }
 
   if (options.plugins && Array.isArray(options.plugins)) {

@@ -1,5 +1,5 @@
 //! zzb.js
-//! version: 1.1.30
+//! version: 1.2.0
 //! author(s): Jaret Pfluger
 //! license: MIT
 //! https://github.com/jpfluger/zazzy-browser
@@ -81,7 +81,7 @@ function _ajax () {
 
             rob.errs = data.errs
             rob.recs = data.recs
-            rob.fields = data.fields
+            rob.columns = data.columns
 
             rob.listErrs = zzb.rob.toListErrs(rob.errs)
           }
@@ -385,7 +385,7 @@ ZazzyDialog.prototype.create$Modal = function () {
     $button.data('button', button)
 
     // Button action (eg onClick)
-    $button.on('click', {dialog: self, $button: $button, button: button}, function (event) {
+    $button.on('click', { dialog: self, $button: $button, button: button }, function (event) {
       var dialog = event.data.dialog
       var $button = event.data.$button
       var button = $button.data('button')
@@ -623,7 +623,8 @@ _forms.prototype.displayUIErrors = function (options, callback) {
     fnSystemErrorContent: null, // function(listContent)
     fnDialogSystemErrors: null, // if this is used, then the inline selectorDisplaySystemMessage will not be used
     fnDialogErrors: null,
-    fnDialogSuccess: null}, options)
+    fnDialogSuccess: null
+  }, options)
 
   if (zzb.types.isNonEmptyString(options.selector)) {
     if ($(options.selector).length > 0) {
@@ -716,7 +717,7 @@ _forms.prototype.displayUIErrors = function (options, callback) {
   // via dialog
   if (list.hasSystemErrors()) {
     if (options.fnDialogSystemErrors && zzb.types.isFunction(options.fnDialogSystemErrors)) {
-      options.fnDialogSystemErrors(zzb.rob.renderListErrs({errs: list.system, format: 'html-list'}), function () {
+      options.fnDialogSystemErrors(zzb.rob.renderListErrs({ errs: list.system, format: 'html-list' }), function () {
         runCallback()
       })
       return // exit
@@ -731,7 +732,7 @@ _forms.prototype.displayUIErrors = function (options, callback) {
       $sysDisplay.html('')
 
       if (list.hasSystemErrors()) {
-        var messages = zzb.rob.renderListErrs({errs: list.system, format: 'html-list'})
+        var messages = zzb.rob.renderListErrs({ errs: list.system, format: 'html-list' })
         if (zzb.types.isNonEmptyString(messages)) {
           if (options.fnSystemErrorContent && zzb.types.isFunction(options.fnSystemErrorContent)) {
             messages = options.fnSystemErrorContent(messages)
@@ -864,7 +865,7 @@ _perms.prototype.mergePermkey = function (permkey, merge) {
 }
 
 _perms.prototype.getPermObject = function (permkey, available, merge) {
-  var po = {key: null, perm: null, attr: {}, toPermkey: function () { return this.key + ':' + this.perm }}
+  var po = { key: null, perm: null, attr: {}, toPermkey: function () { return this.key + ':' + this.perm } }
 
   if (merge || zzb.types.isNonEmptyString(merge)) {
     permkey = this.mergePermkey(permkey, merge)
@@ -909,7 +910,7 @@ var reCRUDX = new RegExp('^[CRUDX]*$')
 
 _perms.prototype.getPermAttributes = function (permkey) {
   // CRUDX
-  var attr = {canRead: false, canCreate: false, canUpdate: false, canDelete: false, canExecute: false}
+  var attr = { canRead: false, canCreate: false, canUpdate: false, canDelete: false, canExecute: false }
 
   if (!permkey || !zzb.types.isNonEmptyString(permkey)) {
     return attr
@@ -1014,7 +1015,7 @@ _rob.prototype.newROB = function (options) {
   return _.merge({
     errs: null,
     recs: [],
-    fields: [],
+    columns: [],
     paginate: {
       page: 0,
       limit: 0,
@@ -1023,8 +1024,8 @@ _rob.prototype.newROB = function (options) {
     hasErrors: function () {
       return (this.errs && Array.isArray(this.errs) && this.errs.length > 0)
     },
-    hasFields: function () {
-      return (this.fields && Array.isArray(this.fields) && this.fields.length > 0)
+    hasColumns: function () {
+      return (this.columns && Array.isArray(this.columns) && this.columns.length > 0)
     },
     hasRecords: function () {
       return (this.recs && Array.isArray(this.recs) && this.recs.length > 0)
@@ -1054,7 +1055,7 @@ _rob.prototype.newROB = function (options) {
 // reduce the error array to an object
 _rob.prototype.toObject = function (errs) {
   if (!errs || !Array.isArray(errs)) {
-    return {'_system': [errs]}
+    return { _system: [errs] }
   }
   var eo = {}
   _.each(errs, function (err) {
@@ -1079,7 +1080,7 @@ function mergeErrorDefaults (options) {
   // why we have isErr?
   //   server-side supports logger { emerg: 0, alert: 1, crit: 2, error: 3, warning: 4, notice: 5, info: 6, debug: 7 }
   //   of which numbers 0 to 3 are errors and > 4 are not
-  options = _.merge({type: 'error', message: null, field: '_system', stack: null, isErr: true, title: null}, options)
+  options = _.merge({ type: 'error', message: null, field: '_system', stack: null, isErr: true, title: null }, options)
 
   if (options.isErr) {
     if (options.type === 'warn') {
@@ -1112,7 +1113,7 @@ var createError = function (options1, options2) {
     return mergeErrorDefaults()
   }
   if (zzb.types.isNonEmptyString(options1)) {
-    return mergeErrorDefaults(_.merge({message: options1}, options2))
+    return mergeErrorDefaults(_.merge({ message: options1 }, options2))
   } else if (!Array.isArray(options1) && zzb.types.isObject(options1)) {
     return mergeErrorDefaults(options1)
   }
@@ -1226,7 +1227,7 @@ _rob.prototype.toListErrs = function (errs) {
 }
 
 _rob.prototype.renderListErrs = function (options) {
-  options = _.merge({errs: [], format: 'text', defaultTitle: '', template: null}, options)
+  options = _.merge({ errs: [], format: 'text', defaultTitle: '', template: null }, options)
   var arr = []
   if (zzb.types.isArrayHasRecords(options.errs)) {
     _.each(options.errs, function (err) {
@@ -1283,7 +1284,7 @@ var _status = function () {
 
 // The status can be embedded in sessionStorage or an attribute otherwise tries an ajax call.
 _status.prototype.get = function (options, callback) {
-  options = _.merge({path: window.location.path, role: null})
+  options = _.merge({ path: window.location.path, role: null })
 
   var setSelf = (options.path === window.location.path && !options.role)
 
@@ -1328,7 +1329,7 @@ _status.prototype.get = function (options, callback) {
   // not in session storage? (best) try a server-side call to '/zzb/status'
   // REQUIRES (callback)
   // if err then returns defaults where isLoggedIn = false
-  tmpStatus = {user: {isLoggedIn: false, username: null}, page: {path: window.location.pathname}}
+  tmpStatus = { user: { isLoggedIn: false, username: null }, page: { path: window.location.pathname } }
   // remember newbies that inside .then() that "this" refrences the .then() function, so using "that" is a workaround
   var that = this
 
@@ -1540,7 +1541,7 @@ _strings.prototype.joinArrToCommas = function (arr, fieldName) {
  * @returns {String}
  */
 _strings.prototype.toPlural = function (word, number, options) {
-  options = _.merge({forcePlural: false, suffix: null}, options)
+  options = _.merge({ forcePlural: false, suffix: null }, options)
 
   if ((number === 1 || number === -1) && !options.forcePlural) {
     return word
@@ -1659,7 +1660,7 @@ var _uib = function () {}
  * @returns {String}
  */
 _uib.prototype.createPanelGroup = function (options) {
-  options = _.merge({id: zzb.uuid.newV4(), classPanelGroup: '', innerHtml: ''}, options)
+  options = _.merge({ id: zzb.uuid.newV4(), classPanelGroup: '', innerHtml: '' }, options)
   var template = '<div id="panelGroup_{id}" class="panel-group {classPanelGroup}">{innerHtml}</div>'
   return zzb.strings.format(template, options) // _.formatObj(template, uie)
 }
@@ -1671,7 +1672,7 @@ _uib.prototype.createPanelGroup = function (options) {
  * @returns {String}
  */
 _uib.prototype.createPanelBody = function (options) {
-  options = _.merge({id: zzb.uuid.newV4(), classPanelBody: '', innerHtml: ''}, options)
+  options = _.merge({ id: zzb.uuid.newV4(), classPanelBody: '', innerHtml: '' }, options)
   var template = '<div id="panelBody_{id}" class="panel-body {classPanelBody}">{innerHtml}</div>'
   return zzb.strings.format(template, options) // _.formatObj(template, uie)
 }
@@ -1685,7 +1686,8 @@ _uib.prototype.createPanelBody = function (options) {
  * @returns {String}
  */
 _uib.prototype.createPanel = function (options) {
-  options = _.merge({id: zzb.uuid.newV4(),
+  options = _.merge({
+    id: zzb.uuid.newV4(),
     className: '',
     attributesExtra: '',
     classPanelHeading: '',
@@ -1715,7 +1717,8 @@ _uib.prototype.createPanel = function (options) {
  * @returns {String}
  */
 _uib.prototype.createPanelCollapsible = function (options) {
-  options = _.merge({id: zzb.uuid.newV4(),
+  options = _.merge({
+    id: zzb.uuid.newV4(),
     className: '',
     attributesExtra: '',
     name: '',
@@ -1764,7 +1767,8 @@ _uib.prototype.createPanelCollapsible = function (options) {
  * @returns {String}
  */
 _uib.prototype.createPanelCollapsibleBegin = function (options) {
-  options = _.merge({id: zzb.uuid.newV4(),
+  options = _.merge({
+    id: zzb.uuid.newV4(),
     className: '',
     attributesExtra: '',
     name: '',

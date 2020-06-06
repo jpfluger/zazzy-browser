@@ -16,7 +16,7 @@ var path = require('path')
 var util = require('util')
 var pkg = require('./package.json')
 
-var literalify = browserifyTools.makeRequireTransform('literalify', {excludeExtensions: ['json']}, function (args, opts, cb) {
+var literalify = browserifyTools.makeRequireTransform('literalify', { excludeExtensions: ['json'] }, function (args, opts, cb) {
   if (opts.config && args[0] in opts.config) {
     return cb(null, opts.config[args[0]])
   } else {
@@ -46,7 +46,7 @@ function cleanJS (cb) {
 }
 
 function lintJS () {
-  return gulp.src([paths.srcJSEntry], {base: '.'})
+  return gulp.src([paths.srcJSEntry], { base: '.' })
     .pipe(eslint({}))
     .pipe(eslint.format())
     .pipe(eslint.failAfterError())
@@ -57,9 +57,9 @@ function distJS (cb) {
   var appBundler = browserify({
     entries: paths.srcJSEntry,
     transform: [[literalify.configure({
-      'jQuery': 'window.$',
-      'BootstrapDialog': 'window.BootstrapDialog',
-      'lodash': 'window._'
+      jQuery: 'window.$',
+      BootstrapDialog: 'window.BootstrapDialog',
+      lodash: 'window._'
     })]],
     cache: {},
     packageCache: {},
@@ -75,7 +75,7 @@ function distJS (cb) {
 }
 
 function minifyJS () {
-  return gulp.src([paths.distJS], {base: '.'})
+  return gulp.src([paths.distJS], { base: '.' })
     .pipe(concat(paths.minJS))
     .pipe(uglify())
     .pipe(insert.prepend(pckInfo.join('\n')))

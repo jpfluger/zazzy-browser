@@ -183,7 +183,7 @@ _strings.prototype.joinArrToCommas = function (arr, fieldName) {
  * @returns {String}
  */
 _strings.prototype.toPlural = function (word, number, options) {
-  options = _.merge({forcePlural: false, suffix: null}, options)
+  options = _.merge({ forcePlural: false, suffix: null }, options)
 
   if ((number === 1 || number === -1) && !options.forcePlural) {
     return word
