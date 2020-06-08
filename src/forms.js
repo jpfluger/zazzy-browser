@@ -10,6 +10,22 @@ var _ = require('lodash')
 
 var _forms = function () {}
 
+_forms.prototype.findForm = function (id) {
+  var $form
+  if (zzb.types.isString(id)) {
+    if (id.length > 0 && id[0] === '.') {
+      // assume a class
+      $form = $(id)
+    } else {
+      // assume an id... but it may need to be escaped by '#'
+      $form = $(zzb.types.escapeJqueryId(id))
+    }
+  } else {
+    $form = $(id).closest('form')
+  }
+  return $form
+}
+
 _forms.prototype.displayUIErrors = function (options, callback) {
   options = _.merge({
     selector: null,
