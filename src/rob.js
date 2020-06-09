@@ -83,9 +83,13 @@ function mergeErrorDefaults (options) {
       options.type = 'warning'
     } else if (options.type === 'err') {
       options.type = 'error'
+    } else if (options.type === 'crit') {
+      options.type = 'critical'
     } else if (options.type === 'emerg') {
       options.type = 'emergency'
     }
+    // no "else" statement to default to a value (eg "error")
+    // this keeps the the available types loosely open
     switch (options.type) {
       case 'warning':
       case 'notice':

@@ -34,7 +34,18 @@ function _ajax () {
           } else {
             // always redirect, if present
             if (data.redirect && data.redirect.length > 0) {
-              window.location.href = data.redirect
+              if (zzb.types.isNonEmptyString(data.message)) {
+                zzb.dialogs.showMessage({
+                  className: 'zzb-dialog-flash-message',
+                  dataBackdrop: 'static',
+                  body: data.message,
+                  onHide: function (ev) {
+                    window.location.href = data.redirect
+                  }
+                })
+              } else {
+                window.location.href = data.redirect
+              }
               return
             }
 
