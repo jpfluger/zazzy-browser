@@ -52,13 +52,15 @@ _forms.prototype.displayUIErrors = function (options, callback) {
 
     // Optionally don't hide existing fields
     skipHideFields: false,
+    // if true, show a small dialog with the system errors, formatted according to listSystemErrsFormatType. if used, then inline selectorInlineSystemFieldname is not used
+    doFlashSystemErrors: false,
     // these three things lead to the same value of "listErrs"
     listErrs: null,
     errs: null,
     rob: null,
     // callbacks
     fnSystemErrorContent: null, // function(listContent)
-    fnDialogSystemErrors: null, // if this is used, then the inline selectorInlineSystemFieldname will not be used
+    fnDialogSystemErrors: null, // if this is used, then both doFlashSystemErrors and inline selectorInlineSystemFieldname are not used
     fnDialogErrors: null,
     fnDialogSuccess: null
   }, options)
@@ -177,30 +179,44 @@ _forms.prototype.displayUIErrors = function (options, callback) {
   // --------------------------------------
   // System Messages
 
-  // via dialog
   if (list.hasSystemErrors()) {
+    var messages = ''
+    // via custom dialog
     if (options.fnDialogSystemErrors && zzb.types.isFunction(options.fnDialogSystemErrors)) {
-      options.fnDialogSystemErrors(zzb.rob.renderListErrs({ errs: list.system, format: 'html-list' }), function () {
+      options.fnDialogSystemErrors(zzb.rob.renderListErrs({ errs: list.system, format: options.listSystemErrsFormatType }), function () {
         runCallback()
       })
       return // exit
-    }
-  }
-
-  // via inline
-  if (zzb.types.isNonEmptyString(options.selectorInlineSystemFieldname)) {
-    var $sysDisplay = options.$form.find(options.selectorValidateMessage + '[' + options.attrFieldname + "='" + options.selectorInlineSystemFieldname + "']")
-    if (zzb.types.isObject($sysDisplay) && $sysDisplay.length > 0) {
-      var $content = $sysDisplay.find(options.selectorValidateMessageContent)
-      if (!zzb.types.isObject($content) || $content.length === 0) {
-        $content = $sysDisplay
+    } else if (options.doFlashSystemErrors) {
+      // via small dialog box
+      messages = zzb.rob.renderListErrs({ errs: list.system, format: options.listSystemErrsFormatType })
+      if (zzb.types.isNonEmptyString(messages)) {
+        if (options.fnSystemErrorContent && zzb.types.isFunction(options.fnSystemErrorContent)) {
+          messages = options.fnSystemErrorContent(messages)
+        }
+        zzb.dialogs.showMessage({
+          className: 'zzb-dialog-flash-message zzb-flash-invalid', // zzb-flash-valid
+          dataBackdrop: 'static',
+          body: messages,
+          onHide: function () {
+            runCallback()
+          }
+        })
       }
+      return // exit
+    } else if (zzb.types.isNonEmptyString(options.selectorInlineSystemFieldname)) {
+      // via inline
+      var $sysDisplay = options.$form.find(options.selectorValidateMessage + '[' + options.attrFieldname + "='" + options.selectorInlineSystemFieldname + "']")
+      if (zzb.types.isObject($sysDisplay) && $sysDisplay.length > 0) {
+        var $content = $sysDisplay.find(options.selectorValidateMessageContent)
+        if (!zzb.types.isObject($content) || $content.length === 0) {
+          $content = $sysDisplay
+        }
 
-      $sysDisplay.addClass('d-none')
-      hideValidateTargetCSS($content, false)
+        $sysDisplay.addClass('d-none')
+        hideValidateTargetCSS($content, false)
 
-      if (list.hasSystemErrors()) {
-        var messages = zzb.rob.renderListErrs({ errs: list.system, format: options.listSystemErrsFormatType })
+        messages = zzb.rob.renderListErrs({ errs: list.system, format: options.listSystemErrsFormatType })
         if (zzb.types.isNonEmptyString(messages)) {
           if (options.fnSystemErrorContent && zzb.types.isFunction(options.fnSystemErrorContent)) {
             messages = options.fnSystemErrorContent(messages)
@@ -293,10 +309,19 @@ _forms.prototype.hideValidateFields = function (options) {
   }
 }
 
-_forms.prototype.serializeFormData = function (id, action) {
-  var $form = zzb.forms.findForm(id)
-  if (!zzb.types.isObject($form)) {
-    throw new Error('serializeFormData: $form not found')
+_forms.prototype.serializeFormData = function (options) {
+  options = _.merge({
+    formSelector: null,
+    $form: null,
+    action: null
+  }, options)
+
+  options.$form = zzb.forms.findForm(options.$form)
+  if (!zzb.types.isObject(options.$form) || options.$form.length === 0) {
+    options.$form = zzb.forms.findForm(options.formSelector)
+    if (!zzb.types.isObject(options.$form) || options.$form.length === 0) {
+      throw new Error('serializeFormData: $form not found')
+    }
   }
 
   // using https://github.com/marioizquierdo/jquery.serializeJSON
@@ -304,16 +329,18 @@ _forms.prototype.serializeFormData = function (id, action) {
   // var data = $form.serializeJSON({parseBooleans: true, parseNumbers: true})
   // using https://github.com/raphaelm22/jquery.serializeToJSON
   // Does not require the type, but output is a hierarchy with parent-child relationships
-  var data = $form.serializeToJSON()
+  var data = options.$form.serializeToJSON()
   // using https://github.com/rc1021/serialize-json
   // Does not require the type, but output is a hierarchy with parent-child relationships - doesn't convert string to bool by default
   // var data = $form.serializeJson()
 
-  if (zzb.types.isNonEmptyString(action)) {
-    data.submit = action
+  if (zzb.types.isNonEmptyString(options.action)) {
+    data.submit = options.action
   }
 
-  return { data: data, $form: $form }
+  options.data = data
+
+  return options
 }
 
 _forms.prototype.submitForm = function (options, callback) {
