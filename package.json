@@ -1,6 +1,6 @@
 {
   "name": "zazzy-browser",
-  "version": "1.2.1",
+  "version": "1.3.0",
   "description": "A collection of general-purpose browser utilities used as higher-level building-blocks to create Bootstrap v4 websites and assist in client-server communications.",
   "engines": {
     "node": ">= 12.17.0"
@@ -30,7 +30,8 @@
   ],
   "dependencies": {
     "jquery": ">=3.5.1",
-    "lodash": "^4.17.15"
+    "lodash": "^4.17.15",
+    "jquery-serializetojson": "^1.4.1"
   },
   "devDependencies": {
     "browserify": "^16.5.1",
@@ -56,7 +57,8 @@
       "$",
       "jQuery",
       "define",
-      "sessionStorage"
+      "sessionStorage",
+      "serializeToJSON"
     ],
     "ignore": [
       "dist/**"

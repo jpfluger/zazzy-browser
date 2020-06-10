@@ -26,27 +26,37 @@ function _ajax () {
           // ?
           // if (jqXHR.status != '200') {}
 
+          var noFinalResolve = false
           var rob = zzb.rob.newROB()
 
           if (!jqXHR.responseJSON) {
             // html or some other data type was returned
             rob.recs = [data]
           } else {
-            // always redirect, if present
-            if (data.redirect && data.redirect.length > 0) {
-              if (zzb.types.isNonEmptyString(data.message)) {
-                zzb.dialogs.showMessage({
-                  className: 'zzb-dialog-flash-message',
-                  dataBackdrop: 'static',
-                  body: data.message,
-                  onHide: function (ev) {
-                    window.location.href = data.redirect
-                  }
-                })
-              } else {
-                window.location.href = data.redirect
+            // handle redirect
+            if (options.SKIPREDIRECT !== true) {
+              if (data.redirect && data.redirect.length > 0) {
+                if (zzb.types.isFunction(options.onRedirect)) {
+                  options.onRedirect(data, function (skipRedirect) {
+                    if (!skipRedirect) {
+                      window.location.href = data.redirect
+                    }
+                  })
+                  return
+                } else if (zzb.types.isNonEmptyString(data.message)) {
+                  zzb.dialogs.showMessage({
+                    className: 'zzb-dialog-flash-message',
+                    dataBackdrop: 'static',
+                    body: data.message,
+                    onHide: function (ev) {
+                      window.location.href = data.redirect
+                    }
+                  })
+                } else {
+                  window.location.href = data.redirect
+                }
+                return
               }
-              return
             }
 
             // Errors are ALWAYS an ARRAY and in an expected ROB Error format
@@ -89,9 +99,36 @@ function _ajax () {
             rob.columns = data.columns
 
             rob.listErrs = zzb.rob.toListErrs(rob.errs)
+
+            if (options.SKIPFLASH !== true) {
+              if (zzb.types.isNonEmptyString(data.message)) {
+                noFinalResolve = true
+                zzb.dialogs.showMessage({
+                  className: 'zzb-dialog-flash-message',
+                  dataBackdrop: 'static',
+                  body: data.message,
+                  onHide: function (ev) {
+                    resolve(rob)
+                  }
+                })
+              }
+            }
+
+            // finish processing
+            if (zzb.types.isFunction(options.onFinish)) {
+              noFinalResolve = true
+              options.onFinish(rob, function (noResolve) {
+                if (noResolve === true) {
+                  return
+                }
+                resolve(rob)
+              })
+            }
           }
 
-          resolve(rob)
+          if (noFinalResolve !== true) {
+            resolve(rob)
+          }
         })
         .fail(function (jqXHR, textStatus, errorThrown) {
           // if (jqXHR.responseJSON) {

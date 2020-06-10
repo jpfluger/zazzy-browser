@@ -82,7 +82,7 @@ describe('Validate zzb.rob methods', function () {
     it('should create from string (non-object) and crit object', function (done) {
       var err = null
       var robErr = zzb.rob.createError(sPig, { type: 'crit' })
-      if (robErr.type !== 'crit') {
+      if (robErr.type !== 'critical') {
         err = new Error('robErr.type is not warning but ' + robErr.type)
       } else if (robErr.isErr !== true) {
         err = new Error('robErr.isErr is false when it should be true')

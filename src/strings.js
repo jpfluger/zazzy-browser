@@ -196,4 +196,15 @@ _strings.prototype.toPlural = function (word, number, options) {
   }
 }
 
+_strings.prototype.toFirstCapitalEndPeriod = function (target) {
+  if (zzb.types.isNonEmptyString(target)) {
+    target = _.trim(target)
+    target = _.capitalize(target)
+    if (!_.endsWith(target, '.')) {
+      target += '.'
+    }
+  }
+  return target
+}
+
 exports.strings = _strings

@@ -210,7 +210,6 @@ _rob.prototype.toListErrs = function (errs) {
     hasErrors: function () {
       return (this.hasSystemErrors() || this.hasFieldErrors())
     },
-
     hasSystemMessages: function () {
       return (this.systemMessages && this.systemMessages.length > 0)
     },
@@ -247,6 +246,8 @@ _rob.prototype.renderListErrs = function (options) {
           arr.push(zzb.strings.format('<li class="zzb-rob-list-error-item"><span>{0}:</span> {1}</li>', title, err.message))
         } else if (options.format === 'label') {
           arr.push(zzb.strings.format('{0}: {1}', title, err.message))
+        } else if (options.format === 'text-punctuated') {
+          arr.push(zzb.strings.toFirstCapitalEndPeriod(err.message) + ' ')
         } else { // text
           arr.push(zzb.strings.format(err.message))
         }

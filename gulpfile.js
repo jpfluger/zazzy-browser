@@ -58,8 +58,9 @@ function distJS (cb) {
     entries: paths.srcJSEntry,
     transform: [[literalify.configure({
       jQuery: 'window.$',
-      BootstrapDialog: 'window.BootstrapDialog',
-      lodash: 'window._'
+      // BootstrapDialog: 'window.BootstrapDialog',
+      lodash: 'window._',
+      serializeToJSON: 'window.serializeToJSON'
     })]],
     cache: {},
     packageCache: {},
