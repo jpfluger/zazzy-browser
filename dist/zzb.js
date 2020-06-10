@@ -1,5 +1,5 @@
 //! zzb.js
-//! version: 1.3.0
+//! version: 1.3.1
 //! author(s): Jaret Pfluger
 //! license: MIT
 //! https://github.com/jpfluger/zazzy-browser
@@ -791,7 +791,7 @@ _forms.prototype.displayUIErrors = function (options, callback) {
         hideValidateTargetCSS($content, false)
 
         if (errField) {
-          $content.html(zzb.stringstoFirstCapitalEndPeriod(errField.message))
+          $content.html(zzb.strings.toFirstCapitalEndPeriod(errField.message))
           if (errField.isErr === false) { // in this way undefined | null | true will travel the "else" path
             $content.addClass(cssMessageValid)
           } else {

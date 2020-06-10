@@ -148,7 +148,7 @@ _forms.prototype.displayUIErrors = function (options, callback) {
         hideValidateTargetCSS($content, false)
 
         if (errField) {
-          $content.html(zzb.stringstoFirstCapitalEndPeriod(errField.message))
+          $content.html(zzb.strings.toFirstCapitalEndPeriod(errField.message))
           if (errField.isErr === false) { // in this way undefined | null | true will travel the "else" path
             $content.addClass(cssMessageValid)
           } else {
