@@ -1,5 +1,5 @@
 //! zzb.js
-//! version: 1.3.3
+//! version: 1.3.4
 //! author(s): Jaret Pfluger
 //! license: MIT
 //! https://github.com/jpfluger/zazzy-browser
@@ -1832,7 +1832,7 @@ _strings.prototype.toFirstCapitalEndPeriod = function (target) {
 
 // From https://stackoverflow.com/questions/10420352/converting-file-size-in-bytes-to-human-readable-string/10420404
 //      https://ux.stackexchange.com/questions/13815/files-size-units-kib-vs-kb-vs-kb
-_strings.prototype.sizeToHumanReadable = function (bytes , si, dp) {
+_strings.prototype.sizeToHumanReadable = function (bytes, si, dp) {
   if (si !== true) {
     si = false
   }
@@ -1851,7 +1851,7 @@ _strings.prototype.sizeToHumanReadable = function (bytes , si, dp) {
     : ['KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB']
   var u = -1
   // var r = 10 ** dp
-  var r = Math.pow(dp, 10);
+  var r = Math.pow(dp, 10)
 
   do {
     bytes /= thresh
