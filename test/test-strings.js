@@ -199,4 +199,23 @@ describe('Validate zzb.string methods', function () {
       done(err)
     })
   })
+
+  describe('zzb.strings.millisecondsTimeToHumanReadable', function () {
+    it('should equal 1h 11m 24.68s', function (done) {
+      var err = null
+      var compare = zzb.strings.millisecondsTimeToHumanReadable(4284675)
+      if (compare !== '1h 11m 24.68s') {
+        err = new Error('milliseconds human readable is "' + compare + '" but should be "1h 11m 24.68s"')
+      }
+      done(err)
+    })
+    it('should equal 18d 9h 2m 24.95s', function (done) {
+      var err = null
+      var compare = zzb.strings.millisecondsTimeToHumanReadable(1587744948)
+      if (compare !== '18d 9h 2m 24.95s') {
+        err = new Error('milliseconds human readable is "' + compare + '" but should be "18d 9h 2m 24.95s"')
+      }
+      done(err)
+    })
+  })
 })

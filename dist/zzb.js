@@ -1,5 +1,5 @@
 //! zzb.js
-//! version: 1.3.4
+//! version: 1.3.5
 //! author(s): Jaret Pfluger
 //! license: MIT
 //! https://github.com/jpfluger/zazzy-browser
@@ -1859,6 +1859,25 @@ _strings.prototype.sizeToHumanReadable = function (bytes, si, dp) {
   } while (Math.round(Math.abs(bytes) * r) / r >= thresh && u < units.length - 1)
 
   return bytes.toFixed(dp) + ' ' + units[u]
+}
+
+_strings.prototype.millisecondsTimeToHumanReadable = function (milliseconds) {
+  var temp = milliseconds / 1000
+  var years = Math.floor(temp / 31536000)
+  var days = Math.floor((temp %= 31536000) / 86400)
+  var hours = Math.floor((temp %= 86400) / 3600)
+  var minutes = Math.floor((temp %= 3600) / 60)
+  var seconds = temp % 60
+
+  if (days || hours || seconds || minutes) {
+    return (years ? years + 'y ' : '') +
+      (days ? days + 'd ' : '') +
+      (hours ? hours + 'h ' : '') +
+      (minutes ? minutes + 'm ' : '') +
+      Number.parseFloat(seconds).toFixed(2) + 's'
+  }
+
+  return '< 1s'
 }
 
 exports.strings = _strings
