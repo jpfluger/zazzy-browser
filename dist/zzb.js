@@ -1,5 +1,5 @@
 //! zzb.js
-//! version: 1.3.5
+//! version: 1.3.6
 //! author(s): Jaret Pfluger
 //! license: MIT
 //! https://github.com/jpfluger/zazzy-browser
@@ -151,28 +151,36 @@ function _ajax () {
   }
 }
 
-// sometimes a request is made for an html snippet but json is returned
-// this is why dataType is commented out here b/c the calling function isn't certain what type of data will return
+// Sometimes a request is made for an html snippet but json is returned. The function will error if the dataType i
+// specified but in the wrong format. This function removes 'dataType' but you can do it manually by using {dataType: ''}
 _ajax.prototype.get = function (options) {
+  options = _.merge({ contentType: 'application/json; charset=UTF-8', data: {} }, options)
   options.type = 'GET'
-  options.contentType = 'application/json; charset=UTF-8'
-  options.data = JSON.stringify(options.data)
+  if (!zzb.types.isNonEmptyString(options.data)) {
+    options.data = JSON.stringify(options.data)
+  }
   return this.ajax(options)
 }
 
+// Sometimes a request is made for an html snippet but json is returned. The function will error if the dataType i
+// specified but in the wrong format. To have jquery "guess", then override datatype in this way: {dataType: ''}
 _ajax.prototype.getJSON = function (options) {
+  options = _.merge({ dataType: 'json', contentType: 'application/json; charset=UTF-8', data: {} }, options)
   options.type = 'GET'
-  options.dataType = 'json'
-  options.contentType = 'application/json; charset=UTF-8'
-  options.data = JSON.stringify(options.data)
+  if (!zzb.types.isNonEmptyString(options.data)) {
+    options.data = JSON.stringify(options.data)
+  }
   return this.ajax(options)
 }
 
+// Sometimes a request is made for an html snippet but json is returned. The function will error if the dataType i
+// specified but in the wrong format. To have jquery "guess", then override datatype in this way: {dataType: ''}
 _ajax.prototype.postJSON = function (options) {
+  options = _.merge({ dataType: 'json', contentType: 'application/json; charset=UTF-8', data: {} }, options)
   options.type = 'POST'
-  options.dataType = 'json'
-  options.contentType = 'application/json; charset=UTF-8'
-  options.data = JSON.stringify(options.data)
+  if (!zzb.types.isNonEmptyString(options.data)) {
+    options.data = JSON.stringify(options.data)
+  }
   return this.ajax(options)
 }
 
@@ -1830,25 +1838,54 @@ _strings.prototype.toFirstCapitalEndPeriod = function (target) {
   return target
 }
 
+var sizeUnitsFormatNameSingle = ['K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y']
+var sizeUnitsFormatNameDouble = ['KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
+var sizeUnitsFormatNameFull = ['Kilobyte', 'Megabyte', 'Gigabyte', 'Terabyte', 'Petabyte', 'Exabyte', 'Zettabyte', 'Yottabyte']
+var sizeUnitsFormatNameEIC = ['KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB']
+
 // From https://stackoverflow.com/questions/10420352/converting-file-size-in-bytes-to-human-readable-string/10420404
 //      https://ux.stackexchange.com/questions/13815/files-size-units-kib-vs-kb-vs-kb
-_strings.prototype.sizeToHumanReadable = function (bytes, si, dp) {
-  if (si !== true) {
-    si = false
+// We standardized the above, somewhat, with https://github.com/cloudfoundry/bytefmt
+// Also only divisions are with 1024 and NOT 1000
+_strings.prototype.sizeToHumanReadable = function (bytes, unitsFormat, noSizeUnitSeparation, dp) {
+  if (!zzb.types.isNonEmptyString(unitsFormat)) {
+    unitsFormat = 'single'
+  }
+  var unitSeperateSpace = ' '
+  if (noSizeUnitSeparation === true) {
+    unitSeperateSpace = ''
   }
   if (!dp) {
     dp = 1
   }
 
-  var thresh = si ? 1000 : 1024
+  var thresh = 1024 // si ? 1000 : 1024
 
-  if (Math.abs(bytes) < thresh) {
-    return bytes + ' B'
+  var units
+  var unitsBytes = 'B'
+  switch (unitsFormat.toLowerCase()) {
+    case 'full':
+      units = sizeUnitsFormatNameFull
+      unitsBytes = 'Bytes'
+      break
+    case 'double':
+      units = sizeUnitsFormatNameDouble
+      break
+    case 'eic':
+      units = sizeUnitsFormatNameEIC
+      break
+    default: // single
+      units = sizeUnitsFormatNameSingle
+      break
   }
 
-  var units = si
-    ? ['kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
-    : ['KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB']
+  if (Math.abs(bytes) < thresh) {
+    return bytes + unitSeperateSpace + unitsBytes
+  }
+
+  // var units = si
+  //   ? ['kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
+  //   : ['KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB']
   var u = -1
   // var r = 10 ** dp
   var r = Math.pow(dp, 10)
@@ -1858,9 +1895,14 @@ _strings.prototype.sizeToHumanReadable = function (bytes, si, dp) {
     ++u
   } while (Math.round(Math.abs(bytes) * r) / r >= thresh && u < units.length - 1)
 
-  return bytes.toFixed(dp) + ' ' + units[u]
+  var valFixed = bytes.toFixed(dp) + ''
+  valFixed = _.trimEnd(valFixed, '.00')
+  valFixed = _.trimEnd(valFixed, '.0')
+
+  return valFixed + unitSeperateSpace + units[u]
 }
 
+// https://stackoverflow.com/questions/8211744/convert-time-interval-given-in-seconds-into-more-human-readable-form
 _strings.prototype.millisecondsTimeToHumanReadable = function (milliseconds) {
   var temp = milliseconds / 1000
   var years = Math.floor(temp / 31536000)

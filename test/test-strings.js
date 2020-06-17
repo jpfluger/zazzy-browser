@@ -70,131 +70,195 @@ describe('Validate zzb.string methods', function () {
   })
 
   describe('zzb.strings.sizeToHumanReadable', function () {
-    it('should equal 1.0 KiB - base 1024', function (done) {
+    it('should equal 1 K - base 1024', function (done) {
       var err = null
       var compare = zzb.strings.sizeToHumanReadable(1024)
-      if (compare !== '1.0 KiB') {
-        err = new Error('size human readable is "' + compare + '" but should be "1.0 KiB"')
+      if (compare !== '1 K') {
+        err = new Error('size human readable is "' + compare + '" but should be "1 K"')
       }
       done(err)
     })
-    it('should equal 1.0 KB - base 1000', function (done) {
+    it('should equal 1K - base 1024', function (done) {
       var err = null
-      var compare = zzb.strings.sizeToHumanReadable(1024, true)
-      if (compare !== '1.0 kB') {
-        err = new Error('size human readable is "' + compare + '" but should be "1.0 kB"')
+      var compare = zzb.strings.sizeToHumanReadable(1024, 'single', true)
+      if (compare !== '1K') {
+        err = new Error('size human readable is "' + compare + '" but should be "1K"')
       }
       done(err)
     })
     it('should equal 0 B - base 1024', function (done) {
       var err = null
-      var compare = zzb.strings.sizeToHumanReadable(0, false)
+      var compare = zzb.strings.sizeToHumanReadable(0)
       if (compare !== '0 B') {
         err = new Error('size human readable is "' + compare + '" but should be "0 B"')
       }
       done(err)
     })
-    it('should equal 0 B - base 1000', function (done) {
+    it('should equal 0B - base 1024', function (done) {
       var err = null
-      var compare = zzb.strings.sizeToHumanReadable(0, true)
-      if (compare !== '0 B') {
-        err = new Error('size human readable is "' + compare + '" but should be "0 B"')
+      var compare = zzb.strings.sizeToHumanReadable(0, 'single', true)
+      if (compare !== '0B') {
+        err = new Error('size human readable is "' + compare + '" but should be "0B"')
+      }
+      done(err)
+    })
+    it('should equal 0 Bytes - base 1024', function (done) {
+      var err = null
+      var compare = zzb.strings.sizeToHumanReadable(0, 'full')
+      if (compare !== '0 Bytes') {
+        err = new Error('size human readable is "' + compare + '" but should be "0 Bytes"')
+      }
+      done(err)
+    })
+    it('should equal 0Bytes - base 1024', function (done) {
+      var err = null
+      var compare = zzb.strings.sizeToHumanReadable(0, 'full', true)
+      if (compare !== '0Bytes') {
+        err = new Error('size human readable is "' + compare + '" but should be "0Bytes"')
       }
       done(err)
     })
     it('should equal 512 B - base 1024', function (done) {
       var err = null
-      var compare = zzb.strings.sizeToHumanReadable(512, false)
+      var compare = zzb.strings.sizeToHumanReadable(512)
       if (compare !== '512 B') {
         err = new Error('size human readable is "' + compare + '" but should be "512 B"')
       }
       done(err)
     })
-    it('should equal 512 B - base 1000', function (done) {
+    it('should equal 512B - base 1024', function (done) {
       var err = null
-      var compare = zzb.strings.sizeToHumanReadable(512, true)
-      if (compare !== '512 B') {
-        err = new Error('size human readable is "' + compare + '" but should be "512 B"')
+      var compare = zzb.strings.sizeToHumanReadable(512, 'single', true)
+      if (compare !== '512B') {
+        err = new Error('size human readable is "' + compare + '" but should be "512B"')
       }
       done(err)
     })
-    it('should equal 4.7 MiB - base 1024', function (done) {
+    it('should equal 4.7 M - base 1024', function (done) {
       var err = null
-      var compare = zzb.strings.sizeToHumanReadable(4915200, false)
-      if (compare !== '4.7 MiB') {
-        err = new Error('size human readable is "' + compare + '" but should be "4.7 MiB"')
+      var compare = zzb.strings.sizeToHumanReadable(4915200)
+      if (compare !== '4.7 M') {
+        err = new Error('size human readable is "' + compare + '" but should be "4.7 M"')
       }
       done(err)
     })
-    it('should equal 4.9 MB - base 1000', function (done) {
+    it('should equal 4.7M - base 1024', function (done) {
       var err = null
-      var compare = zzb.strings.sizeToHumanReadable(4915200, true)
-      if (compare !== '4.9 MB') {
-        err = new Error('size human readable is "' + compare + '" but should be "4.9 MB"')
+      var compare = zzb.strings.sizeToHumanReadable(4915200, 'single', true)
+      if (compare !== '4.7M') {
+        err = new Error('size human readable is "' + compare + '" but should be "4.7M"')
       }
       done(err)
     })
-    it('should equal 10.5 GiB - base 1024', function (done) {
+    it('should equal 10.5 G - base 1024', function (done) {
       var err = null
-      var compare = zzb.strings.sizeToHumanReadable(11304960000, false)
-      if (compare !== '10.5 GiB') {
-        err = new Error('size human readable is "' + compare + '" but should be "10.5 GiB"')
+      var compare = zzb.strings.sizeToHumanReadable(11304960000)
+      if (compare !== '10.5 G') {
+        err = new Error('size human readable is "' + compare + '" but should be "10.5 G"')
       }
       done(err)
     })
-    it('should equal 11.3 GB - base 1000', function (done) {
+    it('should equal 10.5G - base 1024', function (done) {
       var err = null
-      var compare = zzb.strings.sizeToHumanReadable(11304960000, true)
-      if (compare !== '11.3 GB') {
-        err = new Error('size human readable is "' + compare + '" but should be "11.3 GB"')
+      var compare = zzb.strings.sizeToHumanReadable(11304960000, 'single', true)
+      if (compare !== '10.5G') {
+        err = new Error('size human readable is "' + compare + '" but should be "10.5G"')
       }
       done(err)
     })
-    it('should equal 91.5 TiB - base 1024', function (done) {
+    it('should equal 91.5 T - base 1024', function (done) {
       var err = null
-      var compare = zzb.strings.sizeToHumanReadable(11304960000 * 8900, false)
-      if (compare !== '91.5 TiB') {
-        err = new Error('size human readable is "' + compare + '" but should be "91.5 TiB"')
+      var compare = zzb.strings.sizeToHumanReadable(11304960000 * 8900)
+      if (compare !== '91.5 T') {
+        err = new Error('size human readable is "' + compare + '" but should be "91.5 T"')
       }
       done(err)
     })
-    it('should equal 100.6 TB - base 1000', function (done) {
+    it('should equal 91.5T - base 1024', function (done) {
       var err = null
-      var compare = zzb.strings.sizeToHumanReadable(11304960000 * 8900, true)
-      if (compare !== '100.6 TB') {
-        err = new Error('size human readable is "' + compare + '" but should be "100.6 TB"')
+      var compare = zzb.strings.sizeToHumanReadable(11304960000 * 8900, 'single', true)
+      if (compare !== '91.5T') {
+        err = new Error('size human readable is "' + compare + '" but should be "91.5T"')
       }
       done(err)
     })
-    it('should equal 885.7 PiB - base 1024', function (done) {
+    it('should equal 885.7 P - base 1024', function (done) {
       var err = null
-      var compare = zzb.strings.sizeToHumanReadable(11304960000 * 8900 * 9911, false)
-      if (compare !== '885.7 PiB') {
-        err = new Error('size human readable is "' + compare + '" but should be "885.7 PiB"')
+      var compare = zzb.strings.sizeToHumanReadable(11304960000 * 8900 * 9911)
+      if (compare !== '885.7 P') {
+        err = new Error('size human readable is "' + compare + '" but should be "885.7 P"')
       }
       done(err)
     })
-    it('should equal 997.2 PB - base 1000', function (done) {
+    it('should equal 885.7P - base 1024', function (done) {
       var err = null
-      var compare = zzb.strings.sizeToHumanReadable(11304960000 * 8900 * 9911, true)
-      if (compare !== '997.2 PB') {
-        err = new Error('size human readable is "' + compare + '" but should be "997.2 PB"')
+      var compare = zzb.strings.sizeToHumanReadable(11304960000 * 8900 * 9911, 'single', true)
+      if (compare !== '885.7P') {
+        err = new Error('size human readable is "' + compare + '" but should be "885.7P"')
+      }
+      done(err)
+    })
+    it('should equal 2.6 E - base 1024', function (done) {
+      var err = null
+      var compare = zzb.strings.sizeToHumanReadable(11304960000 * 8900 * 9911 * 3)
+      if (compare !== '2.6 E') {
+        err = new Error('size human readable is "' + compare + '" but should be "2.6 E"')
+      }
+      done(err)
+    })
+    it('should equal 2.6E - base 1024', function (done) {
+      var err = null
+      var compare = zzb.strings.sizeToHumanReadable(11304960000 * 8900 * 9911 * 3, 'single', true)
+      if (compare !== '2.6E') {
+        err = new Error('size human readable is "' + compare + '" but should be "2.6E"')
+      }
+      done(err)
+    })
+    it('should equal 2.6 EB - base 1024', function (done) {
+      var err = null
+      var compare = zzb.strings.sizeToHumanReadable(11304960000 * 8900 * 9911 * 3, 'double')
+      if (compare !== '2.6 EB') {
+        err = new Error('size human readable is "' + compare + '" but should be "2.6 EB"')
+      }
+      done(err)
+    })
+    it('should equal 2.6EB - base 1024', function (done) {
+      var err = null
+      var compare = zzb.strings.sizeToHumanReadable(11304960000 * 8900 * 9911 * 3, 'double', true)
+      if (compare !== '2.6EB') {
+        err = new Error('size human readable is "' + compare + '" but should be "2.6EB"')
       }
       done(err)
     })
     it('should equal 2.6 EiB - base 1024', function (done) {
       var err = null
-      var compare = zzb.strings.sizeToHumanReadable(11304960000 * 8900 * 9911 * 3, false)
+      var compare = zzb.strings.sizeToHumanReadable(11304960000 * 8900 * 9911 * 3, 'eic')
       if (compare !== '2.6 EiB') {
         err = new Error('size human readable is "' + compare + '" but should be "2.6 EiB"')
       }
       done(err)
     })
-    it('should equal 3.0 EB - base 1000', function (done) {
+    it('should equal 2.6EiB - base 1024', function (done) {
       var err = null
-      var compare = zzb.strings.sizeToHumanReadable(11304960000 * 8900 * 9911 * 3, true)
-      if (compare !== '3.0 EB') {
-        err = new Error('size human readable is "' + compare + '" but should be "3.0 EB"')
+      var compare = zzb.strings.sizeToHumanReadable(11304960000 * 8900 * 9911 * 3, 'eic', true)
+      if (compare !== '2.6EiB') {
+        err = new Error('size human readable is "' + compare + '" but should be "2.6EiB"')
+      }
+      done(err)
+    })
+    it('should equal 2.6 Exabyte - base 1024', function (done) {
+      var err = null
+      var compare = zzb.strings.sizeToHumanReadable(11304960000 * 8900 * 9911 * 3, 'full')
+      if (compare !== '2.6 Exabyte') {
+        err = new Error('size human readable is "' + compare + '" but should be "2.6 Exabyte"')
+      }
+      done(err)
+    })
+    it('should equal 2.6Exabyte - base 1024', function (done) {
+      var err = null
+      var compare = zzb.strings.sizeToHumanReadable(11304960000 * 8900 * 9911 * 3, 'full', true)
+      if (compare !== '2.6Exabyte') {
+        err = new Error('size human readable is "' + compare + '" but should be "2.6Exabyte"')
       }
       done(err)
     })

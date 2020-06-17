@@ -145,28 +145,36 @@ function _ajax () {
   }
 }
 
-// sometimes a request is made for an html snippet but json is returned
-// this is why dataType is commented out here b/c the calling function isn't certain what type of data will return
+// Sometimes a request is made for an html snippet but json is returned. The function will error if the dataType i
+// specified but in the wrong format. This function removes 'dataType' but you can do it manually by using {dataType: ''}
 _ajax.prototype.get = function (options) {
+  options = _.merge({ contentType: 'application/json; charset=UTF-8', data: {} }, options)
   options.type = 'GET'
-  options.contentType = 'application/json; charset=UTF-8'
-  options.data = JSON.stringify(options.data)
+  if (!zzb.types.isNonEmptyString(options.data)) {
+    options.data = JSON.stringify(options.data)
+  }
   return this.ajax(options)
 }
 
+// Sometimes a request is made for an html snippet but json is returned. The function will error if the dataType i
+// specified but in the wrong format. To have jquery "guess", then override datatype in this way: {dataType: ''}
 _ajax.prototype.getJSON = function (options) {
+  options = _.merge({ dataType: 'json', contentType: 'application/json; charset=UTF-8', data: {} }, options)
   options.type = 'GET'
-  options.dataType = 'json'
-  options.contentType = 'application/json; charset=UTF-8'
-  options.data = JSON.stringify(options.data)
+  if (!zzb.types.isNonEmptyString(options.data)) {
+    options.data = JSON.stringify(options.data)
+  }
   return this.ajax(options)
 }
 
+// Sometimes a request is made for an html snippet but json is returned. The function will error if the dataType i
+// specified but in the wrong format. To have jquery "guess", then override datatype in this way: {dataType: ''}
 _ajax.prototype.postJSON = function (options) {
+  options = _.merge({ dataType: 'json', contentType: 'application/json; charset=UTF-8', data: {} }, options)
   options.type = 'POST'
-  options.dataType = 'json'
-  options.contentType = 'application/json; charset=UTF-8'
-  options.data = JSON.stringify(options.data)
+  if (!zzb.types.isNonEmptyString(options.data)) {
+    options.data = JSON.stringify(options.data)
+  }
   return this.ajax(options)
 }
 
