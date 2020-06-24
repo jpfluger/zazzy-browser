@@ -1,5 +1,5 @@
 //! zzb.js
-//! version: 1.3.6
+//! version: 1.3.7
 //! author(s): Jaret Pfluger
 //! license: MIT
 //! https://github.com/jpfluger/zazzy-browser
@@ -51,7 +51,7 @@ function _ajax () {
                   return
                 } else if (zzb.types.isNonEmptyString(data.message)) {
                   zzb.dialogs.showMessage({
-                    className: 'zzb-dialog-flash-message',
+                    className: 'zzb-dialog-flash-message zzb-dialog-flash-redirect',
                     dataBackdrop: 'static',
                     body: data.message,
                     onHide: function (ev) {
@@ -110,7 +110,7 @@ function _ajax () {
               if (zzb.types.isNonEmptyString(data.message)) {
                 noFinalResolve = true
                 zzb.dialogs.showMessage({
-                  className: 'zzb-dialog-flash-message',
+                  className: 'zzb-dialog-flash-message ' + zzb.format.strings('zzb-dialog-flash-status-', rob.hasErrors() ? 'error' : 'okay'),
                   dataBackdrop: 'static',
                   body: data.message,
                   onHide: function (ev) {
@@ -703,8 +703,8 @@ _forms.prototype.displayUIErrors = function (options, callback) {
 
     // Optionally don't hide existing fields
     skipHideFields: false,
-    // if true, show a small dialog with the system errors, formatted according to listSystemErrsFormatType. if used, then inline selectorInlineSystemFieldname is not used
-    doFlashSystemErrors: false,
+    // If true (default), show a small dialog with the system errors, formatted according to listSystemErrsFormatType.
+    doFlashSystemErrors: true,
     // these three things lead to the same value of "listErrs"
     listErrs: null,
     errs: null,
@@ -838,23 +838,6 @@ _forms.prototype.displayUIErrors = function (options, callback) {
         runCallback()
       })
       return // exit
-    } else if (options.doFlashSystemErrors) {
-      // via small dialog box
-      messages = zzb.rob.renderListErrs({ errs: list.system, format: options.listSystemErrsFormatType })
-      if (zzb.types.isNonEmptyString(messages)) {
-        if (options.fnSystemErrorContent && zzb.types.isFunction(options.fnSystemErrorContent)) {
-          messages = options.fnSystemErrorContent(messages)
-        }
-        zzb.dialogs.showMessage({
-          className: 'zzb-dialog-flash-message zzb-flash-invalid', // zzb-flash-valid
-          dataBackdrop: 'static',
-          body: messages,
-          onHide: function () {
-            runCallback()
-          }
-        })
-      }
-      return // exit
     } else if (zzb.types.isNonEmptyString(options.selectorInlineSystemFieldname)) {
       // via inline
       var $sysDisplay = options.$form.find(options.selectorValidateMessage + '[' + options.attrFieldname + "='" + options.selectorInlineSystemFieldname + "']")
@@ -880,6 +863,24 @@ _forms.prototype.displayUIErrors = function (options, callback) {
           $sysDisplay.removeClass('d-none')
         }
       }
+    } else if (options.doFlashSystemErrors !== false) {
+      // this is the default unless doFlashSystemErrors is explicitly set to false
+      // via small dialog box
+      messages = zzb.rob.renderListErrs({ errs: list.system, format: options.listSystemErrsFormatType })
+      if (zzb.types.isNonEmptyString(messages)) {
+        if (options.fnSystemErrorContent && zzb.types.isFunction(options.fnSystemErrorContent)) {
+          messages = options.fnSystemErrorContent(messages)
+        }
+        zzb.dialogs.showMessage({
+          className: 'zzb-dialog-flash-message zzb-flash-invalid', // zzb-flash-valid
+          dataBackdrop: 'static',
+          body: messages,
+          onHide: function () {
+            runCallback()
+          }
+        })
+      }
+      return // exit
     }
   }
 
@@ -998,8 +999,11 @@ _forms.prototype.submitForm = function (options, callback) {
   if (!zzb.types.isObject(options)) {
     throw new Error('submitForm: options param not defined')
   }
-  if (!zzb.types.isObject(options.$form) || options.$form.length === 0) {
-    throw new Error('submitForm: options.$form not defined')
+  if (zzb.types.isObject(options.$form) && options.$form.length > 0 && !zzb.types.isNonEmptyString(options.url)) {
+    options.url = options.$form.attr('action')
+  }
+  if (!zzb.types.isNonEmptyString(options.url)) {
+    throw new Error('submitForm: options.url is unknown')
   }
   if (!zzb.types.isObject(options.data)) {
     throw new Error('submitForm: options.data not defined')
@@ -1008,7 +1012,7 @@ _forms.prototype.submitForm = function (options, callback) {
   // hide any fields showing error/success validations
   zzb.forms.hideValidateFields(options)
 
-  zzb.ajax.postJSON({ url: options.$form.attr('action'), data: options.data })
+  zzb.ajax.postJSON({ url: options.url, data: options.data })
     .then(function (rob) {
       // Only errors returned at this level b/c underlying function does...
       // 1. handle redirect (can skip with SKIPREDIRECT: true
@@ -1031,6 +1035,25 @@ _forms.prototype.submitForm = function (options, callback) {
         message: 'An unknown communications error occurred while retrieving the login form. Please check your connection settings and try again.'
       })
     })
+}
+
+_forms.prototype.flashSystemErrors = function (options, callback) {
+  options = _.merge({ listSystemErrsFormatType: 'text-punctuated', rob: null }, options)
+  if (!options.rob || !options.rob.listErrs || !options.rob.listErrs.hasSystemErrors()) {
+    callback && callback(options.rob)
+  } else {
+    var messages = zzb.rob.renderListErrs({ errs: options.rob.listErrs.system, format: options.listSystemErrsFormatType })
+    if (zzb.types.isNonEmptyString(messages)) {
+      zzb.dialogs.showMessage({
+        className: 'zzb-dialog-flash-message zzb-dialog-flash-status-error',
+        dataBackdrop: 'static',
+        body: messages,
+        onHide: function () {
+          callback && callback(options.rob)
+        }
+      })
+    }
+  }
 }
 
 exports.forms = _forms

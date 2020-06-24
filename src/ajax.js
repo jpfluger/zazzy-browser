@@ -45,7 +45,7 @@ function _ajax () {
                   return
                 } else if (zzb.types.isNonEmptyString(data.message)) {
                   zzb.dialogs.showMessage({
-                    className: 'zzb-dialog-flash-message',
+                    className: 'zzb-dialog-flash-message zzb-dialog-flash-redirect',
                     dataBackdrop: 'static',
                     body: data.message,
                     onHide: function (ev) {
@@ -104,7 +104,7 @@ function _ajax () {
               if (zzb.types.isNonEmptyString(data.message)) {
                 noFinalResolve = true
                 zzb.dialogs.showMessage({
-                  className: 'zzb-dialog-flash-message',
+                  className: 'zzb-dialog-flash-message ' + zzb.format.strings('zzb-dialog-flash-status-', rob.hasErrors() ? 'error' : 'okay'),
                   dataBackdrop: 'static',
                   body: data.message,
                   onHide: function (ev) {
