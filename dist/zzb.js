@@ -1,5 +1,5 @@
 //! zzb.js
-//! version: 1.3.7
+//! version: 1.3.8
 //! author(s): Jaret Pfluger
 //! license: MIT
 //! https://github.com/jpfluger/zazzy-browser
@@ -698,13 +698,13 @@ _forms.prototype.displayUIErrors = function (options, callback) {
     isTooltip: false, // requires a "parent" DOM object with relative positioning
     addClassFieldIsValid: false, // optional
     addClassFieldIsInvalid: false, // optional
-    selectorInlineSystemFieldname: '._system', // override as appropriate, such as zzb-fieldname="_system-settings.primary"
+    // If true (default), show a small dialog with the system errors, formatted according to listSystemErrsFormatType.
+    doFlashSystemErrors: true, // set to false if it is desired to trip selectorInlineSystemFieldname
+    selectorInlineSystemFieldname: '_system', // override as appropriate, such as zzb-fieldname="_system-settings.primary"
     listSystemErrsFormatType: 'text-punctuated',
 
     // Optionally don't hide existing fields
     skipHideFields: false,
-    // If true (default), show a small dialog with the system errors, formatted according to listSystemErrsFormatType.
-    doFlashSystemErrors: true,
     // these three things lead to the same value of "listErrs"
     listErrs: null,
     errs: null,
@@ -838,6 +838,24 @@ _forms.prototype.displayUIErrors = function (options, callback) {
         runCallback()
       })
       return // exit
+    } else if (options.doFlashSystemErrors !== false) {
+      // this is the default unless doFlashSystemErrors is explicitly set to false
+      // via small dialog box
+      messages = zzb.rob.renderListErrs({ errs: list.system, format: options.listSystemErrsFormatType })
+      if (zzb.types.isNonEmptyString(messages)) {
+        if (options.fnSystemErrorContent && zzb.types.isFunction(options.fnSystemErrorContent)) {
+          messages = options.fnSystemErrorContent(messages)
+        }
+        zzb.dialogs.showMessage({
+          className: 'zzb-dialog-flash-message zzb-flash-invalid', // zzb-flash-valid
+          dataBackdrop: 'static',
+          body: messages,
+          onHide: function () {
+            runCallback()
+          }
+        })
+      }
+      return // exit
     } else if (zzb.types.isNonEmptyString(options.selectorInlineSystemFieldname)) {
       // via inline
       var $sysDisplay = options.$form.find(options.selectorValidateMessage + '[' + options.attrFieldname + "='" + options.selectorInlineSystemFieldname + "']")
@@ -863,24 +881,6 @@ _forms.prototype.displayUIErrors = function (options, callback) {
           $sysDisplay.removeClass('d-none')
         }
       }
-    } else if (options.doFlashSystemErrors !== false) {
-      // this is the default unless doFlashSystemErrors is explicitly set to false
-      // via small dialog box
-      messages = zzb.rob.renderListErrs({ errs: list.system, format: options.listSystemErrsFormatType })
-      if (zzb.types.isNonEmptyString(messages)) {
-        if (options.fnSystemErrorContent && zzb.types.isFunction(options.fnSystemErrorContent)) {
-          messages = options.fnSystemErrorContent(messages)
-        }
-        zzb.dialogs.showMessage({
-          className: 'zzb-dialog-flash-message zzb-flash-invalid', // zzb-flash-valid
-          dataBackdrop: 'static',
-          body: messages,
-          onHide: function () {
-            runCallback()
-          }
-        })
-      }
-      return // exit
     }
   }
 
