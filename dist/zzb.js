@@ -1,5 +1,5 @@
 //! zzb.js
-//! version: 1.3.9
+//! version: 1.3.10
 //! author(s): Jaret Pfluger
 //! license: MIT
 //! https://github.com/jpfluger/zazzy-browser
@@ -384,8 +384,8 @@ ZazzyDialog.prototype.create$Modal = function () {
     options.extraAttributes += ' data-keyboard="' + options.dataKeyboard + '"'
   }
 
-  if (options.noHeaderCloseButton === true) {
-    options.noHeaderCloseButtonButton = '<button type="button" class="close" data-dismiss="modal" aria-label="Close">'
+  if (options.noHeaderCloseButton !== true) {
+    options.noHeaderCloseButtonButton = '<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>'
   }
 
   var template = '<div class="modal {classFade} modal-fullscreen {className}" {extraAttributes} id="{id}" tabindex="-1" role="dialog" aria-labelledby="{arialabel}" aria-hidden="true">' +
@@ -394,8 +394,6 @@ ZazzyDialog.prototype.create$Modal = function () {
     '<div class="modal-header{classModalHeader}">' +
     '<h5 class="modal-title" id="{arialabel}">{title}</h5>' +
     '{noHeaderCloseButtonButton}' +
-    '<span aria-hidden="true">&times;</span>' +
-    '</button>' +
     '</div>' +
     '<div class="modal-body">{body}</div>' +
     '<div class="modal-footer">' +
