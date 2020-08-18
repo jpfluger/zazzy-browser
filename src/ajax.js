@@ -10,6 +10,7 @@ var $ = require('jQuery')
 
 function _ajax () {
   this.ajax = function (options) {
+    options = _.merge({ SKIPREDIRECT: false, SKIPFLASH: false, NOFAILLOG: false, NOFAILFLASH: false, FAILFLASHMESSAGE: '' }, options)
     return new Promise(function (resolve, reject) {
       $.ajax(options)
         .done(function (data, textStatus, jqXHR) {
@@ -137,12 +138,43 @@ function _ajax () {
           //  }
           // }
           reject(errorThrown)
-          if (options.NOFAILLOG === true) {
+          if (options.NOFAILLOG === true && errorThrown) {
             console.log(errorThrown)
+          }
+          if (options.NOFAILFLASH !== true) {
+            if (zzb.types.isNonEmptyString(options.FAILFLASHMESSAGE)) {
+              zzb.ajax.showMessageFailedAction({ message: options.FAILFLASHMESSAGE })
+            } else {
+              zzb.ajax.showMessageFailedAction({ message: AjaxMessage.MSG_FAILED_ACTION_UNEXPECTED_NETWORK })
+            }
           }
         })
     })
   }
+}
+
+var AjaxMessage = function (options) {
+}
+
+AjaxMessage.MSG_FAILED_ACTION_UNEXPECTED = 'Submission failed unexpectedly. '
+AjaxMessage.MSG_FAILED_ACTION_UNEXPECTED_NETWORK = 'Submission failed unexpectedly. This is likely a broken network connection and will resolve itself once reconnected.'
+AjaxMessage.MSG_FAILED_ACTION_UNEXPECTED_NETWORK_VERBOSE = 'Submission failed unexpectedly. This is likely a broken network connection and will resolve itself once reconnected. Either your network is down or our server is down'
+AjaxMessage.MSG_FAILED_ACTION_UNEXPECTED_WITHADMIN = 'Submission failed unexpectedly. Contact the administrator should the problem persist.'
+AjaxMessage.MSG_FAILED_ACTION_UNEXPECTED_NETWORK_WITHADMIN = 'Submission failed unexpectedly. This is likely a broken network connection and will resolve itself once reconnected. Contact the administrator should the problem persist.'
+
+_ajax.prototype.showMessageFailedAction = function (options) {
+  options = _.merge({ err: null, number: null, message: AjaxMessage.MSG_FAILED_ACTION_UNEXPECTED }, options)
+  if (zzb.types.isNumber(options.number)) {
+    options.number = ' (' + options.number + ')'
+  }
+  if (options.err) {
+    console.log(options.err)
+  }
+  zzb.dialogs.showMessage({
+    className: 'zzb-dialog-flash-message zzb-flash-invalid', // zzb-flash-valid
+    dataBackdrop: 'static',
+    body: options.message + options.number
+  })
 }
 
 // Sometimes a request is made for an html snippet but json is returned. The function will error if the dataType i
