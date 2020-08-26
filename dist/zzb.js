@@ -1,5 +1,5 @@
 //! zzb.js
-//! version: 1.3.11
+//! version: 1.3.12
 //! author(s): Jaret Pfluger
 //! license: MIT
 //! https://github.com/jpfluger/zazzy-browser
@@ -111,7 +111,7 @@ function _ajax () {
               if (zzb.types.isNonEmptyString(data.message)) {
                 noFinalResolve = true
                 zzb.dialogs.showMessage({
-                  className: 'zzb-dialog-flash-message ' + zzb.format.strings('zzb-dialog-flash-status-', rob.hasErrors() ? 'error' : 'okay'),
+                  className: 'zzb-dialog-flash-message ' + zzb.strings.format('zzb-dialog-flash-status-{0}', rob.hasErrors() ? 'error' : 'okay'),
                   dataBackdrop: 'static',
                   body: data.message,
                   onHide: function (ev) {
@@ -1017,7 +1017,11 @@ _forms.prototype.serializeFormData = function (options) {
   // var data = $form.serializeJSON({parseBooleans: true, parseNumbers: true})
   // using https://github.com/raphaelm22/jquery.serializeToJSON
   // Does not require the type, but output is a hierarchy with parent-child relationships
-  var data = options.$form.serializeToJSON()
+  var data = options.$form.serializeToJSON({
+    parseFloat: {
+      condition: '.zzb-number,.zzb-money'
+    }
+  })
   // using https://github.com/rc1021/serialize-json
   // Does not require the type, but output is a hierarchy with parent-child relationships - doesn't convert string to bool by default
   // var data = $form.serializeJson()

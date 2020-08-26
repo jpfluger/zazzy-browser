@@ -330,7 +330,11 @@ _forms.prototype.serializeFormData = function (options) {
   // var data = $form.serializeJSON({parseBooleans: true, parseNumbers: true})
   // using https://github.com/raphaelm22/jquery.serializeToJSON
   // Does not require the type, but output is a hierarchy with parent-child relationships
-  var data = options.$form.serializeToJSON()
+  var data = options.$form.serializeToJSON({
+    parseFloat: {
+      condition: '.zzb-number,.zzb-money'
+    }
+  })
   // using https://github.com/rc1021/serialize-json
   // Does not require the type, but output is a hierarchy with parent-child relationships - doesn't convert string to bool by default
   // var data = $form.serializeJson()

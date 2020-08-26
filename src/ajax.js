@@ -105,7 +105,7 @@ function _ajax () {
               if (zzb.types.isNonEmptyString(data.message)) {
                 noFinalResolve = true
                 zzb.dialogs.showMessage({
-                  className: 'zzb-dialog-flash-message ' + zzb.format.strings('zzb-dialog-flash-status-', rob.hasErrors() ? 'error' : 'okay'),
+                  className: 'zzb-dialog-flash-message ' + zzb.strings.format('zzb-dialog-flash-status-{0}', rob.hasErrors() ? 'error' : 'okay'),
                   dataBackdrop: 'static',
                   body: data.message,
                   onHide: function (ev) {
