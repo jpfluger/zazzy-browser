@@ -1,5 +1,7 @@
 # zazzy-browser (zzb)
 
+> Note: this library will not be maintained going forward in favor of the lightweight [jpfluger/zzb](https://github.com/jpfluger/zzb), which has no extra dependencies on lodash or jquery. 
+ 
 A collection of general-purpose browser utilities used as higher-level building-blocks to create [Bootstrap v4](http://getbootstrap.com/) websites and assist in client-server communications. 
 
 Zazzy Browser depends on [jQuery](https://jquery.com/), [lodash](https://github.com/lodash/lodash)
