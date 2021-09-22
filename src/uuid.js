@@ -1,6 +1,3 @@
-// client or server
-var _ = require('lodash')
-
 // ---------------------------------------------------
 // uuid
 // ---------------------------------------------------
@@ -18,16 +15,39 @@ var _uuid = function () {}
  * Generates an RFC 4122 version 4 uuid
  * This is not a time-based approach, unlike uuid v1 - so don't let the use of _.now() fool you!
  * Use of _.now() has to do with collision avoidance.
- * @see http://stackoverflow.com/a/8809472
+ * @see https://dirask.com/posts/JavaScript-UUID-function-in-Vanilla-JS-1X9kgD
  * @returns {String} the generated uuid
  */
 _uuid.prototype.newV4 = function () {
-  var d = _.now()
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-    var r = (d + _.random(16)) % 16 | 0
-    d = Math.floor(d / 16)
-    return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16)
-  })
+  function generateNumber(limit) {
+    var value = limit * Math.random();
+    return value | 0;
+  }
+
+  function generateX() {
+    var value = generateNumber(16);
+    return value.toString(16);
+  }
+
+  function generateXes(count) {
+    var result = '';
+    for(var i = 0; i < count; ++i) {
+      result += generateX();
+    }
+    return result;
+  }
+
+  function generateVariant() {
+    var value = generateNumber(16);
+    var variant =  (value & 0x3) | 0x8;
+    return variant.toString(16);
+  }
+
+  return generateXes(8)
+    + '-' + generateXes(4)
+    + '-' + '4' + generateXes(3)
+    + '-' + generateVariant() + generateXes(3)
+    + '-' + generateXes(12)
 }
 
 /**

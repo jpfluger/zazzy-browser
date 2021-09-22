@@ -1,17 +1,69 @@
-// client or server
-// var _ = require('lodash')
-
 // ---------------------------------------------------
 // types
 // ---------------------------------------------------
 
 function _types () {}
 
-_types.prototype.escapeJqueryId = function (id, prefix) {
-  // ref: https://learn.jquery.com/using-jquery-core/faq/how-do-i-select-an-element-by-an-id-that-has-characters-used-in-css-notation/
-  prefix = (prefix == null ? '#' : prefix)
-  return prefix + id.replace(/(:|\.|\[|\]|,)/g, '\\$1')
+_types.prototype.merge = function(defaultOption, newOptions) {
+  return mergeArgs(defaultOption, newOptions)
 }
+
+const mergeArgs = function (...arguments) {
+  // create a new object
+  let target = {};
+
+  // deep merge the object into the target object
+  const merger = (obj) => {
+    for (let prop in obj) {
+      if (obj.hasOwnProperty(prop)) {
+        if (Object.prototype.toString.call(obj[prop]) === '[object Object]') {
+          // if the property is a nested object
+          target[prop] = mergeArgs(target[prop], obj[prop]);
+        } else {
+          // for regular property
+          target[prop] = obj[prop];
+        }
+      }
+    }
+  };
+
+  // iterate through all objects and
+  // deep merge them with target
+  for (let i = 0; i < arguments.length; i++) {
+    merger(arguments[i]);
+  }
+
+  return target;
+};
+
+const merge = (...arguments) => {
+
+  // create a new object
+  let target = {};
+
+  // deep merge the object into the target object
+  const merger = (obj) => {
+    for (let prop in obj) {
+      if (obj.hasOwnProperty(prop)) {
+        if (Object.prototype.toString.call(obj[prop]) === '[object Object]') {
+          // if the property is a nested object
+          target[prop] = merge(target[prop], obj[prop]);
+        } else {
+          // for regular property
+          target[prop] = obj[prop];
+        }
+      }
+    }
+  };
+
+  // iterate through all objects and
+  // deep merge them with target
+  for (let i = 0; i < arguments.length; i++) {
+    merger(arguments[i]);
+  }
+
+  return target;
+};
 
 // http://stackoverflow.com/questions/23252173/get-html-escaped-text-from-textarea-with-jquery
 _types.prototype.escapeHtml = function (unsafe) {
@@ -25,6 +77,24 @@ _types.prototype.escapeHtml = function (unsafe) {
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#039;')
   }
+}
+
+// baseToString is a lightweight version of the lodash function baseToString.
+// https://github.com/lodash/lodash/blob/0843bd46ef805dd03c0c8d804630804f3ba0ca3c/lodash.js#L4230
+_types.prototype.baseToString = function(value) {
+  // Exit early for strings to avoid a performance hit in some environments.
+  if (typeof value == 'string') {
+    return value;
+  }
+  if (zzb.types.isNumber(value)) {
+    var result = (trimSuffix + '');
+    return (result == '0' && (1 / value) == -INFINITY) ? '-0' : result;
+  }
+  return ''
+}
+
+_types.prototype.toString = function (s) {
+  return s == null ? '' : zzb.types.baseToString(s);
 }
 
 _types.prototype.isArray = function (o) {

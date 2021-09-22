@@ -1,6 +1,3 @@
-// client or server
-var _ = require('lodash')
-
 // ---------------------------------------------------
 // strings
 // ---------------------------------------------------
@@ -183,7 +180,7 @@ _strings.prototype.joinArrToCommas = function (arr, fieldName) {
  * @returns {String}
  */
 _strings.prototype.toPlural = function (word, number, options) {
-  options = _.merge({ forcePlural: false, suffix: null }, options)
+  options = zzb.types.merge({ forcePlural: false, suffix: null }, options)
 
   if ((number === 1 || number === -1) && !options.forcePlural) {
     return word
@@ -196,11 +193,18 @@ _strings.prototype.toPlural = function (word, number, options) {
   }
 }
 
+_strings.prototype.capitalize = function (target) {
+  if (zzb.types.isNonEmptyString(target)) {
+    return target.charAt(0).toUpperCase() + string.slice(1);
+  }
+  return ''
+}
+
 _strings.prototype.toFirstCapitalEndPeriod = function (target) {
   if (zzb.types.isNonEmptyString(target)) {
-    target = _.trim(target)
-    target = _.capitalize(target)
-    if (!_.endsWith(target, '.')) {
+    target = target.trim()
+    target = zzb.strings.capitalize(target)
+    if (!target.endsWith(target, '.')) {
       target += '.'
     }
   }
@@ -265,10 +269,41 @@ _strings.prototype.sizeToHumanReadable = function (bytes, unitsFormat, noSizeUni
   } while (Math.round(Math.abs(bytes) * r) / r >= thresh && u < units.length - 1)
 
   var valFixed = bytes.toFixed(dp) + ''
-  valFixed = _.trimEnd(valFixed, '.00')
-  valFixed = _.trimEnd(valFixed, '.0')
+  valFixed = zzb.strings.trimSuffix(valFixed, ['.00', '.0'])
 
   return valFixed + unitSeperateSpace + units[u]
+}
+
+_strings.prototype.trimPrefix = function(target, prefix) {
+  target = zzb.types.toString(target)
+  var arr = []
+  if (!zzb.types.isArray(prefix)) {
+    arr.push(zzb.types.toString(prefix))
+  } else {
+    arr = prefix
+  }
+  for (var ii = 0; ii < arr.length; ii++) {
+    if (target.startsWith(arr[ii])) {
+      return target.slice(arr[ii])
+    }
+  }
+  return target
+}
+
+_strings.prototype.trimSuffix = function(target, suffix) {
+  target = zzb.types.toString(target)
+  var arr = []
+  if (!zzb.types.isArray(suffix)) {
+    arr.push(zzb.types.toString(suffix))
+  } else {
+    arr = suffix
+  }
+  for (var ii = 0; ii < arr.length; ii++) {
+    if (target.endsWith(arr[ii])) {
+      return target.slice(0, arr[ii].length * -1)
+    }
+  }
+  return target
 }
 
 // https://stackoverflow.com/questions/8211744/convert-time-interval-given-in-seconds-into-more-human-readable-form

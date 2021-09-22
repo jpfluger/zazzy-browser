@@ -1,6 +1,3 @@
-// client or server
-var _ = require('lodash')
-
 // ---------------------------------------------------
 // perms (Permission Keys)
 // ---------------------------------------------------
@@ -22,14 +19,16 @@ _perms.prototype.getPermObjectFromPermkeys = function (permkeys) {
   var self = this
 
   if (Array.isArray(permkeys)) {
-    _.each(permkeys, function (permkey) {
+    permkeys.forEach(function (permkey) {
       var po = self.getPermObject(permkey)
       if (po.key) {
         pos[po.key] = po
       }
     })
   } else if (zzb.types.isObject(permkeys)) {
-    _.forOwn(permkeys, function (perm, key) {
+    for (const key in permkeys) {
+      var perm = permkeys[key]
+      // _.forOwn(permkeys, function (perm, key) {
       if (!perm) {
         perm = ''
       }
@@ -42,7 +41,7 @@ _perms.prototype.getPermObjectFromPermkeys = function (permkeys) {
       if (po && po.key) {
         pos[po.key] = po
       }
-    })
+    }
   }
 
   return pos
@@ -188,7 +187,7 @@ _perms.prototype.hasMatch = function (permkey, target) {
     tp = this.getPermObject(target)
   } else if (Array.isArray(target)) {
     var self = this
-    _.each(target, function (item) {
+    target.forEach(function (item) {
       if (zzb.types.isNonEmptyString(item)) {
         item = self.getPermObject(item)
       }

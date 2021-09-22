@@ -1,404 +1,525 @@
-// css styling for modal uses bootstrap4-fs-modal
-// https://github.com/keaukraine/bootstrap4-fs-modal
-
-// client or server
-var _ = require('lodash')
-
 // ---------------------------------------------------
 // BootstrapDialog
-// refined port of https://github.com/nakupanda/bootstrap3-dialog (MIT LICENSE)
+// Quick & Easy: https://getbootstrap.com/docs/5.1/components/modal
+// Transition from jquery to vanilla-js: https://gist.github.com/joyrexus/7307312
+// Non-bootstrap compatible: https://engineertodeveloper.com/create-a-modal-using-vanilla-javascript/
 // ---------------------------------------------------
 
-var ZazzyDialog = function (options) {
-  this.defaultOptions = ZazzyDialog.getDialogDefaults(options)
+class ZazzyDialog {
+  constructor(options) {
 
-  this.defaultOptions.onShow = typeof options.onShow === 'function' ? options.onShow : function () {}
-  this.defaultOptions.onShown = typeof options.onShown === 'function' ? options.onShown : function () {}
-  this.defaultOptions.onHide = typeof options.onHide === 'function' ? options.onHide : function () {}
-  this.defaultOptions.onHidden = typeof options.onHidden === 'function' ? options.onHidden : function () {}
-}
+    this.defaultOptions = ZazzyDialog.getDialogDefaults(options)
 
-ZazzyDialog.getButtonDefaults = function (options) {
-  var button = {
-    id: null,
-    type: ZazzyDialog.TYPE_NONE,
-    label: '',
-    className: '',
-    action: null,
-    isDismiss: false,
-    isOutline: false
-  }
-  return (zzb.types.isObject(options) ? _.merge(button, options) : button)
-}
+    this.defaultOptions.onShow = typeof options.onShow === 'function' ? options.onShow : function () {}
+    this.defaultOptions.onShown = typeof options.onShown === 'function' ? options.onShown : function () {}
+    this.defaultOptions.onHide = typeof options.onHide === 'function' ? options.onHide : function () {}
+    this.defaultOptions.onHidden = typeof options.onHidden === 'function' ? options.onHidden : function () {}
 
-ZazzyDialog.getDialogDefaults = function (options) {
-  var dialog = {
-    id: zzb.uuid.newV4(),
-    type: ZazzyDialog.TYPE_NONE,
-    className: '',
-    extraAttributes: '',
-    noFade: false,
-    title: '',
-    body: '',
-    buttons: [],
-    onShow: null,
-    onShown: null,
-    onHide: null,
-    onHidden: null,
-    doVerticalCenter: true,
-    doAutoDestroy: true,
-    underlay: {
-      isOn: false,
-      id: null,
-      className: '',
-      bg: '#838383',
-      opacity: 0.5
+    this.isBootstrap = (this.defaultOptions.forceNoBootstrap === true ? false : window.bootstrap != undefined)
+
+    this.modal = null
+    if (zzb.types.isNonEmptyString(this.defaultOptions.id)) {
+      this.modal = document.getElementById(this.defaultOptions.id)
     }
-  }
-  return (zzb.types.isObject(options) ? _.merge(dialog, options) : dialog)
-}
 
-ZazzyDialog.BUTTON_CLOSE = 'button-close'
-ZazzyDialog.BUTTON_OK = 'button-ok'
-ZazzyDialog.BUTTON_YES = 'button-yes'
-ZazzyDialog.BUTTON_NO = 'button-no'
-ZazzyDialog.BUTTON_CANCEL = 'button-cancel'
+    if (!this.modal) {
+      this.modal = this.createModal()
+    }
 
-// standard is "btn-TYPE"; outline effect is "btn-outline-TYPE"
-ZazzyDialog.TYPE_NONE = 'none'
-ZazzyDialog.TYPE_PRIMARY = 'primary'
-ZazzyDialog.TYPE_SECONDARY = 'secondary'
-ZazzyDialog.TYPE_SUCCESS = 'success'
-ZazzyDialog.TYPE_DANGER = 'danger'
-ZazzyDialog.TYPE_WARNING = 'warning'
-ZazzyDialog.TYPE_INFO = 'info'
-ZazzyDialog.TYPE_LIGHT = 'light'
-ZazzyDialog.TYPE_DARK = 'dark'
-ZazzyDialog.TYPE_LINK = 'link'
-
-ZazzyDialog.getButtonPreset = function (preset, order, max) {
-  var button = ZazzyDialog.getButtonDefaults()
-  button.isDismiss = true
-
-  if (order === (max - 1)) {
-    button.type = ZazzyDialog.TYPE_PRIMARY
-  } else if (order === (max - 2)) {
-    button.type = ZazzyDialog.TYPE_SECONDARY
-  }
-
-  switch (preset) {
-    case 'button-close':
-      button.label = 'Close'
-      break
-    case 'button-ok':
-      button.label = 'Ok'
-      break
-    case 'button-accept':
-      button.label = 'Accept'
-      break
-    case 'button-yes':
-      button.label = 'Yes'
-      break
-    case 'button-no':
-      button.label = 'No'
-      break
-    case 'button-cancel':
-      button.label = 'Cancel'
-      break
-    default:
-      button = null
-  }
-
-  return button
-}
-
-ZazzyDialog.validateType = function (type) {
-  if (!type) {
-    return ZazzyDialog.TYPE_NONE
-  }
-
-  switch (type) {
-    case ZazzyDialog.TYPE_PRIMARY:
-    case ZazzyDialog.TYPE_SECONDARY:
-    case ZazzyDialog.TYPE_SUCCESS:
-    case ZazzyDialog.TYPE_DANGER:
-    case ZazzyDialog.TYPE_WARNING:
-    case ZazzyDialog.TYPE_INFO:
-    case ZazzyDialog.TYPE_LIGHT:
-    case ZazzyDialog.TYPE_DARK:
-    case ZazzyDialog.TYPE_LINK:
-      return type
-    default:
-      return ZazzyDialog.TYPE_NONE
-  }
-}
-
-ZazzyDialog.isTypeNone = function (type) {
-  return ZazzyDialog.validateType(type) === ZazzyDialog.TYPE_NONE
-}
-
-ZazzyDialog.prototype.getId = function () {
-  if (!(zzb.types.isNonEmptyString(this.defaultOptions.id))) {
-    this.defaultOptions.id = zzb.uuid.newV4()
-  }
-  return this.defaultOptions.id
-}
-
-ZazzyDialog.prototype.getClassName = function () {
-  if (!(zzb.types.isNonEmptyString(this.defaultOptions.className))) {
-    this.defaultOptions.className = ''
-  }
-  return this.defaultOptions.className
-}
-
-ZazzyDialog.prototype.getTitle = function () {
-  if (!(zzb.types.isNonEmptyString(this.defaultOptions.title))) {
-    this.defaultOptions.title = ''
-  }
-  return this.defaultOptions.title
-}
-
-ZazzyDialog.prototype.getBody = function () {
-  if (!(zzb.types.isNonEmptyString(this.defaultOptions.body))) {
+    // Cleanup duplications
+    this.defaultOptions.htmlDialog = ''
     this.defaultOptions.body = ''
-  }
-  return this.defaultOptions.body
-}
 
-ZazzyDialog.prototype.create$Modal = function () {
-  var options = _.merge({
-    id: this.getId(),
-    arialabel: 'arialabel' + this.getId(),
-    className: this.getClassName(),
-    title: this.getTitle(),
-    body: this.getBody(),
-    classVerticalCenter: (this.defaultOptions.doVerticalCenter ? ' modal-dialog-centered' : ''),
-    classModalHeader: '',
-    noHeaderCloseButton: false,
-    noHeaderCloseButtonButton: ''
-  }, this.defaultOptions)
+    if (this.isBootstrap) {
+      this.bsModal = new bootstrap.Modal(this.modal, {})
+    } else {
+      this.closeModal = this.modal.querySelectorAll('[data-bs-dismiss]');
 
-  options.classFade = 'fade'
-  if (zzb.types.isBoolean(options.noFade) && options.noFade === true) {
-    options.classFade = ''
-  }
-
-  if (!ZazzyDialog.isTypeNone(this.defaultOptions.type)) {
-    options.classModalHeader += ' alert-' + this.defaultOptions.type
-  }
-
-  if (zzb.types.isNonEmptyString(options.dataBackdrop)) {
-    options.extraAttributes += ' data-backdrop="' + options.dataBackdrop + '"'
-  }
-
-  if (zzb.types.isBoolean(options.dataKeyboard)) {
-    options.extraAttributes += ' data-keyboard="' + options.dataKeyboard + '"'
-  }
-
-  if (options.noHeaderCloseButton !== true) {
-    options.noHeaderCloseButtonButton = '<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>'
-  }
-
-  var template = '<div class="modal {classFade} modal-fullscreen {className}" {extraAttributes} id="{id}" tabindex="-1" role="dialog" aria-labelledby="{arialabel}" aria-hidden="true">' +
-    '<div class="modal-dialog{classVerticalCenter}" role="document">' +
-    '<div class="modal-content">' +
-    '<div class="modal-header{classModalHeader}">' +
-    '<h5 class="modal-title" id="{arialabel}">{title}</h5>' +
-    '{noHeaderCloseButtonButton}' +
-    '</div>' +
-    '<div class="modal-body">{body}</div>' +
-    '<div class="modal-footer">' +
-    '</div>' +
-    '</div>' +
-    '</div>' +
-    '</div>'
-
-  var $modal = $(zzb.strings.format(template, options))
-
-  if (!(Array.isArray(this.defaultOptions.buttons))) {
-    this.defaultOptions.buttons = []
-  }
-
-  var self = this
-  var maxButtons = this.defaultOptions.buttons.length
-
-  _.each(this.defaultOptions.buttons, function (button, ii) {
-    if (zzb.types.isNonEmptyString(button)) {
-      button = ZazzyDialog.getButtonPreset(button, ii, maxButtons)
+      this.closeModal.forEach(item => {
+        item.addEventListener("click", (e) => {
+          this.close();
+        });
+      })
     }
 
-    if (!(zzb.types.isObject(button))) {
-      return // continue
-    }
-
-    if (!(zzb.types.isNonEmptyString(button.id))) {
-      button.id = 'button-' + ii + '-' + self.getId()
-    }
-
-    if (button.isDismiss) {
-      if (!zzb.types.isFunction(button.action)) {
-        button.action = function (dialog, ev) {
-          dialog.close()
+    var self = this
+    this.modal.addEventListener('show.bs.modal', function (ev) {
+      if (self.defaultOptions.onShow && zzb.types.isFunction(self.defaultOptions.onShow)) {
+        self.defaultOptions.onShow(ev)
+      }
+    })
+    this.modal.addEventListener('shown.bs.modal', function (ev) {
+      if (self.defaultOptions.onShown && zzb.types.isFunction(self.defaultOptions.onShown)) {
+        self.defaultOptions.onShown(ev)
+      }
+    })
+    this.modal.addEventListener('hide.bs.modal', function (ev) {
+      if (self.defaultOptions.onHide && zzb.types.isFunction(self.defaultOptions.onHide)) {
+        self.defaultOptions.onHide(ev)
+      }
+    })
+    this.modal.addEventListener('hidden.bs.modal', function (ev) {
+      if (self.defaultOptions.onHidden && zzb.types.isFunction(self.defaultOptions.onHidden)) {
+        self.defaultOptions.onHidden(ev)
+      }
+      if (self.defaultOptions.doAutoDestroy) {
+        if (self.bsModal) {
+          self.bsModal.dispose()
         }
-      }
-      $modal.find('.modal-header button.close').attr('aria-label', button.label)
-    }
-
-    if (!ZazzyDialog.isTypeNone(button.type)) {
-      if (button.isOutline) {
-        button.className += ' btn-outline-' + button.type
-      } else {
-        button.className += ' btn-' + button.type
-      }
-    }
-
-    var $button = $(zzb.strings.format('<button id="{id}" type="button" class="btn {className}">{label}</button>', button))
-    $button.data('button', button)
-
-    // Button action (eg onClick)
-    $button.on('click', { dialog: self, $button: $button, button: button }, function (event) {
-      var dialog = event.data.dialog
-      var $button = event.data.$button
-      var button = $button.data('button')
-      if (typeof button.action === 'function') {
-        return button.action.call($button, dialog, event)
       }
     })
 
-    if ($modal.find('.modal-footer > button').length > 0) {
-      $button.insertAfter($modal.find('.modal-footer > button').last())
-    } else {
-      $modal.find('.modal-footer').append($button)
+    this.target = document.getElementById(options.target)
+    if (this.target) {
+      this.target.addEventListener("click", (e) => {
+        this.open()
+      })
     }
-  })
+  }
 
-  return $modal
-}
+  open() {
 
-ZazzyDialog.prototype.open = function () {
-  if (!this.$modal) {
-    this.$modal = this.create$Modal()
+    // this.showNonBootstrapUnderlay = false
+    // if (zzb.types.isNonEmptyString(this.defaultOptions.dataBackdrop)) {
+    //   if (!this.bsModal) {
+    //     this.showNonBootstrapUnderlay = true
+    //     if (zzb.types.isObject(this.defaultOptions.underlay) && this.defaultOptions.underlay.isOn === true) {
+    //       if (!zzb.types.isNonEmptyString(this.defaultOptions.underlay.id)) {
+    //         this.defaultOptions.underlay.id = 'zzbModalUnderlay'
+    //       }
+    //       var $underlay = document.createElement('div')
+    //       $underlay.setAttribute('id', this.defaultOptions.underlay.id)
+    //
+    //       if (zzb.types.isNonEmptyString(this.defaultOptions.underlay.className)) {
+    //         $underlay.classList.add(this.defaultOptions.underlay.className)
+    //       } else {
+    //         $underlay.style.display = 'none'
+    //         $underlay.style.position = 'absolute'
+    //         $underlay.style.top = '0'
+    //         $underlay.style.left = '0'
+    //         $underlay.style.width = '100%'
+    //         $underlay.style.height = '100%'
+    //         if (zzb.types.isNonEmptyString(this.defaultOptions.underlay.bg)) {
+    //           $underlay.style.backgroundColor = this.defaultOptions.underlay.bg
+    //           if (zzb.types.isNumber(this.defaultOptions.underlay.opacity)) {
+    //             $underlay.style.opacity = this.defaultOptions.underlay.opacity
+    //           }
+    //         }
+    //       }
+    //       $('<div id="' + this.defaultOptions.underlay.id + '" ' + underlayAttributes.join('') + '></div>').appendTo('body')
+    //       $underlay = $('#' + this.defaultOptions.underlay.id)
+    //
+    //       $underlay.show()
+    //     }
+    //   }
+    // }
+
+    if (this.bsModal) {
+      // if (this.showNonBootstrapUnderlay) {
+      //  $underlay.show()
+      // }
+      this.bsModal.show();
+    } else {
+      this.modal.classList.add('show-modal');
+      setTimeout(() => {
+        this.animateIn();
+      }, 10);
+    }
+  }
+  close() {
+    if (this.bsModal) {
+      this.bsModal.hide()
+    } else {
+      this.animateOut();
+      setTimeout(() => {
+        this.modal.classList.remove('show-modal');
+
+        // if (zzb.types.isObject(this.defaultOptions.underlay) && this.defaultOptions.underlay.isOn === true) {
+        //   if (zzb.types.isNonEmptyString(this.defaultOptions.underlay.id)) {
+        //     var $underlay = $underlay = $('#' + this.defaultOptions.underlay.id)
+        //     if ($underlay.length > 0) {
+        //       $underlay.hide()
+        //     }
+        //   }
+        // }
+
+      }, 250);
+    }
+  }
+  animateIn() {
+    this.modal.classList.add('animate-modal');
+  }
+  animateOut() {
+    this.modal.classList.remove('animate-modal');
+  }
+  destroy() {
+    if (this.bsModal) {
+      this.bsModal.hide()
+      this.bsModal.destroy()
+    }
+    // if ($('#' + this.getId()).length > 0) {
+    //   $('#' + this.getId()).remove()
+    // }
+    //
+    // if (zzb.types.isObject(this.defaultOptions.underlay) && this.defaultOptions.underlay.isOn === true) {
+    //   if (zzb.types.isNonEmptyString(this.defaultOptions.underlay.id)) {
+    //     var $underlay = $underlay = $('#' + this.defaultOptions.underlay.id)
+    //     if ($underlay.length > 0) {
+    //       $underlay.remove()
+    //     }
+    //   }
+    // }
+    //
+    // this.$modal = null
+  }
+
+  static BUTTON_CLOSE = 'button-close'
+  static BUTTON_OK = 'button-ok'
+  static BUTTON_YES = 'button-yes'
+  static BUTTON_NO = 'button-no'
+  static BUTTON_CANCEL = 'button-cancel'
+
+  // standard is "btn-TYPE"; outline effect is "btn-outline-TYPE"
+  static TYPE_NONE = 'none'
+  static TYPE_PRIMARY = 'primary'
+  static TYPE_SECONDARY = 'secondary'
+  static TYPE_SUCCESS = 'success'
+  static TYPE_DANGER = 'danger'
+  static TYPE_WARNING = 'warning'
+  static TYPE_INFO = 'info'
+  static TYPE_LIGHT = 'light'
+  static TYPE_DARK = 'dark'
+  static TYPE_LINK = 'link'
+
+  static getDialogDefaults(options) {
+    var dialog = {
+      // contains the full html, including id, title, body and buttons already formatted
+      htmlDialog: '',
+      // The remainder builds the htmlDialog
+      id: zzb.uuid.newV4(),
+      type: ZazzyDialog.TYPE_NONE,
+      className: '',
+      extraAttributes: '',
+      noFade: false,
+      title: '',
+      body: '',
+      buttons: [],
+      onShow: null,
+      onShown: null,
+      onHide: null,
+      onHidden: null,
+      doVerticalCenter: true,
+      doAutoDestroy: true,
+      forceNoBootstrap: false,
+      underlay: {
+        isOn: false,
+        id: null,
+        className: '',
+        bg: '#838383',
+        opacity: 0.5
+      }
+    }
+    return (zzb.types.isObject(options) ? zzb.types.merge(dialog, options) : dialog)
+  }
+
+  static getButtonDefaults(options) {
+    var button = {
+      id: null,
+      type: ZazzyDialog.TYPE_NONE,
+      label: '',
+      className: '',
+      action: null,
+      isDismiss: false,
+      isOutline: false
+    }
+    return (zzb.types.isObject(options) ? zzb.types.merge(button, options) : button)
+  }
+
+  static getButtonPreset(preset, order, max) {
+    var button = ZazzyDialog.getButtonDefaults()
+    button.isDismiss = true
+
+    if (order === (max - 1)) {
+      button.type = ZazzyDialog.TYPE_PRIMARY
+    } else if (order === (max - 2)) {
+      button.type = ZazzyDialog.TYPE_SECONDARY
+    }
+
+    switch (preset) {
+      case 'button-close':
+        button.label = 'Close'
+        break
+      case 'button-ok':
+        button.label = 'Ok'
+        break
+      case 'button-accept':
+        button.label = 'Accept'
+        break
+      case 'button-yes':
+        button.label = 'Yes'
+        break
+      case 'button-no':
+        button.label = 'No'
+        break
+      case 'button-cancel':
+        button.label = 'Cancel'
+        break
+      default:
+        button = null
+    }
+
+    return button
+  }
+
+  static validateType(type) {
+    if (!type) {
+      return ZazzyDialog.TYPE_NONE
+    }
+
+    switch (type) {
+      case ZazzyDialog.TYPE_PRIMARY:
+      case ZazzyDialog.TYPE_SECONDARY:
+      case ZazzyDialog.TYPE_SUCCESS:
+      case ZazzyDialog.TYPE_DANGER:
+      case ZazzyDialog.TYPE_WARNING:
+      case ZazzyDialog.TYPE_INFO:
+      case ZazzyDialog.TYPE_LIGHT:
+      case ZazzyDialog.TYPE_DARK:
+      case ZazzyDialog.TYPE_LINK:
+        return type
+      default:
+        return ZazzyDialog.TYPE_NONE
+    }
+  }
+
+  static isTypeNone(type) {
+    return ZazzyDialog.validateType(type) === ZazzyDialog.TYPE_NONE
+  }
+
+  getId() {
+    if (!(zzb.types.isNonEmptyString(this.defaultOptions.id))) {
+      this.defaultOptions.id = zzb.uuid.newV4()
+    }
+    return this.defaultOptions.id
+  }
+
+  getClassName() {
+    if (!(zzb.types.isNonEmptyString(this.defaultOptions.className))) {
+      this.defaultOptions.className = ''
+    }
+    return this.defaultOptions.className
+  }
+
+  getTitle() {
+    if (!(zzb.types.isNonEmptyString(this.defaultOptions.title))) {
+      this.defaultOptions.title = ''
+    }
+    return this.defaultOptions.title
+  }
+
+  getBody() {
+    if (!(zzb.types.isNonEmptyString(this.defaultOptions.body))) {
+      this.defaultOptions.body = ''
+    }
+    return this.defaultOptions.body
+  }
+
+  createModal() {
+
+    // Add htmlDialog only when htmlDialog is not empty
+    if (this.defaultOptions.htmlDialog && !zzb.types.isNonEmptyString(this.defaultOptions.htmlDialog)) {
+      document.body.insertAdjacentHTML('beforeend', htmlModal)
+      return document.getElementById(this.getId())
+    }
+
+    // if (!this.isBootstrap) {
+    //   htmlModal = '<div id="' + options.id + '" class="modal" tabIndex="-1" role="dialog" aria-hidden="true">'
+    //     + '<div class="modal-dialog">'
+    //     + '<div class="modal-content">'
+    //     + '<div class="modal-header">'
+    //     + '<h5 class="modal-title">Modal Header</h5>'
+    //     + '<button type="button" data-bs-dismiss="modal" aria-label="Close">'
+    //     + '<svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-x" fill="currentColor" xmlns="http://www.w3.org/2000/svg">'
+    //     + '<path fill-rule="evenodd" d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>'
+    //     + '</svg>'
+    //     + '</button>'
+    //     + '</div>'
+    //     + '<div class="modal-body">'
+    //     + '<h1>My Modal</h1>'
+    //     + '<button type="button" class="btn" data-bs-dismiss="modal">Close</button>'
+    //     + '</div>'
+    //     + '</div>'
+    //     + '</div>'
+    //     + '</div>'
+    // } else {
+    //   htmlModal = '<div class="modal fade" id="' + options.id + '" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">'
+    //     + '<div class="modal-dialog">'
+    //     + '<div class="modal-content">'
+    //     + '<div class="modal-header">'
+    //     + '<h5 class="modal-title" id="staticBackdropLabel">Modal title</h5>'
+    //     + '<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>'
+    //     + '</div>'
+    //     + '<div class="modal-body">'
+    //     + 'some body content here'
+    //     + '</div>'
+    //     + '<div class="modal-footer">'
+    //     + '<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>'
+    //     + '<button type="button" class="btn btn-primary">Understood</button>'
+    //     + '</div>'
+    //     + '</div>'
+    //     + '</div>'
+    //     + '</div>'
+    // }
+
+    var options = zzb.types.merge({
+      id: this.getId(),
+      arialabel: 'arialabel' + this.getId(),
+      className: this.getClassName(),
+      title: this.getTitle(),
+      body: this.getBody(),
+      classVerticalCenter: (this.defaultOptions.doVerticalCenter ? ' modal-dialog-centered' : ''),
+      classModalHeader: '',
+      noHeaderCloseButton: false,
+      noHeaderCloseButtonButton: '',
+      dataKeyboard: null,
+    }, this.defaultOptions)
+
+    options.classFade = 'fade'
+    if (zzb.types.isBoolean(options.noFade) && options.noFade === true) {
+      options.classFade = ''
+    }
+
+    if (!ZazzyDialog.isTypeNone(options.type)) {
+      options.classModalHeader += ' alert-' + options.type
+    }
+
+    if (zzb.types.isNonEmptyString(options.dataBackdrop)) {
+      options.extraAttributes += ' data-bs-backdrop="' + options.dataBackdrop + '"'
+    }
+
+    if (zzb.types.isBoolean(options.dataKeyboard)) {
+      options.extraAttributes += ' data-bs-keyboard="' + options.dataKeyboard + '"'
+    }
+
+    if (options.noHeaderCloseButton !== true) {
+      options.noHeaderCloseButtonButton = '<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>'
+      //options.noHeaderCloseButtonButton = '<button type="button" class="close" data-bs-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>'
+    }
+
+    var template =
+      '<div class="modal {classFade} modal-fullscreen {className}" {extraAttributes} id="{id}" tabindex="-1" role="dialog" aria-labelledby="{arialabel}" aria-hidden="true">' +
+        '<div class="modal-dialog{classVerticalCenter}" role="document">' +
+          '<div class="modal-content">' +
+            '<div class="modal-header{classModalHeader}">' +
+              '<h5 class="modal-title" id="{arialabel}">{title}</h5>' +
+              '{noHeaderCloseButtonButton}' +
+            '</div>' +
+            '<div class="modal-body">{body}</div>' +
+            '<div class="modal-footer">' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>'
+
+    // Insert the template prior to adding events
+    document.body.insertAdjacentHTML('beforeend', zzb.strings.format(template, options))
+    var $modal = document.getElementById(this.getId())
+
+    if (!$modal) {
+      throw new Error('unexpected that modal has not been created')
+    }
+
     var self = this
 
-    // https://getbootstrap.com/docs/4.0/components/modal/#events
-    this.$modal.on('show.bs.modal', function (ev) {
-      self.onShow(ev)
-    })
-    this.$modal.on('shown.bs.modal', function (ev) {
-      self.onShown(ev)
-    })
-    this.$modal.on('hide.bs.modal', function (ev) {
-      self.onHide(ev)
-    })
-    this.$modal.on('hidden.bs.modal', function (ev) {
-      self.onHidden(ev)
-    })
-  }
-
-  if (zzb.types.isObject(this.defaultOptions.underlay) && this.defaultOptions.underlay.isOn === true) {
-    if (!zzb.types.isNonEmptyString(this.defaultOptions.underlay.id)) {
-      this.defaultOptions.underlay.id = 'zzbModalUnderlay'
+    if (!Array.isArray(options.buttons)) {
+      options.buttons = []
     }
-    var $underlay = $underlay = $('#' + this.defaultOptions.underlay.id)
-    if ($underlay.length === 0) {
-      var underlayAttributes = []
-      if (zzb.types.isNonEmptyString(this.defaultOptions.underlay.className)) {
-        underlayAttributes.push(' class="' + this.defaultOptions.underlay.className + '"')
-      } else {
-        underlayAttributes.push(' style="')
-        underlayAttributes.push('position:absolute;top:0;left:0;width:100%;height:100%;display:none;')
-        if (zzb.types.isNonEmptyString(this.defaultOptions.underlay.bg)) {
-          underlayAttributes.push('background-color:' + this.defaultOptions.underlay.bg + ';')
-          if (zzb.types.isNumber(this.defaultOptions.underlay.opacity)) {
-            underlayAttributes.push('opacity:' + this.defaultOptions.underlay.opacity + ';')
+
+    var maxButtons = options.buttons.length
+
+    options.buttons.forEach(function (button, ii) {
+      if (zzb.types.isNonEmptyString(button)) {
+        button = ZazzyDialog.getButtonPreset(button, ii, maxButtons)
+      }
+
+      if (!(zzb.types.isObject(button))) {
+        return // continue
+      }
+
+      if (!(zzb.types.isNonEmptyString(button.id))) {
+        button.id = 'button-' + ii + '-' + self.getId()
+      }
+
+      if (!ZazzyDialog.isTypeNone(button.type)) {
+        if (button.isOutline) {
+          button.className += ' btn-outline-' + button.type
+        } else {
+          button.className += ' btn-' + button.type
+        }
+      }
+
+      if (button.isDismiss) {
+        if (!zzb.types.isFunction(button.action)) {
+          button.action = function (dialog, ev) {
+            dialog.close()
           }
         }
-        underlayAttributes.push('"')
+        zzb.dom.setAttribute($modal.querySelector('.modal-header button[data-bs-dismiss]'), 'aria-label', button.label)
       }
-      $('<div id="' + this.defaultOptions.underlay.id + '" ' + underlayAttributes.join('') + '></div>').appendTo('body')
-      $underlay = $('#' + this.defaultOptions.underlay.id)
-    }
-    $underlay.show()
-  }
 
-  this.$modal.modal('show')
-  this.$modal.appendTo('body')
-}
+      if (zzb.dom.hasElement($modal.querySelector('.modal-footer'))) {
+        $modal.querySelector('.modal-footer')
+          .insertAdjacentHTML('beforeend', zzb.strings.format('<button id="{id}" type="button" class="btn {className}">{label}</button>', button))
 
-ZazzyDialog.prototype.onShow = function (ev) {
-  this.defaultOptions.onShow(ev, this, this.$modal)
-}
-
-ZazzyDialog.prototype.onShown = function (ev) {
-  this.defaultOptions.onShown(ev, this, this.$modal)
-}
-
-ZazzyDialog.prototype.onHide = function (ev) {
-  this.defaultOptions.onHide(ev, this, this.$modal)
-}
-
-ZazzyDialog.prototype.onHidden = function (ev) {
-  this.defaultOptions.onHidden(ev, this, this.$modal)
-  if (this.defaultOptions.doAutoDestroy) {
-    this.$modal.remove()
-  }
-}
-
-ZazzyDialog.prototype.close = function () {
-  this.$modal.modal('hide')
-  if (zzb.types.isObject(this.defaultOptions.underlay) && this.defaultOptions.underlay.isOn === true) {
-    if (zzb.types.isNonEmptyString(this.defaultOptions.underlay.id)) {
-      var $underlay = $underlay = $('#' + this.defaultOptions.underlay.id)
-      if ($underlay.length > 0) {
-        $underlay.hide()
+        document.getElementById(button.id).addEventListener('click', function(ev) {
+          if (button && zzb.types.isFunction(button.action)) {
+            return button.action.call(document.getElementById(button.id), self, ev)
+          }
+        })
       }
-    }
-  }
-}
+    })
 
-ZazzyDialog.prototype.destroy = function () {
-  // delete dialog from the body
-  this.$modal.modal('hide')
-  this.$modal.modal('dispose')
-  if ($('#' + this.getId()).length > 0) {
-    $('#' + this.getId()).remove()
+    this.defaultOptions = options
+    return document.getElementById(this.getId())
   }
-
-  if (zzb.types.isObject(this.defaultOptions.underlay) && this.defaultOptions.underlay.isOn === true) {
-    if (zzb.types.isNonEmptyString(this.defaultOptions.underlay.id)) {
-      var $underlay = $underlay = $('#' + this.defaultOptions.underlay.id)
-      if ($underlay.length > 0) {
-        $underlay.remove()
-      }
-    }
-  }
-
-  this.$modal = null
 }
 
 // ---------------------------------------------------
 // _dialogs
 // ---------------------------------------------------
 
-var _dialogs = function () {}
+var _dialogs = function () {
+  this.modals = {}
+}
 
 _dialogs.prototype.ZazzyDialog = ZazzyDialog
 
 _dialogs.prototype.modal = function (options) {
-  return new ZazzyDialog(options)
+  if (options && options.id && zzb.types.isNonEmptyString(options.id)) {
+    if (this.modals[options.id]) {
+      return this.modals[options.id]
+    }
+  }
+  var myModal = new ZazzyDialog(options)
+  if (myModal && zzb.types.isNonEmptyString(myModal.getId())) {
+    return myModal
+  }
+  throw new Error('Failed to create dialog')
 }
 
 _dialogs.prototype.showMessage = function (options) {
-  var dialog = zzb.dialogs.modal(_.merge({
+  var dialog = zzb.dialogs.modal(zzb.types.merge({
     type: ZazzyDialog.TYPE_NONE,
     buttons: [ZazzyDialog.BUTTON_OK]
   }, options))
-
+  if (options.noAutoOpen === true) {
+    return dialog
+  }
   dialog.open()
 }
 
 _dialogs.prototype.showMessageChoice = function (options) {
-  var dialog = zzb.dialogs.modal(_.merge({
+  var dialog = zzb.dialogs.modal(zzb.types.merge({
     type: ZazzyDialog.TYPE_NONE,
     buttons: [
       ZazzyDialog.BUTTON_CANCEL,
@@ -411,7 +532,9 @@ _dialogs.prototype.showMessageChoice = function (options) {
       })
     ]
   }, options))
-
+  if (options.noAutoOpen === true) {
+    return dialog
+  }
   dialog.open()
 }
 
@@ -420,7 +543,7 @@ _dialogs.prototype.handleError = function (options) {
     '<div class="zzb-dialog-message">{message}</div>'
 
   // this.dialogs.handleError({log: 'failed to retrieve login dialog form: ' + err, title: 'Unknown error', message: 'An unknown communications error occurred while retrieving the login form. Please check your connection settings and try again.'})
-  options = _.merge({
+  options = zzb.types.merge({
     log: null,
     type: ZazzyDialog.TYPE_DANGER,
     title: '',
@@ -447,7 +570,7 @@ _dialogs.prototype.handleError = function (options) {
     if (zzb.types.isArray(options.errs)) {
       var arrHtml = []
 
-      _.each(options.errs, function (err, index) {
+      options.errs.forEach(function (err, index) {
         if (err.message && zzb.types.isNonEmptyString(err.message)) {
           arrHtml.push(zzb.strings.format('<div class="zzb-dialog-error-item">{0}</div>', err.message))
         }

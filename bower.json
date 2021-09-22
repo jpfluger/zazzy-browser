@@ -1,7 +1,7 @@
 {
   "name": "zazzy-browser",
   "license": "MIT",
-  "description": "General-purpose browser functions used as building-blocks to create Bootstrap v4 websites and assist in client-server communications.",
+  "description": "A collection of general-purpose browser utilities used as higher-level building-blocks to assist in client-server communications.",
   "homepage": "https://github.com/jpfluger/zazzy-browser",
   "authors": [
     "Jaret Pfluger <japes@aberlorn.com>"
@@ -15,10 +15,6 @@
     "browser",
     "zazzy"
   ],
-  "dependencies": {
-    "jquery": ">=3.5",
-    "lodash": "^4.0"
-  },
   "ignore": [
     "**/.*",
     "node_modules",
@@ -28,6 +24,7 @@
     "website",
     "package.json",
     "gulpfile.js",
+    "webpack.config.js",
     "src"
   ]
 }

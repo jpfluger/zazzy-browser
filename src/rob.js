@@ -1,6 +1,3 @@
-// client or server
-var _ = require('lodash')
-
 // ---------------------------------------------------
 // rob (Return Object)
 // ---------------------------------------------------
@@ -8,7 +5,7 @@ var _ = require('lodash')
 var _rob = function () {}
 
 _rob.prototype.newROB = function (options) {
-  return _.merge({
+  return zzb.types.merge({
     errs: null,
     recs: [],
     columns: [],
@@ -34,7 +31,7 @@ _rob.prototype.newROB = function (options) {
     },
     find: function (key, value) {
       var hit = null
-      _.each(this.recs, function (rec) {
+      this.recs.forEach(function (rec) {
         if (rec && zzb.types.isObject(rec) && !Array.isArray(rec) && rec[key] === value) {
           hit = rec
           return false
@@ -54,7 +51,7 @@ _rob.prototype.toObject = function (errs) {
     return { _system: [errs] }
   }
   var eo = {}
-  _.each(errs, function (err) {
+  errs.forEach(function (err) {
     if (err) {
       if (!err.field) {
         err.field = '_system'
@@ -76,7 +73,7 @@ function mergeErrorDefaults (options) {
   // why we have isErr?
   //   server-side supports logger { emerg: 0, alert: 1, crit: 2, error: 3, warning: 4, notice: 5, info: 6, debug: 7 }
   //   of which numbers 0 to 3 are errors and > 4 are not
-  options = _.merge({ type: 'error', message: null, field: '_system', stack: null, isErr: true, title: null }, options)
+  options = zzb.types.merge({ type: 'error', message: null, field: '_system', stack: null, isErr: true, title: null }, options)
 
   if (options.isErr) {
     if (options.type === 'warn') {
@@ -113,7 +110,7 @@ var createError = function (options1, options2) {
     return mergeErrorDefaults()
   }
   if (zzb.types.isNonEmptyString(options1)) {
-    return mergeErrorDefaults(_.merge({ message: options1 }, options2))
+    return mergeErrorDefaults(zzb.types.merge({ message: options1 }, options2))
   } else if (!Array.isArray(options1) && zzb.types.isObject(options1)) {
     return mergeErrorDefaults(options1)
   }
@@ -135,7 +132,7 @@ _rob.prototype.sanitizeErrors = function (errs) {
     newErrs = [createError(errs)]
   } else if (errs.length > 0) {
     newErrs = []
-    _.each(errs, function (err) {
+    errs.forEach(function (err) {
       newErrs.push(createError(err))
     })
   }
@@ -162,7 +159,7 @@ _rob.prototype.toListErrs = function (errs) {
   var arrFieldMessages = []
 
   if (errs && Array.isArray(errs) && errs.length > 0) {
-    _.each(errs, function (err) {
+    errs.forEach(function (err) {
       if (err.isErr === true) {
         if (err.system === '_system') {
           arrSystem.push(err)
@@ -226,10 +223,10 @@ _rob.prototype.toListErrs = function (errs) {
 }
 
 _rob.prototype.renderListErrs = function (options) {
-  options = _.merge({ errs: [], format: 'text', defaultTitle: '', template: null }, options)
+  options = zzb.types.merge({ errs: [], format: 'text', defaultTitle: '', template: null }, options)
   var arr = []
   if (zzb.types.isArrayHasRecords(options.errs)) {
-    _.each(options.errs, function (err) {
+    options.errs.forEach(function (err) {
       var title = ''
       if (zzb.types.isNonEmptyString(options.defaultTitle)) {
         title = options.defaultTitle

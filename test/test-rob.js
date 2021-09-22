@@ -1,5 +1,5 @@
 /* global describe, it */
-var zzbLoader = require('../src/zzb-server.js').zzbLoader
+var zzbLoader = require('./zzb-tester.js').zzbLoader
 
 describe('Validate zzb.rob methods', function () {
   var zzb = zzbLoader()
