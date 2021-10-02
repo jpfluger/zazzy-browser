@@ -48,11 +48,11 @@ _perms.prototype.getPermObjectFromPermkeys = function (permkeys) {
 }
 
 _perms.prototype.mergePermkey = function (permkey, merge) {
-  if (!merge || !zzb.types.isNonEmptyString(merge)) {
+  if (!merge || !zzb.types.isStringNotEmpty(merge)) {
     return permkey
   }
 
-  if (!permkey || !zzb.types.isNonEmptyString(permkey)) {
+  if (!permkey || !zzb.types.isStringNotEmpty(permkey)) {
     return merge
   }
 
@@ -96,11 +96,11 @@ _perms.prototype.mergePermkey = function (permkey, merge) {
 _perms.prototype.getPermObject = function (permkey, available, merge) {
   var po = { key: null, perm: null, attr: {}, toPermkey: function () { return this.key + ':' + this.perm } }
 
-  if (merge || zzb.types.isNonEmptyString(merge)) {
+  if (merge || zzb.types.isStringNotEmpty(merge)) {
     permkey = this.mergePermkey(permkey, merge)
   }
 
-  if (!permkey || !zzb.types.isNonEmptyString(permkey)) {
+  if (!permkey || !zzb.types.isStringNotEmpty(permkey)) {
     po.attr = this.getPermAttributes()
     return po
   }
@@ -120,7 +120,7 @@ _perms.prototype.getPermObject = function (permkey, available, merge) {
 
   if (po.perm.length > 0) {
     // remove any permissions from the default that are not available
-    if (available && zzb.types.isNonEmptyString(available)) {
+    if (available && zzb.types.isStringNotEmpty(available)) {
       available = available.trim().toUpperCase()
       for (var mm = po.perm.length - 1; mm >= 0; mm--) {
         if (available.indexOf(po.perm[mm]) < 0) {
@@ -141,7 +141,7 @@ _perms.prototype.getPermAttributes = function (permkey) {
   // CRUDX
   var attr = { canRead: false, canCreate: false, canUpdate: false, canDelete: false, canExecute: false }
 
-  if (!permkey || !zzb.types.isNonEmptyString(permkey)) {
+  if (!permkey || !zzb.types.isStringNotEmpty(permkey)) {
     return attr
   }
 
@@ -174,7 +174,7 @@ _perms.prototype.hasMatch = function (permkey, target) {
   }
 
   var po = permkey
-  if (zzb.types.isNonEmptyString(permkey)) {
+  if (zzb.types.isStringNotEmpty(permkey)) {
     po = this.getPermObject(permkey)
   }
 
@@ -183,12 +183,12 @@ _perms.prototype.hasMatch = function (permkey, target) {
   }
 
   var tp = null
-  if (zzb.types.isNonEmptyString(target)) {
+  if (zzb.types.isStringNotEmpty(target)) {
     tp = this.getPermObject(target)
   } else if (Array.isArray(target)) {
     var self = this
     target.forEach(function (item) {
-      if (zzb.types.isNonEmptyString(item)) {
+      if (zzb.types.isStringNotEmpty(item)) {
         item = self.getPermObject(item)
       }
       if (item.key === po.key) {
@@ -206,7 +206,7 @@ _perms.prototype.hasMatch = function (permkey, target) {
       if (!target[po.key]) {
         return false
       } else {
-        if (zzb.types.isNonEmptyString(target[po.key])) {
+        if (zzb.types.isStringNotEmpty(target[po.key])) {
           tp = this.getPermObject(po.key + ':' + target[po.key])
         } else {
           tp = target[po.key]

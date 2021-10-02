@@ -1,4 +1,4 @@
-//! zzb.js v2.0.1 (https://github.com/jpfluger/zazzy-browser)
+//! zzb.js v2.1.0 (https://github.com/jpfluger/zazzy-browser)
 //! MIT License; Copyright 2017-2021 Jaret Pfluger
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
@@ -22,10 +22,10 @@ _ajax.prototype.request = function(options, callback) {
   }
   options = zzb.types.merge({url: null, method:'GET', body: null, expectType:'text', headers:{},
                 RAWRETURN: false, SKIPREDIRECT: false, SKIPFLASH: false, SHOWCATCHMESSAGE: false, NOCATCHLOG: false, NOCATCHFLASH: false, CATCHFLASHMESSAGE: '' }, options)
-  if (!zzb.types.isNonEmptyString(options.url)) {
+  if (!zzb.types.isStringNotEmpty(options.url)) {
     return callback(null, new Error('No url defined to fetch request.'))
   }
-  if (!zzb.types.isNonEmptyString(options.method)) {
+  if (!zzb.types.isStringNotEmpty(options.method)) {
     return callback(null, new Error('No url method defined to fetch request.'))
   }
   fetch(options.url, {
@@ -67,7 +67,7 @@ _ajax.prototype.request = function(options, callback) {
       } else {
         // handle redirect
         if (objReturn.request.SKIPREDIRECT !== true) {
-          if (zzb.types.isNonEmptyString(data.redirect)) {
+          if (zzb.types.isStringNotEmpty(data.redirect)) {
             if (zzb.types.isFunction(objReturn.request.onRedirect)) {
               objReturn.request.onRedirect(data, function (skipRedirect) {
                 if (!skipRedirect) {
@@ -75,7 +75,7 @@ _ajax.prototype.request = function(options, callback) {
                 }
               })
               return
-            } else if (zzb.types.isNonEmptyString(data.message)) {
+            } else if (zzb.types.isStringNotEmpty(data.message)) {
               zzb.dialogs.showMessage({
                 className: 'zzb-dialog-flash-message zzb-dialog-flash-redirect',
                 dataBackdrop: 'static',
@@ -133,7 +133,7 @@ _ajax.prototype.request = function(options, callback) {
         rob.listErrs = zzb.rob.toListErrs(rob.errs)
 
         if (options.SKIPFLASH !== true) {
-          if (zzb.types.isNonEmptyString(data.message)) {
+          if (zzb.types.isStringNotEmpty(data.message)) {
             noFinalResolve = true
             zzb.dialogs.showMessage({
               className: 'zzb-dialog-flash-message ' + zzb.strings.format('zzb-dialog-flash-status-{0}', rob.hasErrors() ? 'error' : 'okay'),
@@ -170,7 +170,7 @@ _ajax.prototype.request = function(options, callback) {
     .catch(function (err) {
 
       let errMessage = ''
-      if (err && zzb.types.isNonEmptyString(err.message)) {
+      if (err && zzb.types.isStringNotEmpty(err.message)) {
         if (options.NOCATCHLOG !== true) {
           console.log(err.message)
         }
@@ -182,10 +182,10 @@ _ajax.prototype.request = function(options, callback) {
       // UI Dialog to display the error
       if (options.NOCATCHFLASH !== true) {
         let divErr = ''
-        if (zzb.types.isNonEmptyString(errMessage)) {
+        if (zzb.types.isStringNotEmpty(errMessage)) {
           divErr = zzb.strings.format('\n<div class="zzb-dialog-error-catch">Error: {0}</div>', errMessage)
         }
-        if (zzb.types.isNonEmptyString(options.CATCHFLASHMESSAGE)) {
+        if (zzb.types.isStringNotEmpty(options.CATCHFLASHMESSAGE)) {
           zzb.ajax.showMessageFailedAction({ message: options.CATCHFLASHMESSAGE + divErr })
         } else {
           zzb.ajax.showMessageFailedAction({ message: AjaxMessage.MSG_FAILED_ACTION_UNEXPECTED + divErr })
@@ -228,13 +228,13 @@ _ajax.prototype.getJSON = function (options, callback) {
 // specified but in the wrong format. To have jquery "guess", then override expectType in this way: {expectType: 'text'}
 _ajax.prototype.postJSON = function (options, callback) {
   options.method = 'POST'
-  if (!zzb.types.isNonEmptyString(options.expectType)) {
+  if (!zzb.types.isStringNotEmpty(options.expectType)) {
     options.expectType = 'json'
   }
   options.headers = {
     'Content-Type': 'application/json'
   }
-  if (!zzb.types.isNonEmptyString(options.body)) {
+  if (!zzb.types.isStringNotEmpty(options.body)) {
     options.body = JSON.stringify(options.body)
   } else {
     options.body = '{}'
@@ -296,7 +296,7 @@ class ZazzyDialog {
     this.isBootstrap = (this.defaultOptions.forceNoBootstrap === true ? false : window.bootstrap != undefined)
 
     this.modal = null
-    if (zzb.types.isNonEmptyString(this.defaultOptions.id)) {
+    if (zzb.types.isStringNotEmpty(this.defaultOptions.id)) {
       this.modal = document.getElementById(this.defaultOptions.id)
     }
 
@@ -358,17 +358,17 @@ class ZazzyDialog {
   open() {
 
     // this.showNonBootstrapUnderlay = false
-    // if (zzb.types.isNonEmptyString(this.defaultOptions.dataBackdrop)) {
+    // if (zzb.types.isStringNotEmpty(this.defaultOptions.dataBackdrop)) {
     //   if (!this.bsModal) {
     //     this.showNonBootstrapUnderlay = true
     //     if (zzb.types.isObject(this.defaultOptions.underlay) && this.defaultOptions.underlay.isOn === true) {
-    //       if (!zzb.types.isNonEmptyString(this.defaultOptions.underlay.id)) {
+    //       if (!zzb.types.isStringNotEmpty(this.defaultOptions.underlay.id)) {
     //         this.defaultOptions.underlay.id = 'zzbModalUnderlay'
     //       }
     //       var $underlay = document.createElement('div')
     //       $underlay.setAttribute('id', this.defaultOptions.underlay.id)
     //
-    //       if (zzb.types.isNonEmptyString(this.defaultOptions.underlay.className)) {
+    //       if (zzb.types.isStringNotEmpty(this.defaultOptions.underlay.className)) {
     //         $underlay.classList.add(this.defaultOptions.underlay.className)
     //       } else {
     //         $underlay.style.display = 'none'
@@ -377,7 +377,7 @@ class ZazzyDialog {
     //         $underlay.style.left = '0'
     //         $underlay.style.width = '100%'
     //         $underlay.style.height = '100%'
-    //         if (zzb.types.isNonEmptyString(this.defaultOptions.underlay.bg)) {
+    //         if (zzb.types.isStringNotEmpty(this.defaultOptions.underlay.bg)) {
     //           $underlay.style.backgroundColor = this.defaultOptions.underlay.bg
     //           if (zzb.types.isNumber(this.defaultOptions.underlay.opacity)) {
     //             $underlay.style.opacity = this.defaultOptions.underlay.opacity
@@ -413,7 +413,7 @@ class ZazzyDialog {
         this.modal.classList.remove('show-modal');
 
         // if (zzb.types.isObject(this.defaultOptions.underlay) && this.defaultOptions.underlay.isOn === true) {
-        //   if (zzb.types.isNonEmptyString(this.defaultOptions.underlay.id)) {
+        //   if (zzb.types.isStringNotEmpty(this.defaultOptions.underlay.id)) {
         //     var $underlay = $underlay = $('#' + this.defaultOptions.underlay.id)
         //     if ($underlay.length > 0) {
         //       $underlay.hide()
@@ -440,7 +440,7 @@ class ZazzyDialog {
     // }
     //
     // if (zzb.types.isObject(this.defaultOptions.underlay) && this.defaultOptions.underlay.isOn === true) {
-    //   if (zzb.types.isNonEmptyString(this.defaultOptions.underlay.id)) {
+    //   if (zzb.types.isStringNotEmpty(this.defaultOptions.underlay.id)) {
     //     var $underlay = $underlay = $('#' + this.defaultOptions.underlay.id)
     //     if ($underlay.length > 0) {
     //       $underlay.remove()
@@ -575,28 +575,28 @@ class ZazzyDialog {
   }
 
   getId() {
-    if (!(zzb.types.isNonEmptyString(this.defaultOptions.id))) {
+    if (!(zzb.types.isStringNotEmpty(this.defaultOptions.id))) {
       this.defaultOptions.id = zzb.uuid.newV4()
     }
     return this.defaultOptions.id
   }
 
   getClassName() {
-    if (!(zzb.types.isNonEmptyString(this.defaultOptions.className))) {
+    if (!(zzb.types.isStringNotEmpty(this.defaultOptions.className))) {
       this.defaultOptions.className = ''
     }
     return this.defaultOptions.className
   }
 
   getTitle() {
-    if (!(zzb.types.isNonEmptyString(this.defaultOptions.title))) {
+    if (!(zzb.types.isStringNotEmpty(this.defaultOptions.title))) {
       this.defaultOptions.title = ''
     }
     return this.defaultOptions.title
   }
 
   getBody() {
-    if (!(zzb.types.isNonEmptyString(this.defaultOptions.body))) {
+    if (!(zzb.types.isStringNotEmpty(this.defaultOptions.body))) {
       this.defaultOptions.body = ''
     }
     return this.defaultOptions.body
@@ -605,7 +605,7 @@ class ZazzyDialog {
   createModal() {
 
     // Add htmlDialog only when htmlDialog is not empty
-    if (this.defaultOptions.htmlDialog && !zzb.types.isNonEmptyString(this.defaultOptions.htmlDialog)) {
+    if (this.defaultOptions.htmlDialog && !zzb.types.isStringNotEmpty(this.defaultOptions.htmlDialog)) {
       document.body.insertAdjacentHTML('beforeend', htmlModal)
       return document.getElementById(this.getId())
     }
@@ -671,7 +671,7 @@ class ZazzyDialog {
       options.classModalHeader += ' alert-' + options.type
     }
 
-    if (zzb.types.isNonEmptyString(options.dataBackdrop)) {
+    if (zzb.types.isStringNotEmpty(options.dataBackdrop)) {
       options.extraAttributes += ' data-bs-backdrop="' + options.dataBackdrop + '"'
     }
 
@@ -716,7 +716,7 @@ class ZazzyDialog {
     var maxButtons = options.buttons.length
 
     options.buttons.forEach(function (button, ii) {
-      if (zzb.types.isNonEmptyString(button)) {
+      if (zzb.types.isStringNotEmpty(button)) {
         button = ZazzyDialog.getButtonPreset(button, ii, maxButtons)
       }
 
@@ -724,7 +724,7 @@ class ZazzyDialog {
         return // continue
       }
 
-      if (!(zzb.types.isNonEmptyString(button.id))) {
+      if (!(zzb.types.isStringNotEmpty(button.id))) {
         button.id = 'button-' + ii + '-' + self.getId()
       }
 
@@ -773,13 +773,13 @@ var _dialogs = function () {
 _dialogs.prototype.ZazzyDialog = ZazzyDialog
 
 _dialogs.prototype.modal = function (options) {
-  if (options && options.id && zzb.types.isNonEmptyString(options.id)) {
+  if (options && options.id && zzb.types.isStringNotEmpty(options.id)) {
     if (this.modals[options.id]) {
       return this.modals[options.id]
     }
   }
   var myModal = new ZazzyDialog(options)
-  if (myModal && zzb.types.isNonEmptyString(myModal.getId())) {
+  if (myModal && zzb.types.isStringNotEmpty(myModal.getId())) {
     return myModal
   }
   throw new Error('Failed to create dialog')
@@ -844,12 +844,12 @@ _dialogs.prototype.handleError = function (options) {
     console.log(options.log)
   }
 
-  if (!zzb.types.isNonEmptyString(options.errors)) {
+  if (!zzb.types.isStringNotEmpty(options.errors)) {
     if (zzb.types.isArray(options.errs)) {
       var arrHtml = []
 
       options.errs.forEach(function (err, index) {
-        if (err.message && zzb.types.isNonEmptyString(err.message)) {
+        if (err.message && zzb.types.isStringNotEmpty(err.message)) {
           arrHtml.push(zzb.strings.format('<div class="zzb-dialog-error-item">{0}</div>', err.message))
         }
       })
@@ -977,11 +977,11 @@ _perms.prototype.getPermObjectFromPermkeys = function (permkeys) {
 }
 
 _perms.prototype.mergePermkey = function (permkey, merge) {
-  if (!merge || !zzb.types.isNonEmptyString(merge)) {
+  if (!merge || !zzb.types.isStringNotEmpty(merge)) {
     return permkey
   }
 
-  if (!permkey || !zzb.types.isNonEmptyString(permkey)) {
+  if (!permkey || !zzb.types.isStringNotEmpty(permkey)) {
     return merge
   }
 
@@ -1025,11 +1025,11 @@ _perms.prototype.mergePermkey = function (permkey, merge) {
 _perms.prototype.getPermObject = function (permkey, available, merge) {
   var po = { key: null, perm: null, attr: {}, toPermkey: function () { return this.key + ':' + this.perm } }
 
-  if (merge || zzb.types.isNonEmptyString(merge)) {
+  if (merge || zzb.types.isStringNotEmpty(merge)) {
     permkey = this.mergePermkey(permkey, merge)
   }
 
-  if (!permkey || !zzb.types.isNonEmptyString(permkey)) {
+  if (!permkey || !zzb.types.isStringNotEmpty(permkey)) {
     po.attr = this.getPermAttributes()
     return po
   }
@@ -1049,7 +1049,7 @@ _perms.prototype.getPermObject = function (permkey, available, merge) {
 
   if (po.perm.length > 0) {
     // remove any permissions from the default that are not available
-    if (available && zzb.types.isNonEmptyString(available)) {
+    if (available && zzb.types.isStringNotEmpty(available)) {
       available = available.trim().toUpperCase()
       for (var mm = po.perm.length - 1; mm >= 0; mm--) {
         if (available.indexOf(po.perm[mm]) < 0) {
@@ -1070,7 +1070,7 @@ _perms.prototype.getPermAttributes = function (permkey) {
   // CRUDX
   var attr = { canRead: false, canCreate: false, canUpdate: false, canDelete: false, canExecute: false }
 
-  if (!permkey || !zzb.types.isNonEmptyString(permkey)) {
+  if (!permkey || !zzb.types.isStringNotEmpty(permkey)) {
     return attr
   }
 
@@ -1103,7 +1103,7 @@ _perms.prototype.hasMatch = function (permkey, target) {
   }
 
   var po = permkey
-  if (zzb.types.isNonEmptyString(permkey)) {
+  if (zzb.types.isStringNotEmpty(permkey)) {
     po = this.getPermObject(permkey)
   }
 
@@ -1112,12 +1112,12 @@ _perms.prototype.hasMatch = function (permkey, target) {
   }
 
   var tp = null
-  if (zzb.types.isNonEmptyString(target)) {
+  if (zzb.types.isStringNotEmpty(target)) {
     tp = this.getPermObject(target)
   } else if (Array.isArray(target)) {
     var self = this
     target.forEach(function (item) {
-      if (zzb.types.isNonEmptyString(item)) {
+      if (zzb.types.isStringNotEmpty(item)) {
         item = self.getPermObject(item)
       }
       if (item.key === po.key) {
@@ -1135,7 +1135,7 @@ _perms.prototype.hasMatch = function (permkey, target) {
       if (!target[po.key]) {
         return false
       } else {
-        if (zzb.types.isNonEmptyString(target[po.key])) {
+        if (zzb.types.isStringNotEmpty(target[po.key])) {
           tp = this.getPermObject(po.key + ':' + target[po.key])
         } else {
           tp = target[po.key]
@@ -1276,7 +1276,7 @@ var createError = function (options1, options2) {
   if (!options1) {
     return mergeErrorDefaults()
   }
-  if (zzb.types.isNonEmptyString(options1)) {
+  if (zzb.types.isStringNotEmpty(options1)) {
     return mergeErrorDefaults(zzb.types.merge({ message: options1 }, options2))
   } else if (!Array.isArray(options1) && zzb.types.isObject(options1)) {
     return mergeErrorDefaults(options1)
@@ -1330,7 +1330,7 @@ _rob.prototype.toListErrs = function (errs) {
       if (err.isErr === true) {
         if (err.system === '_system') {
           arrSystem.push(err)
-        } else if (zzb.types.isNonEmptyString(err.field)) {
+        } else if (zzb.types.isStringNotEmpty(err.field)) {
           if (err.field === '_system') {
             arrSystem.push(err)
           } else {
@@ -1342,7 +1342,7 @@ _rob.prototype.toListErrs = function (errs) {
       } else {
         if (err.system === '_system') {
           arrSystemMessages.push(err)
-        } else if (zzb.types.isNonEmptyString(err.field)) {
+        } else if (zzb.types.isStringNotEmpty(err.field)) {
           if (err.field === '_system') {
             arrSystemMessages.push(err)
           } else {
@@ -1395,9 +1395,9 @@ _rob.prototype.renderListErrs = function (options) {
   if (zzb.types.isArrayHasRecords(options.errs)) {
     options.errs.forEach(function (err) {
       var title = ''
-      if (zzb.types.isNonEmptyString(options.defaultTitle)) {
+      if (zzb.types.isStringNotEmpty(options.defaultTitle)) {
         title = options.defaultTitle
-      } else if (zzb.types.isNonEmptyString(err.field)) {
+      } else if (zzb.types.isStringNotEmpty(err.field)) {
         title = err.field
       }
 
@@ -1626,14 +1626,14 @@ _strings.prototype.toPlural = function (word, number, options) {
 }
 
 _strings.prototype.capitalize = function (target) {
-  if (zzb.types.isNonEmptyString(target)) {
+  if (zzb.types.isStringNotEmpty(target)) {
     return target.charAt(0).toUpperCase() + string.slice(1);
   }
   return ''
 }
 
 _strings.prototype.toFirstCapitalEndPeriod = function (target) {
-  if (zzb.types.isNonEmptyString(target)) {
+  if (zzb.types.isStringNotEmpty(target)) {
     target = target.trim()
     target = zzb.strings.capitalize(target)
     if (!target.endsWith(target, '.')) {
@@ -1653,7 +1653,7 @@ var sizeUnitsFormatNameEIC = ['KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', '
 // We standardized the above, somewhat, with https://github.com/cloudfoundry/bytefmt
 // Also only divisions are with 1024 and NOT 1000
 _strings.prototype.sizeToHumanReadable = function (bytes, unitsFormat, noSizeUnitSeparation, dp) {
-  if (!zzb.types.isNonEmptyString(unitsFormat)) {
+  if (!zzb.types.isStringNotEmpty(unitsFormat)) {
     unitsFormat = 'single'
   }
   var unitSeperateSpace = ' '
@@ -1870,7 +1870,7 @@ _types.prototype.isArray = function (o) {
 }
 
 _types.prototype.isArrayHasRecords = function (o) {
-  return this.isArray(o) && o.length > 0
+  return zzb.types.isArray(o) && o.length > 0
 }
 
 _types.prototype.isObject = function (o) {
@@ -1881,11 +1881,23 @@ _types.prototype.isNumber = function (o) {
   return !isNaN(o - 0) && o !== null && o !== '' && o !== false
 }
 
+// Deprecated
+// Will be remove in version 3.0.0
 _types.prototype.isNonEmptyString = function (s) {
   return (s && (typeof s === 'string') && s.trim().length > 0)
 }
 
+_types.prototype.isStringNotEmpty = function (s) {
+  return (s && (typeof s === 'string') && s.trim().length > 0)
+}
+
+// Deprecated
+// Will be remove in version 3.0.0
 _types.prototype.isEmptyString = function (s) {
+  return (s && (typeof s === 'string') && s.trim().length === 0)
+}
+
+_types.prototype.isStringEmpty = function (s) {
   return (s && (typeof s === 'string') && s.trim().length === 0)
 }
 

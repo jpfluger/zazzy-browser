@@ -14,10 +14,10 @@ _ajax.prototype.request = function(options, callback) {
   }
   options = zzb.types.merge({url: null, method:'GET', body: null, expectType:'text', headers:{},
                 RAWRETURN: false, SKIPREDIRECT: false, SKIPFLASH: false, SHOWCATCHMESSAGE: false, NOCATCHLOG: false, NOCATCHFLASH: false, CATCHFLASHMESSAGE: '' }, options)
-  if (!zzb.types.isNonEmptyString(options.url)) {
+  if (!zzb.types.isStringNotEmpty(options.url)) {
     return callback(null, new Error('No url defined to fetch request.'))
   }
-  if (!zzb.types.isNonEmptyString(options.method)) {
+  if (!zzb.types.isStringNotEmpty(options.method)) {
     return callback(null, new Error('No url method defined to fetch request.'))
   }
   fetch(options.url, {
@@ -59,7 +59,7 @@ _ajax.prototype.request = function(options, callback) {
       } else {
         // handle redirect
         if (objReturn.request.SKIPREDIRECT !== true) {
-          if (zzb.types.isNonEmptyString(data.redirect)) {
+          if (zzb.types.isStringNotEmpty(data.redirect)) {
             if (zzb.types.isFunction(objReturn.request.onRedirect)) {
               objReturn.request.onRedirect(data, function (skipRedirect) {
                 if (!skipRedirect) {
@@ -67,7 +67,7 @@ _ajax.prototype.request = function(options, callback) {
                 }
               })
               return
-            } else if (zzb.types.isNonEmptyString(data.message)) {
+            } else if (zzb.types.isStringNotEmpty(data.message)) {
               zzb.dialogs.showMessage({
                 className: 'zzb-dialog-flash-message zzb-dialog-flash-redirect',
                 dataBackdrop: 'static',
@@ -125,7 +125,7 @@ _ajax.prototype.request = function(options, callback) {
         rob.listErrs = zzb.rob.toListErrs(rob.errs)
 
         if (options.SKIPFLASH !== true) {
-          if (zzb.types.isNonEmptyString(data.message)) {
+          if (zzb.types.isStringNotEmpty(data.message)) {
             noFinalResolve = true
             zzb.dialogs.showMessage({
               className: 'zzb-dialog-flash-message ' + zzb.strings.format('zzb-dialog-flash-status-{0}', rob.hasErrors() ? 'error' : 'okay'),
@@ -162,7 +162,7 @@ _ajax.prototype.request = function(options, callback) {
     .catch(function (err) {
 
       let errMessage = ''
-      if (err && zzb.types.isNonEmptyString(err.message)) {
+      if (err && zzb.types.isStringNotEmpty(err.message)) {
         if (options.NOCATCHLOG !== true) {
           console.log(err.message)
         }
@@ -174,10 +174,10 @@ _ajax.prototype.request = function(options, callback) {
       // UI Dialog to display the error
       if (options.NOCATCHFLASH !== true) {
         let divErr = ''
-        if (zzb.types.isNonEmptyString(errMessage)) {
+        if (zzb.types.isStringNotEmpty(errMessage)) {
           divErr = zzb.strings.format('\n<div class="zzb-dialog-error-catch">Error: {0}</div>', errMessage)
         }
-        if (zzb.types.isNonEmptyString(options.CATCHFLASHMESSAGE)) {
+        if (zzb.types.isStringNotEmpty(options.CATCHFLASHMESSAGE)) {
           zzb.ajax.showMessageFailedAction({ message: options.CATCHFLASHMESSAGE + divErr })
         } else {
           zzb.ajax.showMessageFailedAction({ message: AjaxMessage.MSG_FAILED_ACTION_UNEXPECTED + divErr })
@@ -220,13 +220,13 @@ _ajax.prototype.getJSON = function (options, callback) {
 // specified but in the wrong format. To have jquery "guess", then override expectType in this way: {expectType: 'text'}
 _ajax.prototype.postJSON = function (options, callback) {
   options.method = 'POST'
-  if (!zzb.types.isNonEmptyString(options.expectType)) {
+  if (!zzb.types.isStringNotEmpty(options.expectType)) {
     options.expectType = 'json'
   }
   options.headers = {
     'Content-Type': 'application/json'
   }
-  if (!zzb.types.isNonEmptyString(options.body)) {
+  if (!zzb.types.isStringNotEmpty(options.body)) {
     options.body = JSON.stringify(options.body)
   } else {
     options.body = '{}'

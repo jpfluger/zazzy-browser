@@ -102,7 +102,7 @@ _types.prototype.isArray = function (o) {
 }
 
 _types.prototype.isArrayHasRecords = function (o) {
-  return this.isArray(o) && o.length > 0
+  return zzb.types.isArray(o) && o.length > 0
 }
 
 _types.prototype.isObject = function (o) {
@@ -113,11 +113,23 @@ _types.prototype.isNumber = function (o) {
   return !isNaN(o - 0) && o !== null && o !== '' && o !== false
 }
 
+// Deprecated
+// Will be remove in version 3.0.0
 _types.prototype.isNonEmptyString = function (s) {
   return (s && (typeof s === 'string') && s.trim().length > 0)
 }
 
+_types.prototype.isStringNotEmpty = function (s) {
+  return (s && (typeof s === 'string') && s.trim().length > 0)
+}
+
+// Deprecated
+// Will be remove in version 3.0.0
 _types.prototype.isEmptyString = function (s) {
+  return (s && (typeof s === 'string') && s.trim().length === 0)
+}
+
+_types.prototype.isStringEmpty = function (s) {
   return (s && (typeof s === 'string') && s.trim().length === 0)
 }
 

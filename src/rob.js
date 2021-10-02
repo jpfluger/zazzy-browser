@@ -109,7 +109,7 @@ var createError = function (options1, options2) {
   if (!options1) {
     return mergeErrorDefaults()
   }
-  if (zzb.types.isNonEmptyString(options1)) {
+  if (zzb.types.isStringNotEmpty(options1)) {
     return mergeErrorDefaults(zzb.types.merge({ message: options1 }, options2))
   } else if (!Array.isArray(options1) && zzb.types.isObject(options1)) {
     return mergeErrorDefaults(options1)
@@ -163,7 +163,7 @@ _rob.prototype.toListErrs = function (errs) {
       if (err.isErr === true) {
         if (err.system === '_system') {
           arrSystem.push(err)
-        } else if (zzb.types.isNonEmptyString(err.field)) {
+        } else if (zzb.types.isStringNotEmpty(err.field)) {
           if (err.field === '_system') {
             arrSystem.push(err)
           } else {
@@ -175,7 +175,7 @@ _rob.prototype.toListErrs = function (errs) {
       } else {
         if (err.system === '_system') {
           arrSystemMessages.push(err)
-        } else if (zzb.types.isNonEmptyString(err.field)) {
+        } else if (zzb.types.isStringNotEmpty(err.field)) {
           if (err.field === '_system') {
             arrSystemMessages.push(err)
           } else {
@@ -228,9 +228,9 @@ _rob.prototype.renderListErrs = function (options) {
   if (zzb.types.isArrayHasRecords(options.errs)) {
     options.errs.forEach(function (err) {
       var title = ''
-      if (zzb.types.isNonEmptyString(options.defaultTitle)) {
+      if (zzb.types.isStringNotEmpty(options.defaultTitle)) {
         title = options.defaultTitle
-      } else if (zzb.types.isNonEmptyString(err.field)) {
+      } else if (zzb.types.isStringNotEmpty(err.field)) {
         title = err.field
       }
 

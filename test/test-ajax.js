@@ -148,7 +148,7 @@ describe('test ajax', function () {
   //   zzb.ajax.getJSON({url: 'http://localhost:8080/force-flash-message', NOCATCHFLASH: true}, function(drr, err) {
   //     if (err) {
   //       err = new Error('err should not have been handled')
-  //     } else if (!zzb.types.isNonEmptyString(drr.data.message)) {
+  //     } else if (!zzb.types.isStringNotEmpty(drr.data.message)) {
   //       err = new Error('should have data.message')
   //     }
   //     done(err)

@@ -18,7 +18,7 @@ class ZazzyDialog {
     this.isBootstrap = (this.defaultOptions.forceNoBootstrap === true ? false : window.bootstrap != undefined)
 
     this.modal = null
-    if (zzb.types.isNonEmptyString(this.defaultOptions.id)) {
+    if (zzb.types.isStringNotEmpty(this.defaultOptions.id)) {
       this.modal = document.getElementById(this.defaultOptions.id)
     }
 
@@ -80,17 +80,17 @@ class ZazzyDialog {
   open() {
 
     // this.showNonBootstrapUnderlay = false
-    // if (zzb.types.isNonEmptyString(this.defaultOptions.dataBackdrop)) {
+    // if (zzb.types.isStringNotEmpty(this.defaultOptions.dataBackdrop)) {
     //   if (!this.bsModal) {
     //     this.showNonBootstrapUnderlay = true
     //     if (zzb.types.isObject(this.defaultOptions.underlay) && this.defaultOptions.underlay.isOn === true) {
-    //       if (!zzb.types.isNonEmptyString(this.defaultOptions.underlay.id)) {
+    //       if (!zzb.types.isStringNotEmpty(this.defaultOptions.underlay.id)) {
     //         this.defaultOptions.underlay.id = 'zzbModalUnderlay'
     //       }
     //       var $underlay = document.createElement('div')
     //       $underlay.setAttribute('id', this.defaultOptions.underlay.id)
     //
-    //       if (zzb.types.isNonEmptyString(this.defaultOptions.underlay.className)) {
+    //       if (zzb.types.isStringNotEmpty(this.defaultOptions.underlay.className)) {
     //         $underlay.classList.add(this.defaultOptions.underlay.className)
     //       } else {
     //         $underlay.style.display = 'none'
@@ -99,7 +99,7 @@ class ZazzyDialog {
     //         $underlay.style.left = '0'
     //         $underlay.style.width = '100%'
     //         $underlay.style.height = '100%'
-    //         if (zzb.types.isNonEmptyString(this.defaultOptions.underlay.bg)) {
+    //         if (zzb.types.isStringNotEmpty(this.defaultOptions.underlay.bg)) {
     //           $underlay.style.backgroundColor = this.defaultOptions.underlay.bg
     //           if (zzb.types.isNumber(this.defaultOptions.underlay.opacity)) {
     //             $underlay.style.opacity = this.defaultOptions.underlay.opacity
@@ -135,7 +135,7 @@ class ZazzyDialog {
         this.modal.classList.remove('show-modal');
 
         // if (zzb.types.isObject(this.defaultOptions.underlay) && this.defaultOptions.underlay.isOn === true) {
-        //   if (zzb.types.isNonEmptyString(this.defaultOptions.underlay.id)) {
+        //   if (zzb.types.isStringNotEmpty(this.defaultOptions.underlay.id)) {
         //     var $underlay = $underlay = $('#' + this.defaultOptions.underlay.id)
         //     if ($underlay.length > 0) {
         //       $underlay.hide()
@@ -162,7 +162,7 @@ class ZazzyDialog {
     // }
     //
     // if (zzb.types.isObject(this.defaultOptions.underlay) && this.defaultOptions.underlay.isOn === true) {
-    //   if (zzb.types.isNonEmptyString(this.defaultOptions.underlay.id)) {
+    //   if (zzb.types.isStringNotEmpty(this.defaultOptions.underlay.id)) {
     //     var $underlay = $underlay = $('#' + this.defaultOptions.underlay.id)
     //     if ($underlay.length > 0) {
     //       $underlay.remove()
@@ -297,28 +297,28 @@ class ZazzyDialog {
   }
 
   getId() {
-    if (!(zzb.types.isNonEmptyString(this.defaultOptions.id))) {
+    if (!(zzb.types.isStringNotEmpty(this.defaultOptions.id))) {
       this.defaultOptions.id = zzb.uuid.newV4()
     }
     return this.defaultOptions.id
   }
 
   getClassName() {
-    if (!(zzb.types.isNonEmptyString(this.defaultOptions.className))) {
+    if (!(zzb.types.isStringNotEmpty(this.defaultOptions.className))) {
       this.defaultOptions.className = ''
     }
     return this.defaultOptions.className
   }
 
   getTitle() {
-    if (!(zzb.types.isNonEmptyString(this.defaultOptions.title))) {
+    if (!(zzb.types.isStringNotEmpty(this.defaultOptions.title))) {
       this.defaultOptions.title = ''
     }
     return this.defaultOptions.title
   }
 
   getBody() {
-    if (!(zzb.types.isNonEmptyString(this.defaultOptions.body))) {
+    if (!(zzb.types.isStringNotEmpty(this.defaultOptions.body))) {
       this.defaultOptions.body = ''
     }
     return this.defaultOptions.body
@@ -327,7 +327,7 @@ class ZazzyDialog {
   createModal() {
 
     // Add htmlDialog only when htmlDialog is not empty
-    if (this.defaultOptions.htmlDialog && !zzb.types.isNonEmptyString(this.defaultOptions.htmlDialog)) {
+    if (this.defaultOptions.htmlDialog && !zzb.types.isStringNotEmpty(this.defaultOptions.htmlDialog)) {
       document.body.insertAdjacentHTML('beforeend', htmlModal)
       return document.getElementById(this.getId())
     }
@@ -393,7 +393,7 @@ class ZazzyDialog {
       options.classModalHeader += ' alert-' + options.type
     }
 
-    if (zzb.types.isNonEmptyString(options.dataBackdrop)) {
+    if (zzb.types.isStringNotEmpty(options.dataBackdrop)) {
       options.extraAttributes += ' data-bs-backdrop="' + options.dataBackdrop + '"'
     }
 
@@ -438,7 +438,7 @@ class ZazzyDialog {
     var maxButtons = options.buttons.length
 
     options.buttons.forEach(function (button, ii) {
-      if (zzb.types.isNonEmptyString(button)) {
+      if (zzb.types.isStringNotEmpty(button)) {
         button = ZazzyDialog.getButtonPreset(button, ii, maxButtons)
       }
 
@@ -446,7 +446,7 @@ class ZazzyDialog {
         return // continue
       }
 
-      if (!(zzb.types.isNonEmptyString(button.id))) {
+      if (!(zzb.types.isStringNotEmpty(button.id))) {
         button.id = 'button-' + ii + '-' + self.getId()
       }
 
@@ -495,13 +495,13 @@ var _dialogs = function () {
 _dialogs.prototype.ZazzyDialog = ZazzyDialog
 
 _dialogs.prototype.modal = function (options) {
-  if (options && options.id && zzb.types.isNonEmptyString(options.id)) {
+  if (options && options.id && zzb.types.isStringNotEmpty(options.id)) {
     if (this.modals[options.id]) {
       return this.modals[options.id]
     }
   }
   var myModal = new ZazzyDialog(options)
-  if (myModal && zzb.types.isNonEmptyString(myModal.getId())) {
+  if (myModal && zzb.types.isStringNotEmpty(myModal.getId())) {
     return myModal
   }
   throw new Error('Failed to create dialog')
@@ -566,12 +566,12 @@ _dialogs.prototype.handleError = function (options) {
     console.log(options.log)
   }
 
-  if (!zzb.types.isNonEmptyString(options.errors)) {
+  if (!zzb.types.isStringNotEmpty(options.errors)) {
     if (zzb.types.isArray(options.errs)) {
       var arrHtml = []
 
       options.errs.forEach(function (err, index) {
-        if (err.message && zzb.types.isNonEmptyString(err.message)) {
+        if (err.message && zzb.types.isStringNotEmpty(err.message)) {
           arrHtml.push(zzb.strings.format('<div class="zzb-dialog-error-item">{0}</div>', err.message))
         }
       })

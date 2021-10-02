@@ -194,14 +194,14 @@ _strings.prototype.toPlural = function (word, number, options) {
 }
 
 _strings.prototype.capitalize = function (target) {
-  if (zzb.types.isNonEmptyString(target)) {
+  if (zzb.types.isStringNotEmpty(target)) {
     return target.charAt(0).toUpperCase() + string.slice(1);
   }
   return ''
 }
 
 _strings.prototype.toFirstCapitalEndPeriod = function (target) {
-  if (zzb.types.isNonEmptyString(target)) {
+  if (zzb.types.isStringNotEmpty(target)) {
     target = target.trim()
     target = zzb.strings.capitalize(target)
     if (!target.endsWith(target, '.')) {
@@ -221,7 +221,7 @@ var sizeUnitsFormatNameEIC = ['KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', '
 // We standardized the above, somewhat, with https://github.com/cloudfoundry/bytefmt
 // Also only divisions are with 1024 and NOT 1000
 _strings.prototype.sizeToHumanReadable = function (bytes, unitsFormat, noSizeUnitSeparation, dp) {
-  if (!zzb.types.isNonEmptyString(unitsFormat)) {
+  if (!zzb.types.isStringNotEmpty(unitsFormat)) {
     unitsFormat = 'single'
   }
   var unitSeperateSpace = ' '

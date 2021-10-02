@@ -51,7 +51,7 @@ describe('Validate zzb.rob methods', function () {
     it('should have default stack trace of empty', function (done) {
       var err = null
       var robErr = zzb.rob.createError({ message: sPig })
-      if (zzb.types.isNonEmptyString(robErr.stack)) {
+      if (zzb.types.isStringNotEmpty(robErr.stack)) {
         err = new Error('robErr.stack exists when it should not')
       }
       done(err)
@@ -60,7 +60,7 @@ describe('Validate zzb.rob methods', function () {
     it('should have stack trace', function (done) {
       var err = null
       var robErr = zzb.rob.createError({ message: sPig, stack: (new Error()).stack })
-      if (!zzb.types.isNonEmptyString(robErr.stack)) {
+      if (!zzb.types.isStringNotEmpty(robErr.stack)) {
         err = new Error('robErr.stack does not exist when it should')
       }
       done(err)
@@ -175,7 +175,7 @@ describe('Validate zzb.rob methods', function () {
     it('should have string of format=text', function (done) {
       var err = null
       var messages = zzb.rob.renderListErrs({ errs: listErrs.system })
-      if (!zzb.types.isNonEmptyString(messages)) {
+      if (!zzb.types.isStringNotEmpty(messages)) {
         err = new Error('no format of text generated')
       }
       done(err)
@@ -183,7 +183,7 @@ describe('Validate zzb.rob methods', function () {
     it('should have string of format=html-list', function (done) {
       var err = null
       var messages = zzb.rob.renderListErrs({ errs: listErrs.system, format: 'html-list' })
-      if (!zzb.types.isNonEmptyString(messages)) {
+      if (!zzb.types.isStringNotEmpty(messages)) {
         err = new Error('no format of text generated')
       }
       done(err)
