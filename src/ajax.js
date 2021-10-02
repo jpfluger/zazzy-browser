@@ -157,14 +157,25 @@ _ajax.prototype.request = function(options, callback) {
       }
 
       objReturn.rob = rob
-      callback(objReturn, null);
+
+      try {
+        callback(objReturn, null);
+      } catch (err) {
+        // Unexpected handler error. Without it, ugliness javascript err message could be displayed.
+        // The admin needs to ask the user to open the debug console to look at the log.
+        console.log(AjaxMessage.APPEND_FAILED_HANDLER_UNEXPECTED, 'error:', err)
+        throw new Error(AjaxMessage.APPEND_FAILED_HANDLER_UNEXPECTED)
+      }
     })
     .catch(function (err) {
 
       let errMessage = ''
       if (err && zzb.types.isStringNotEmpty(err.message)) {
         if (options.NOCATCHLOG !== true) {
-          console.log(err.message)
+          // Prevent double-logging.
+          if (AjaxMessage.APPEND_FAILED_HANDLER_UNEXPECTED !== err.message) {
+            console.log(err.message)
+          }
         }
         if (options.SHOWCATCHMESSAGE !== true) {
           errMessage = err.message
@@ -175,12 +186,12 @@ _ajax.prototype.request = function(options, callback) {
       if (options.NOCATCHFLASH !== true) {
         let divErr = ''
         if (zzb.types.isStringNotEmpty(errMessage)) {
-          divErr = zzb.strings.format('\n<div class="zzb-dialog-error-catch">Error: {0}</div>', errMessage)
+          divErr = zzb.strings.format(' <span class="zzb-dialog-error-catch">{0}</span>', errMessage)
         }
         if (zzb.types.isStringNotEmpty(options.CATCHFLASHMESSAGE)) {
           zzb.ajax.showMessageFailedAction({ message: options.CATCHFLASHMESSAGE + divErr })
         } else {
-          zzb.ajax.showMessageFailedAction({ message: AjaxMessage.MSG_FAILED_ACTION_UNEXPECTED + divErr })
+          zzb.ajax.showMessageFailedAction({ message: AjaxMessage.MSG_FAILED_REQUEST_UNEXPECTED + divErr })
         }
       }
 
@@ -238,17 +249,16 @@ var AjaxMessage = function (options) {}
 
 // Default message is AjaxMessage.MSG_FAILED_ACTION_UNEXPECTED
 // If options.SHOWCATCHMESSAGE is true, then the following is appended to it: + '<div class="zzb-dialog-error-catch">Error: ' + caught err.message + '</div>'
-AjaxMessage.MSG_FAILED_ACTION_UNEXPECTED = 'Communications with remote service failed unexpectedly.'
-// Override by setting the value of options.CATCHFLASHMESSAGE
-// AjaxMessage.MSG_FAILED_ACTION_UNEXPECTED_NETWORK = 'Communications failed unexpectedly. This is likely a broken network connection and will resolve itself once reconnected.'
-// AjaxMessage.MSG_FAILED_ACTION_UNEXPECTED_NETWORK_VERBOSE = 'Communications failed unexpectedly. This is likely a broken network connection and will resolve itself once reconnected. Either your network is down or our server is down.'
-// AjaxMessage.MSG_FAILED_ACTION_UNEXPECTED_WITHADMIN = 'Communications failed unexpectedly. Contact the administrator should the problem persist.'
-// AjaxMessage.MSG_FAILED_ACTION_UNEXPECTED_NETWORK_WITHADMIN = 'Communications failed unexpectedly. This is likely a broken network connection and will resolve itself once reconnected. Contact the administrator should the problem persist.'
+// These can be overwritten with your own defaults.
+AjaxMessage.MSG_FAILED_REQUEST_UNEXPECTED = 'Communications with remote service failed unexpectedly.'
+AjaxMessage.APPEND_FAILED_HANDLER_UNEXPECTED = 'Report this to the remote service administrator.'
 
 _ajax.prototype.showMessageFailedAction = function (options) {
   options = zzb.types.merge({ err: null, number: null, message: AjaxMessage.MSG_FAILED_ACTION_UNEXPECTED }, options)
   if (zzb.types.isNumber(options.number)) {
     options.number = ' (' + options.number + ')'
+  } else {
+    options.number = ''
   }
   if (options.err) {
     console.log(options.err)

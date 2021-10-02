@@ -116,7 +116,7 @@ _types.prototype.isNumber = function (o) {
 // Deprecated
 // Will be remove in version 3.0.0
 _types.prototype.isNonEmptyString = function (s) {
-  return (s && (typeof s === 'string') && s.trim().length > 0)
+  return zzb.types.isStringNotEmpty(s)
 }
 
 _types.prototype.isStringNotEmpty = function (s) {
@@ -126,7 +126,7 @@ _types.prototype.isStringNotEmpty = function (s) {
 // Deprecated
 // Will be remove in version 3.0.0
 _types.prototype.isEmptyString = function (s) {
-  return (s && (typeof s === 'string') && s.trim().length === 0)
+  return zzb.types.isStringEmpty(s)
 }
 
 _types.prototype.isStringEmpty = function (s) {
