@@ -21,4 +21,30 @@ _dom.prototype.setAttribute = function ($elem, key, value) {
   }
 }
 
+_dom.prototype.getAttributes = function ($elem, regex, camelCaseStrip) {
+  if (!$elem || !regex) {
+    return {}
+  }
+  if (!zzb.types.isNumber(camelCaseStrip)) {
+    camelCaseStrip = -1
+  }
+  let data = {};
+  [].forEach.call($elem.attributes, function(attr) {
+    if (regex.test(attr.name)) {
+      if (camelCaseStrip <= 0) {
+        data[attr.name] = attr.value
+      } else {
+        // Creates camel case of the attrib, stripping off the "data-", which is the first 5 characters.
+        // "data-method" transforms to "method"
+        // "data-prop-sub" transforms to "propSub"
+        let camelCaseName = attr.name.substr(camelCaseStrip).replace(/-(.)/g, function ($0, $1) {
+          return $1.toUpperCase()
+        })
+        data[camelCaseName] = attr.value
+      }
+    }
+  })
+  return data
+}
+
 exports.dom = _dom
