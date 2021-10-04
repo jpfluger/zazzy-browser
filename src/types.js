@@ -36,34 +36,9 @@ const mergeArgs = function (...arguments) {
   return target;
 };
 
-const merge = (...arguments) => {
-
-  // create a new object
-  let target = {};
-
-  // deep merge the object into the target object
-  const merger = (obj) => {
-    for (let prop in obj) {
-      if (obj.hasOwnProperty(prop)) {
-        if (Object.prototype.toString.call(obj[prop]) === '[object Object]') {
-          // if the property is a nested object
-          target[prop] = merge(target[prop], obj[prop]);
-        } else {
-          // for regular property
-          target[prop] = obj[prop];
-        }
-      }
-    }
-  };
-
-  // iterate through all objects and
-  // deep merge them with target
-  for (let i = 0; i < arguments.length; i++) {
-    merger(arguments[i]);
-  }
-
-  return target;
-};
+_types.prototype.truncate = function(num, decimal) {
+  return num.toString().substring(0, num.toString().indexOf('.')) + (num.toString().substr(num.toString().indexOf('.'), decimal + 1));
+}
 
 // http://stackoverflow.com/questions/23252173/get-html-escaped-text-from-textarea-with-jquery
 _types.prototype.escapeHtml = function (unsafe) {
