@@ -230,7 +230,8 @@ class ZazzyDialog {
       className: '',
       action: null,
       isDismiss: false,
-      isOutline: false
+      isOutline: false,
+      ztrigger: null // Feature for zactions that links the button with an element, such as those inside body-content (eg hidden html buttons)
     }
     return (zzb.types.isObject(options) ? zzb.types.merge(button, options) : button)
   }
@@ -266,6 +267,10 @@ class ZazzyDialog {
         break
       default:
         button = null
+    }
+
+    if (button && button.label) {
+      button.ztrigger = button.label.toLowerCase()
     }
 
     return button
@@ -438,6 +443,7 @@ class ZazzyDialog {
     var maxButtons = options.buttons.length
 
     options.buttons.forEach(function (button, ii) {
+      // If button is a string, then it has a predefined 'preset' value that needs assignment.
       if (zzb.types.isStringNotEmpty(button)) {
         button = ZazzyDialog.getButtonPreset(button, ii, maxButtons)
       }
@@ -467,9 +473,13 @@ class ZazzyDialog {
         zzb.dom.setAttribute($modal.querySelector('.modal-header button[data-bs-dismiss]'), 'aria-label', button.label)
       }
 
+      if (zzb.types.isStringNotEmpty(button.ztrigger)) {
+        button.ztrigger = zzb.strings.format(' ztrigger="{0}"', button.ztrigger)
+      }
+
       if (zzb.dom.hasElement($modal.querySelector('.modal-footer'))) {
         $modal.querySelector('.modal-footer')
-          .insertAdjacentHTML('beforeend', zzb.strings.format('<button id="{id}" type="button" class="btn {className}">{label}</button>', button))
+          .insertAdjacentHTML('beforeend', zzb.strings.format('<button id="{id}" type="button" class="btn {className}"{ztrigger}>{label}</button>', button))
 
         document.getElementById(button.id).addEventListener('click', function(ev) {
           if (button && zzb.types.isFunction(button.action)) {
