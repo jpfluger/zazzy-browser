@@ -326,4 +326,86 @@ _strings.prototype.millisecondsTimeToHumanReadable = function (milliseconds) {
   return '< 1s'
 }
 
+_strings.prototype.toBool = function (target) {
+  if (!zzb.types.isNonEmptyString(target)) {
+    return (target)
+  }
+  switch(target.toLowerCase().trim()){
+    case "true":
+    case "yes":
+    case "1":
+      return true;
+
+    case "false":
+    case "no":
+    case "0":
+    case null:
+      return false;
+
+    default:
+      return Boolean(target);
+  }
+}
+
+_strings.prototype.parseIntOrZero = function (target, forceArray) {
+  return zzb.strings.parseTypeElse(target, 'int', 0, forceArray ? true : false)
+}
+
+_strings.prototype.parseFloatOrZero = function (target, forceArray) {
+  return zzb.strings.parseTypeElse(target, 'float', 0, forceArray ? true : false)
+}
+
+_strings.prototype.parseBoolOrFalse = function (target, forceArray) {
+  return zzb.strings.parseTypeElse(target, 'bool', false, forceArray ? true : false)
+}
+
+_strings.prototype.parseTypeElse = function (target, type, elseif, forceArray) {
+  let makeArray = (forceArray || zzb.types.isArray(target))
+  if (target === undefined || target === null) {
+    if (makeArray) {
+      return []
+    }
+    return elseif
+  } else if (!zzb.types.isArray(target)) {
+    target = [target]
+  }
+  for (let ii = 0; ii < target.length; ii++) {
+    if (target[ii] == undefined || target[ii] === null) {
+      target[ii] = elseif
+    } else {
+    // if (zzb.types.isString(target[ii])) {
+    //   let isEmpty = !zzb.types.isStringNotEmpty(target[ii])
+      let convertNumber = false
+      switch (type) {
+        case 'int':
+          parsed = parseInt(target[ii])
+          convertNumber = true
+          break
+        case 'float':
+          // parsed = isEmpty ? elseif : parseFloat(target[ii])
+          parsed = parseFloat(target[ii])
+          convertNumber = true
+          break
+        case 'bool':
+          target[ii] = zzb.strings.toBool(target[ii])
+          break
+        default:
+          if (!zzb.types.isString(target[ii])) {
+            if (!zzb.types.isArray(target[ii]) && !zzb.types.isObject(target[ii])) {
+              target[ii] += ''
+            }
+          }
+          break
+      }
+      if (convertNumber) {
+        target[ii] = isNaN(parsed) ? elseif : parsed
+      }
+    }
+  }
+  if (makeArray) {
+    return target
+  }
+  return target[0]
+}
+
 exports.strings = _strings

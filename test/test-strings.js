@@ -282,4 +282,184 @@ describe('Validate zzb.string methods', function () {
       done(err)
     })
   })
+
+  describe('zzb.strings.toBool', function () {
+    it('should equal true', function (done) {
+      let err = null
+      let arr = [true, 'true', 'yes', '1']
+      for (let ii = 0; ii < arr.length; ii++) {
+        let value = zzb.strings.toBool(arr[ii])
+        if (!value) {
+          err = new Error('toBool should be true for parameter ' + arr[ii])
+          break
+        }
+      }
+      done(err)
+    })
+    it('should equal false', function (done) {
+      let err = null
+      let arr = [false, 'false', 'no', '0', null, undefined, '']
+      for (let ii = 0; ii < arr.length; ii++) {
+        let value = zzb.strings.toBool(arr[ii])
+        if (value) {
+          err = new Error('toBool should be false for parameter ' + arr[ii])
+          break
+        }
+      }
+      done(err)
+    })
+  })
+
+  describe('zzb.strings.parse', function () {
+    it('parseIntOrZero should be zero', function (done) {
+      let err = null
+      let arr = [0, 0.0, '0', 'zero', '', undefined, null]
+      for (let ii = 0; ii < arr.length; ii++) {
+        let value = zzb.strings.parseIntOrZero(arr[ii])
+        if (value !== 0) {
+          err = new Error('parseIntOrZero should be zero from parameter ' + ii + ' (='+ arr[ii] + ') and value=' + value)
+          break
+        }
+        value = zzb.strings.parseIntOrZero(arr[ii], true)
+        if (!zzb.types.isArray(value) || value[0] !== 0) {
+          if (arr[ii] === undefined || arr[ii] === null) {
+            if (value.length !== 0) {
+              err = new Error('parseIntOrZero ARRAY should have value array be empty from parameter ' + ii + ' (='+ arr[ii] + ') and value=' + value)
+              break
+            }
+          } else {
+            err = new Error('parseIntOrZero ARRAY should be zero from parameter ' + ii + ' (='+ arr[ii] + ') and value=' + value)
+            break
+          }
+        }
+      }
+      done(err)
+    })
+    it('parseIntOrZero should not be zero', function (done) {
+      let err = null
+      let arr = [1, 1.1, '1']
+      for (let ii = 0; ii < arr.length; ii++) {
+        let value = zzb.strings.parseIntOrZero(arr[ii])
+        if (value === 0) {
+          err = new Error('parseIntOrZero should not be zero from parameter ' + ii + ' (='+ arr[ii] + ') and value=' + value)
+          break
+        }
+      }
+      done(err)
+    })
+    it('parseFloatOrZero should be zero', function (done) {
+      let err = null
+      let arr = [0, 0.0, '0', 'zero', '', undefined, null]
+      for (let ii = 0; ii < arr.length; ii++) {
+        let value = zzb.strings.parseFloatOrZero(arr[ii])
+        if (value !== 0) {
+          err = new Error('parseFloatOrZero should be zero from parameter ' + ii + ' (='+ arr[ii] + ') and value=' + value)
+          break
+        }
+        value = zzb.strings.parseFloatOrZero(arr[ii], true)
+        if (!zzb.types.isArray(value) || value[0] !== 0) {
+          if (arr[ii] === undefined || arr[ii] === null) {
+            if (value.length !== 0) {
+              err = new Error('parseFloatOrZero ARRAY should have value array be empty from parameter ' + ii + ' (='+ arr[ii] + ') and value=' + value)
+              break
+            }
+          } else {
+            err = new Error('parseFloatOrZero ARRAY should be zero from parameter ' + ii + ' (='+ arr[ii] + ') and value=' + value)
+            break
+          }
+        }
+      }
+      done(err)
+    })
+    it('parseFloatOrZero should not be zero', function (done) {
+      let err = null
+      let arr = [1, 1.1, '1', '1.1']
+      for (let ii = 0; ii < arr.length; ii++) {
+        let value = zzb.strings.parseFloatOrZero(arr[ii])
+        if (value === 0) {
+          err = new Error('parseFloatOrZero should not be zero from parameter ' + ii + ' (='+ arr[ii] + ') and value=' + value)
+          break
+        }
+        value = zzb.strings.parseFloatOrZero(arr[ii], true)
+        if (!zzb.types.isArray(value) || value[0] === 0) {
+          err = new Error('parseFloatOrZero ARRAY should not be zero from parameter ' + ii + ' (='+ arr[ii] + ') and value=' + value)
+          break
+        }
+      }
+      done(err)
+    })
+    it('parseBoolOrFalse should be false', function (done) {
+      let err = null
+      let arr = [false, 0, '0', 'false', 'no', undefined, null]
+      for (let ii = 0; ii < arr.length; ii++) {
+        let value = zzb.strings.parseBoolOrFalse(arr[ii])
+        if (value === true) {
+          err = new Error('parseBoolOrFalse should be false from parameter ' + ii + ' (='+ arr[ii] + ') and value=' + value)
+          break
+        }
+        value = zzb.strings.parseBoolOrFalse(arr[ii], true)
+        if (!zzb.types.isArray(value) || value[0] === true) {
+          if (arr[ii] === undefined || arr[ii] === null) {
+            if (value.length !== 0) {
+              err = new Error('parseBoolOrFalse ARRAY should have value array be empty from parameter ' + ii + ' (='+ arr[ii] + ') and value=' + value)
+              break
+            }
+          } else {
+            err = new Error('parseBoolOrFalse ARRAY should be zero from parameter ' + ii + ' (='+ arr[ii] + ') and value=' + value)
+            break
+          }
+        }
+      }
+      done(err)
+    })
+    it('parseBoolOrFalse should be true', function (done) {
+      let err = null
+      let arr = [true, 'true', 'yes', 1, '1']
+      for (let ii = 0; ii < arr.length; ii++) {
+        let value = zzb.strings.parseBoolOrFalse(arr[ii])
+        if (value === false) {
+          err = new Error('parseBoolOrFalse should be true from parameter ' + ii + ' (='+ arr[ii] + ') and value=' + value)
+          break
+        }
+      }
+      done(err)
+    })
+    it('parseTypeElse should be empty', function (done) {
+      let err = null
+      let arr = ['', undefined, null]
+      for (let ii = 0; ii < arr.length; ii++) {
+        let value = zzb.strings.parseTypeElse(arr[ii], 'string', '')
+        if (value !== '') {
+          err = new Error('parseTypeElse should be false from parameter ' + ii + ' (='+ arr[ii] + ') and value=' + value)
+          break
+        }
+        value = zzb.strings.parseTypeElse(arr[ii], 'string', '', true)
+        if (!zzb.types.isArray(value) || value[0] === true) {
+          if (arr[ii] === undefined || arr[ii] !== '') {
+            if (value.length !== 0) {
+              err = new Error('parseTypeElse ARRAY should have value array be empty from parameter ' + ii + ' (='+ arr[ii] + ') and value=' + value)
+              break
+            }
+          } else {
+            err = new Error('parseTypeElse ARRAY should be empty from parameter ' + ii + ' (='+ arr[ii] + ') and value=' + value)
+            break
+          }
+        }
+      }
+      done(err)
+    })
+    it('parseTypeElse should not by empty', function (done) {
+      let err = null
+      let arr = ['hello', 'world', false, true, 0, 1, 1.1]
+      for (let ii = 0; ii < arr.length; ii++) {
+        let value = zzb.strings.parseTypeElse(arr[ii], 'string', '')
+        if (!zzb.types.isNonEmptyString(value)) {
+          //console.log(ii, arr[ii], value)
+          err = new Error('parseTypeElse should not be empty from parameter ' + ii + ' (='+ arr[ii] + ') and value=' + value)
+          break
+        }
+      }
+      done(err)
+    })
+  })
 })

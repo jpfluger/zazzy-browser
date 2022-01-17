@@ -21,6 +21,20 @@ _dom.prototype.setAttribute = function ($elem, key, value) {
   }
 }
 
+_dom.prototype.getAttributeElse = function ($elem, name, elseValue) {
+  if (elseValue === undefined || elseValue === null) {
+    elseValue = null
+  }
+  if (!$elem) {
+    return elseValue
+  }
+  let value = $elem.getAttribute(name)
+  if (zzb.types.isNonEmptyString(value)) {
+    return value
+  }
+  return elseValue
+}
+
 _dom.prototype.getAttributes = function ($elem, regex, camelCaseStrip) {
   if (!$elem || !regex) {
     return {}

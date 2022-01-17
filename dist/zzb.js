@@ -1,4 +1,4 @@
-//! zzb.js v2.2.1 (https://github.com/jpfluger/zazzy-browser)
+//! zzb.js v2.2.2 (https://github.com/jpfluger/zazzy-browser)
 //! MIT License; Copyright 2017-2021 Jaret Pfluger
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
@@ -913,6 +913,20 @@ _dom.prototype.setAttribute = function ($elem, key, value) {
   }
 }
 
+_dom.prototype.getAttributeElse = function ($elem, name, elseValue) {
+  if (elseValue === undefined || elseValue === null) {
+    elseValue = null
+  }
+  if (!$elem) {
+    return elseValue
+  }
+  let value = $elem.getAttribute(name)
+  if (zzb.types.isNonEmptyString(value)) {
+    return value
+  }
+  return elseValue
+}
+
 _dom.prototype.getAttributes = function ($elem, regex, camelCaseStrip) {
   if (!$elem || !regex) {
     return {}
@@ -1778,6 +1792,88 @@ _strings.prototype.millisecondsTimeToHumanReadable = function (milliseconds) {
   return '< 1s'
 }
 
+_strings.prototype.toBool = function (target) {
+  if (!zzb.types.isNonEmptyString(target)) {
+    return (target)
+  }
+  switch(target.toLowerCase().trim()){
+    case "true":
+    case "yes":
+    case "1":
+      return true;
+
+    case "false":
+    case "no":
+    case "0":
+    case null:
+      return false;
+
+    default:
+      return Boolean(target);
+  }
+}
+
+_strings.prototype.parseIntOrZero = function (target, forceArray) {
+  return zzb.strings.parseTypeElse(target, 'int', 0, forceArray ? true : false)
+}
+
+_strings.prototype.parseFloatOrZero = function (target, forceArray) {
+  return zzb.strings.parseTypeElse(target, 'float', 0, forceArray ? true : false)
+}
+
+_strings.prototype.parseBoolOrFalse = function (target, forceArray) {
+  return zzb.strings.parseTypeElse(target, 'bool', false, forceArray ? true : false)
+}
+
+_strings.prototype.parseTypeElse = function (target, type, elseif, forceArray) {
+  let makeArray = (forceArray || zzb.types.isArray(target))
+  if (target === undefined || target === null) {
+    if (makeArray) {
+      return []
+    }
+    return elseif
+  } else if (!zzb.types.isArray(target)) {
+    target = [target]
+  }
+  for (let ii = 0; ii < target.length; ii++) {
+    if (target[ii] == undefined || target[ii] === null) {
+      target[ii] = elseif
+    } else {
+    // if (zzb.types.isString(target[ii])) {
+    //   let isEmpty = !zzb.types.isStringNotEmpty(target[ii])
+      let convertNumber = false
+      switch (type) {
+        case 'int':
+          parsed = parseInt(target[ii])
+          convertNumber = true
+          break
+        case 'float':
+          // parsed = isEmpty ? elseif : parseFloat(target[ii])
+          parsed = parseFloat(target[ii])
+          convertNumber = true
+          break
+        case 'bool':
+          target[ii] = zzb.strings.toBool(target[ii])
+          break
+        default:
+          if (!zzb.types.isString(target[ii])) {
+            if (!zzb.types.isArray(target[ii]) && !zzb.types.isObject(target[ii])) {
+              target[ii] += ''
+            }
+          }
+          break
+      }
+      if (convertNumber) {
+        target[ii] = isNaN(parsed) ? elseif : parsed
+      }
+    }
+  }
+  if (makeArray) {
+    return target
+  }
+  return target[0]
+}
+
 exports.j = _strings
 
 
@@ -2047,49 +2143,49 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_RESULT__;(function (glo
   // types
   // ---------------------------------------------------
 
-  var _types = __webpack_require__(449)/* .types */ .V
+  var _types = (__webpack_require__(449)/* .types */ .V)
 
   // ---------------------------------------------------
   // uuid
   // ---------------------------------------------------
 
-  var _uuid = __webpack_require__(781)/* .uuid */ .V
+  var _uuid = (__webpack_require__(781)/* .uuid */ .V)
 
   // ---------------------------------------------------
   // strings
   // ---------------------------------------------------
 
-  var _strings = __webpack_require__(313)/* .strings */ .j
+  var _strings = (__webpack_require__(313)/* .strings */ .j)
 
   // ---------------------------------------------------
   // _dialogs
   // ---------------------------------------------------
 
-  var _dom = __webpack_require__(171)/* .dom */ .v
+  var _dom = (__webpack_require__(171)/* .dom */ .v)
 
   // ---------------------------------------------------
   // _dialogs
   // ---------------------------------------------------
 
-  var _dialogs = __webpack_require__(772)/* .dialogs */ .y
+  var _dialogs = (__webpack_require__(772)/* .dialogs */ .y)
 
   // ---------------------------------------------------
   // _perms (Permission Keys)
   // ---------------------------------------------------
 
-  var _perms = __webpack_require__(154)/* .perms */ .Q
+  var _perms = (__webpack_require__(154)/* .perms */ .Q)
 
   // ---------------------------------------------------
   // _rob (Return Object)
   // ---------------------------------------------------
 
-  var _rob = __webpack_require__(334)/* .rob */ .S
+  var _rob = (__webpack_require__(334)/* .rob */ .S)
 
   // ---------------------------------------------------
   // _ajax
   // ---------------------------------------------------
 
-  var _ajax = __webpack_require__(546)/* .ajax */ .h
+  var _ajax = (__webpack_require__(546)/* .ajax */ .h)
 
   // ---------------------------------------------------
   // zzb
