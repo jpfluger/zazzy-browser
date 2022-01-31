@@ -259,13 +259,14 @@ _rob.prototype.renderListErrs = function (options) {
 }
 
 _rob.prototype.renderList = function (options) {
-  options = zzb.types.merge({ targets: [], format: 'text', defaultTitle: '', template: null, htmlWrapMulti: '<ul class="zzb-rob-{0}">{1}</ul>'}, options)
+  options = zzb.types.merge({ targets: [], format: 'text', defaultTitle: '', template: null, htmlWrapList: '<ul class="zzb-rob-{0}">{1}</ul>'}, options)
   let arr = []
   // backwards-compatible
   if (options.errs && zzb.types.isArrayHasRecords(options.errs)) {
     options.targets = options.errs
   }
   if (zzb.types.isArrayHasRecords(options.targets)) {
+    let isMulti = (options.targets.length > 1)
     options.targets.forEach(function (target) {
       let title = ''
       if (zzb.types.isStringNotEmpty(options.defaultTitle)) {
@@ -280,7 +281,12 @@ _rob.prototype.renderList = function (options) {
         if (!target.type) {
           target.type = (target.isMessage) ? 'message' : 'unknown'
         }
-        if (options.format === 'html' || options.format === 'html-list') {
+        if (isMulti) {
+
+        }
+        if (!isMulti && options.format === 'html') {
+          arr.push(zzb.strings.format('<div class="zzb-rob-list-item-{0}">{1}</div>', target.type, target.message))
+        } else if (options.format === 'html' || options.format === 'html-list') {
           arr.push(zzb.strings.format('<li class="zzb-rob-list-item-{0}">{1}</li>', target.type, target.message))
         } else if (options.format === 'html-list-label') {
           arr.push(zzb.strings.format('<li class="zzb-rob-list-item-{0}"><span>{1}:</span> {2}</li>', target.type, title, target.message))
@@ -293,10 +299,9 @@ _rob.prototype.renderList = function (options) {
         }
       }
     })
-    let isMulti = (options.targets.length > 1)
-    let isHtml = (options.format === 'html' || options.format === 'html-list' || options.format === 'html-list-label')
-    if (isMulti && isHtml && options.htmlWrapMulti) {
-      return zzb.strings.format(options.htmlWrapMulti, options.format, arr.join(''))
+    let doHtmlWrap = ((isMulti && options.format === 'html') || options.format === 'html-list' || options.format === 'html-list-label')
+    if (doHtmlWrap && options.htmlWrapList) {
+      return zzb.strings.format(options.htmlWrapList, options.format, arr.join(''))
     }
   }
 
