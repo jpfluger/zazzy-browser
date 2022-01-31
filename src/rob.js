@@ -152,37 +152,41 @@ _rob.prototype.sanitizeRecords = function (recs) {
 }
 
 _rob.prototype.toListErrs = function (errs) {
+  return zzb.rob.toList(errs)
+}
+
+_rob.prototype.toList = function (items) {
   var arrFields = []
   var arrSystem = []
 
   var arrSystemMessages = []
   var arrFieldMessages = []
 
-  if (errs && Array.isArray(errs) && errs.length > 0) {
-    errs.forEach(function (err) {
-      if (err.isErr === true) {
-        if (err.system === '_system') {
-          arrSystem.push(err)
-        } else if (zzb.types.isStringNotEmpty(err.field)) {
-          if (err.field === '_system') {
-            arrSystem.push(err)
+  if (items && Array.isArray(items) && items.length > 0) {
+    items.forEach(function (item) {
+      if (item.isErr === true) {
+        if (item.system === '_system') {
+          arrSystem.push(item)
+        } else if (zzb.types.isStringNotEmpty(item.field)) {
+          if (item.field === '_system') {
+            arrSystem.push(item)
           } else {
-            arrFields.push(err)
+            arrFields.push(item)
           }
         } else {
-          arrSystem.push(err)
+          arrSystem.push(item)
         }
       } else {
-        if (err.system === '_system') {
-          arrSystemMessages.push(err)
-        } else if (zzb.types.isStringNotEmpty(err.field)) {
-          if (err.field === '_system') {
-            arrSystemMessages.push(err)
+        if (item.system === '_system') {
+          arrSystemMessages.push(item)
+        } else if (zzb.types.isStringNotEmpty(item.field)) {
+          if (item.field === '_system') {
+            arrSystemMessages.push(item)
           } else {
-            arrFieldMessages.push(err)
+            arrFieldMessages.push(item)
           }
         } else {
-          arrSystemMessages.push(err)
+          arrSystemMessages.push(item)
         }
       }
     })
@@ -195,6 +199,9 @@ _rob.prototype.toListErrs = function (errs) {
     systemMessages: arrSystemMessages,
     fieldMessages: arrFieldMessages,
 
+    hasErrors: function () {
+      return (this.hasSystemErrors() || this.hasFieldErrors())
+    },
     hasSystemErrors: function () {
       return (this.system && this.system.length > 0)
     },
@@ -204,8 +211,8 @@ _rob.prototype.toListErrs = function (errs) {
     combinedErrors: function () {
       return this.system.concat(this.fields)
     },
-    hasErrors: function () {
-      return (this.hasSystemErrors() || this.hasFieldErrors())
+    hasMessages: function () {
+      return (this.hasSystemMessages() || this.hasFieldMessages())
     },
     hasSystemMessages: function () {
       return (this.systemMessages && this.systemMessages.length > 0)
@@ -216,40 +223,81 @@ _rob.prototype.toListErrs = function (errs) {
     combinedMessages: function () {
       return this.systemMessages.concat(this.fieldMessages)
     },
-    hasMessages: function () {
-      return (this.hasSystemMessages() || this.hasFieldMessages())
-    }
+    getByFieldName: function (isMessages, name) {
+      if (name === '_system') {
+        return (isMessages) ? this.systemMessages : this.system
+      }
+      let arr = []
+      if (!name) {
+        return arr
+      }
+      let iterate = (isMessages) ? this.fieldMessages : this.fields
+      iterate.forEach(function(item) {
+        if (item.field === name) {
+          item.isMessage = isMessages
+          arr.push(item)
+        }
+      })
+      return arr
+    },
+    getErrsByName: function (name) {
+      return this.getByFieldName(false, name)
+    },
+    getMessagesByName: function (name) {
+      return this.getByFieldName(true, name)
+    },
+    getAnyByName: function (name) {
+      let arrE = this.getErrsByName(name)
+      let arrM = this.getMessagesByName(name)
+      return arrE.concat(arrM)
+    },
   }
 }
 
 _rob.prototype.renderListErrs = function (options) {
-  options = zzb.types.merge({ errs: [], format: 'text', defaultTitle: '', template: null }, options)
-  var arr = []
-  if (zzb.types.isArrayHasRecords(options.errs)) {
-    options.errs.forEach(function (err) {
-      var title = ''
+  return zzb.rob.renderList(options)
+}
+
+_rob.prototype.renderList = function (options) {
+  options = zzb.types.merge({ targets: [], format: 'text', defaultTitle: '', template: null, htmlWrapMulti: '<ul class="zzb-rob-{0}">{1}</ul>'}, options)
+  let arr = []
+  // backwards-compatible
+  if (options.errs && zzb.types.isArrayHasRecords(options.errs)) {
+    options.targets = options.errs
+  }
+  if (zzb.types.isArrayHasRecords(options.targets)) {
+    options.targets.forEach(function (target) {
+      let title = ''
       if (zzb.types.isStringNotEmpty(options.defaultTitle)) {
         title = options.defaultTitle
-      } else if (zzb.types.isStringNotEmpty(err.field)) {
-        title = err.field
+      } else if (zzb.types.isStringNotEmpty(target.field)) {
+        title = target.field
       }
 
       if (options.template) {
-        arr.push(zzb.strings.format(options.template, title, err.message))
+        arr.push(zzb.strings.format(options.template, title, target.message))
       } else {
+        if (!target.type) {
+          target.type = (target.isMessage) ? 'message' : 'unknown'
+        }
         if (options.format === 'html' || options.format === 'html-list') {
-          arr.push(zzb.strings.format('<li class="zzb-rob-list-error-item">{0}</li>', err.message))
+          arr.push(zzb.strings.format('<li class="zzb-rob-list-item-{0}">{1}</li>', target.type, target.message))
         } else if (options.format === 'html-list-label') {
-          arr.push(zzb.strings.format('<li class="zzb-rob-list-error-item"><span>{0}:</span> {1}</li>', title, err.message))
+          arr.push(zzb.strings.format('<li class="zzb-rob-list-item-{0}"><span>{1}:</span> {2}</li>', target.type, title, target.message))
         } else if (options.format === 'label') {
-          arr.push(zzb.strings.format('{0}: {1}', title, err.message))
+          arr.push(zzb.strings.format('{0}: {1}', title, target.message))
         } else if (options.format === 'text-punctuated') {
-          arr.push(zzb.strings.toFirstCapitalEndPeriod(err.message) + ' ')
+          arr.push(zzb.strings.toFirstCapitalEndPeriod(target.message) + ' ')
         } else { // text
-          arr.push(zzb.strings.format(err.message))
+          arr.push(zzb.strings.format(target.message))
         }
       }
     })
+    let isMulti = (options.targets.length > 1)
+    let isHtml = (options.format === 'html' || options.format === 'html-list' || options.format === 'html-list-label')
+    if (isMulti && isHtml && options.htmlWrapMulti) {
+      return zzb.strings.format(options.htmlWrapMulti, options.format, arr.join(''))
+    }
   }
 
   return arr.join('')

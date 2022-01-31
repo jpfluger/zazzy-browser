@@ -114,6 +114,7 @@ _ajax.prototype.request = function(options, callback) {
           }
         }
 
+        // Obsolete? Depends on the paginate paradigm to be useful.
         if (data.paginate) {
           rob.paginate = data.paginate
         }
@@ -122,7 +123,7 @@ _ajax.prototype.request = function(options, callback) {
         rob.recs = data.recs
         rob.columns = data.columns
 
-        rob.listErrs = zzb.rob.toListErrs(rob.errs)
+        rob.listErrs = zzb.rob.toList(rob.errs)
 
         if (options.SKIPFLASH !== true) {
           if (zzb.types.isStringNotEmpty(data.message)) {
@@ -227,7 +228,7 @@ _ajax.prototype.getJSON = function (options, callback) {
   zzb.ajax.request(options, callback)
 }
 
-// Sometimes a request is made for an html snippet but json is returned. The function will error if the dataType i
+// Sometimes a request is made for a html snippet but json is returned. The function will error if the dataType is
 // specified but in the wrong format. To have jquery "guess", then override expectType in this way: {expectType: 'text'}
 _ajax.prototype.postJSON = function (options, callback) {
   options.method = 'POST'

@@ -185,6 +185,8 @@ describe('Validate zzb.rob methods', function () {
       var messages = zzb.rob.renderListErrs({ errs: listErrs.system, format: 'html-list' })
       if (!zzb.types.isStringNotEmpty(messages)) {
         err = new Error('no format of text generated')
+      } else if (messages !== '<ul class="zzb-rob-html-list"><li class="zzb-rob-list-item-error">The pig smelled the mushrooms.</li><li class="zzb-rob-list-item-emergency">The pig smelled the mushrooms.</li></ul>') {
+        err = new Error('unexpected html-list messages output')
       }
       done(err)
     })
