@@ -1,4 +1,4 @@
-//! zzb.js v2.2.4 (https://github.com/jpfluger/zazzy-browser)
+//! zzb.js v2.2.5 (https://github.com/jpfluger/zazzy-browser)
 //! MIT License; Copyright 2017-2021 Jaret Pfluger
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
@@ -1908,6 +1908,10 @@ _strings.prototype.parseTypeElse = function (target, type, elseif, forceArray) {
           break
         case 'bool':
           target[ii] = zzb.strings.toBool(target[ii])
+          break
+        case 'date':
+        case 'date-iso':
+          target[ii] = zzb.types.isNonEmptyString(target[ii]) ? target[ii] : elseif
           break
         default:
           if (!zzb.types.isString(target[ii])) {

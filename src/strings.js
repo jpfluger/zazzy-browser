@@ -389,6 +389,10 @@ _strings.prototype.parseTypeElse = function (target, type, elseif, forceArray) {
         case 'bool':
           target[ii] = zzb.strings.toBool(target[ii])
           break
+        case 'date':
+        case 'date-iso':
+          target[ii] = zzb.types.isNonEmptyString(target[ii]) ? target[ii] : elseif
+          break
         default:
           if (!zzb.types.isString(target[ii])) {
             if (!zzb.types.isArray(target[ii]) && !zzb.types.isObject(target[ii])) {
