@@ -1,4 +1,4 @@
-//! zzb.js v2.2.5 (https://github.com/jpfluger/zazzy-browser)
+//! zzb.js v2.3.0 (https://github.com/jpfluger/zazzy-browser)
 //! MIT License; Copyright 2017-2021 Jaret Pfluger
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
@@ -367,46 +367,7 @@ class ZazzyDialog {
   }
 
   open() {
-
-    // this.showNonBootstrapUnderlay = false
-    // if (zzb.types.isStringNotEmpty(this.defaultOptions.dataBackdrop)) {
-    //   if (!this.bsModal) {
-    //     this.showNonBootstrapUnderlay = true
-    //     if (zzb.types.isObject(this.defaultOptions.underlay) && this.defaultOptions.underlay.isOn === true) {
-    //       if (!zzb.types.isStringNotEmpty(this.defaultOptions.underlay.id)) {
-    //         this.defaultOptions.underlay.id = 'zzbModalUnderlay'
-    //       }
-    //       var $underlay = document.createElement('div')
-    //       $underlay.setAttribute('id', this.defaultOptions.underlay.id)
-    //
-    //       if (zzb.types.isStringNotEmpty(this.defaultOptions.underlay.className)) {
-    //         $underlay.classList.add(this.defaultOptions.underlay.className)
-    //       } else {
-    //         $underlay.style.display = 'none'
-    //         $underlay.style.position = 'absolute'
-    //         $underlay.style.top = '0'
-    //         $underlay.style.left = '0'
-    //         $underlay.style.width = '100%'
-    //         $underlay.style.height = '100%'
-    //         if (zzb.types.isStringNotEmpty(this.defaultOptions.underlay.bg)) {
-    //           $underlay.style.backgroundColor = this.defaultOptions.underlay.bg
-    //           if (zzb.types.isNumber(this.defaultOptions.underlay.opacity)) {
-    //             $underlay.style.opacity = this.defaultOptions.underlay.opacity
-    //           }
-    //         }
-    //       }
-    //       $('<div id="' + this.defaultOptions.underlay.id + '" ' + underlayAttributes.join('') + '></div>').appendTo('body')
-    //       $underlay = $('#' + this.defaultOptions.underlay.id)
-    //
-    //       $underlay.show()
-    //     }
-    //   }
-    // }
-
     if (this.bsModal) {
-      // if (this.showNonBootstrapUnderlay) {
-      //  $underlay.show()
-      // }
       this.bsModal.show();
     } else {
       this.modal.classList.add('show-modal');
@@ -422,16 +383,6 @@ class ZazzyDialog {
       this.animateOut();
       setTimeout(() => {
         this.modal.classList.remove('show-modal');
-
-        // if (zzb.types.isObject(this.defaultOptions.underlay) && this.defaultOptions.underlay.isOn === true) {
-        //   if (zzb.types.isStringNotEmpty(this.defaultOptions.underlay.id)) {
-        //     var $underlay = $underlay = $('#' + this.defaultOptions.underlay.id)
-        //     if ($underlay.length > 0) {
-        //       $underlay.hide()
-        //     }
-        //   }
-        // }
-
       }, 250);
     }
   }
@@ -446,20 +397,6 @@ class ZazzyDialog {
       this.bsModal.hide()
       this.bsModal.destroy()
     }
-    // if ($('#' + this.getId()).length > 0) {
-    //   $('#' + this.getId()).remove()
-    // }
-    //
-    // if (zzb.types.isObject(this.defaultOptions.underlay) && this.defaultOptions.underlay.isOn === true) {
-    //   if (zzb.types.isStringNotEmpty(this.defaultOptions.underlay.id)) {
-    //     var $underlay = $underlay = $('#' + this.defaultOptions.underlay.id)
-    //     if ($underlay.length > 0) {
-    //       $underlay.remove()
-    //     }
-    //   }
-    // }
-    //
-    // this.$modal = null
   }
 
   static BUTTON_CLOSE = 'button-close'
@@ -487,7 +424,8 @@ class ZazzyDialog {
       // The remainder builds the htmlDialog
       id: zzb.uuid.newV4(),
       type: ZazzyDialog.TYPE_NONE,
-      className: '',
+      classDialog: '',
+      classBackdrop: '',
       extraAttributes: '',
       noFade: false,
       title: '',
@@ -499,14 +437,14 @@ class ZazzyDialog {
       onHidden: null,
       doVerticalCenter: true,
       doAutoDestroy: true,
-      forceNoBootstrap: false,
-      underlay: {
-        isOn: false,
-        id: null,
-        className: '',
-        bg: '#838383',
-        opacity: 0.5
-      }
+      forceNoBootstrap: false
+      // underlay: {
+      //   isOn: false,
+      //   id: null,
+      //   className: '',
+      //   bg: '#838383',
+      //   opacity: 0.5
+      // }
     }
     return (zzb.types.isObject(options) ? zzb.types.merge(dialog, options) : dialog)
   }
@@ -597,11 +535,18 @@ class ZazzyDialog {
     return this.defaultOptions.id
   }
 
-  getClassName() {
-    if (!(zzb.types.isStringNotEmpty(this.defaultOptions.className))) {
-      this.defaultOptions.className = ''
+  getClassBackdrop() {
+    if (!(zzb.types.isStringNotEmpty(this.defaultOptions.classBackdrop))) {
+      this.defaultOptions.classBackdrop = ''
     }
-    return this.defaultOptions.className
+    return this.defaultOptions.classBackdrop
+  }
+
+  getClassDialog() {
+    if (!(zzb.types.isStringNotEmpty(this.defaultOptions.classDialog))) {
+      this.defaultOptions.classDialog = ''
+    }
+    return this.defaultOptions.classDialog
   }
 
   getTitle() {
@@ -668,7 +613,8 @@ class ZazzyDialog {
     var options = zzb.types.merge({
       id: this.getId(),
       arialabel: 'arialabel' + this.getId(),
-      className: this.getClassName(),
+      classBackdrop: this.getClassBackdrop(),
+      classDialog: this.getClassDialog(),
       title: this.getTitle(),
       body: this.getBody(),
       classVerticalCenter: (this.defaultOptions.doVerticalCenter ? ' modal-dialog-centered' : ''),
@@ -687,6 +633,14 @@ class ZazzyDialog {
       options.classModalHeader += ' alert-' + options.type
     }
 
+    if (zzb.types.isNonEmptyString(options.classDialog)) {
+      options.classDialog = ' ' + options.classDialog
+    }
+
+    if (zzb.types.isNonEmptyString(options.classBackdrop)) {
+      options.classBackdrop = ' ' + options.classBackdrop
+    }
+
     if (zzb.types.isStringNotEmpty(options.dataBackdrop)) {
       options.extraAttributes += ' data-bs-backdrop="' + options.dataBackdrop + '"'
     }
@@ -701,8 +655,8 @@ class ZazzyDialog {
     }
 
     var template =
-      '<div class="modal {classFade} modal-fullscreen {className}" {extraAttributes} id="{id}" tabindex="-1" role="dialog" aria-labelledby="{arialabel}" aria-hidden="true">' +
-        '<div class="modal-dialog{classVerticalCenter}" role="document">' +
+      '<div class="modal {classFade} modal-fullscreen{classBackdrop}" {extraAttributes} id="{id}" tabindex="-1" role="dialog" aria-labelledby="{arialabel}" aria-hidden="true">' +
+        '<div class="modal-dialog{classVerticalCenter}{classDialog}" role="document">' +
           '<div class="modal-content">' +
             '<div class="modal-header{classModalHeader}">' +
               '<h5 class="modal-title" id="{arialabel}">{title}</h5>' +
