@@ -69,6 +69,7 @@ _ajax.prototype.request = function(options, callback) {
               return
             } else if (zzb.types.isStringNotEmpty(data.message)) {
               zzb.dialogs.showMessage({
+                type: zzb.types.isNonEmptyString(data.messageType) ? data.messageType : null,
                 classDialog: 'zzb-dialog-flash-message zzb-dialog-flash-redirect' + zzb.strings.mergeElseEmpty(' zzb-dialog-flash-status-{0}', data.messageType),
                 dataBackdrop: 'static',
                 body: data.message,
@@ -129,6 +130,7 @@ _ajax.prototype.request = function(options, callback) {
           if (zzb.types.isStringNotEmpty(data.message)) {
             noFinalResolve = true
             zzb.dialogs.showMessage({
+              type: zzb.types.isNonEmptyString(data.messageType) ? data.messageType : null,
               classDialog: 'zzb-dialog-flash-message' + zzb.strings.mergeElseEmpty(' zzb-dialog-flash-status-{0}', data.messageType, rob.hasErrors() ? 'error' : 'okay'),
               dataBackdrop: 'static',
               body: data.message,
