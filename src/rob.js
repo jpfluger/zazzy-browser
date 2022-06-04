@@ -6,6 +6,8 @@ var _rob = function () {}
 
 _rob.prototype.newROB = function (options) {
   return zzb.types.merge({
+    message: null,
+    messageType: null,
     errs: null,
     recs: [],
     columns: [],

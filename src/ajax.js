@@ -69,7 +69,7 @@ _ajax.prototype.request = function(options, callback) {
               return
             } else if (zzb.types.isStringNotEmpty(data.message)) {
               zzb.dialogs.showMessage({
-                className: 'zzb-dialog-flash-message zzb-dialog-flash-redirect',
+                classDialog: 'zzb-dialog-flash-message zzb-dialog-flash-redirect' + zzb.strings.mergeElseEmpty(' zzb-dialog-flash-status-{0}', data.messageType),
                 dataBackdrop: 'static',
                 body: data.message,
                 onHide: function (ev) {
@@ -129,7 +129,7 @@ _ajax.prototype.request = function(options, callback) {
           if (zzb.types.isStringNotEmpty(data.message)) {
             noFinalResolve = true
             zzb.dialogs.showMessage({
-              className: 'zzb-dialog-flash-message ' + zzb.strings.format('zzb-dialog-flash-status-{0}', rob.hasErrors() ? 'error' : 'okay'),
+              classDialog: 'zzb-dialog-flash-message' + zzb.strings.mergeElseEmpty(' zzb-dialog-flash-status-{0}', data.messageType, rob.hasErrors() ? 'error' : 'okay'),
               dataBackdrop: 'static',
               body: data.message,
               onHide: function (ev) {
@@ -265,7 +265,7 @@ _ajax.prototype.showMessageFailedAction = function (options) {
     console.log(options.err)
   }
   zzb.dialogs.showMessage({
-    className: 'zzb-dialog-flash-message zzb-flash-invalid', // zzb-flash-valid
+    classDialog: 'zzb-dialog-flash-message zzb-flash-invalid', // zzb-flash-valid
     dataBackdrop: 'static',
     body: options.message + options.number
   })

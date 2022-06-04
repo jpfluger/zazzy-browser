@@ -412,4 +412,15 @@ _strings.prototype.parseTypeElse = function (target, type, elseif, forceArray) {
   return target[0]
 }
 
+_strings.prototype.mergeElseEmpty = function (mergeItem, mergeVar1, mergeVar2) {
+  let mergeVar = mergeVar1
+  if (!zzb.types.isStringNotEmpty(mergeVar)) {
+    mergeVar = mergeVar2
+    if (!zzb.types.isStringNotEmpty(mergeVar)) {
+      return ''
+    }
+  }
+  return zzb.strings.format(mergeItem, mergeVar)
+}
+
 exports.strings = _strings

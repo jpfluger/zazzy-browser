@@ -64,7 +64,8 @@ class ZazzyDialog {
       }
       if (self.defaultOptions.doAutoDestroy) {
         if (self.bsModal) {
-          self.bsModal.dispose()
+          self.bsModal.dispose() // removes stored data on DOM
+          self.modal.remove() // removes from DOM completely
         }
       }
     })
@@ -106,7 +107,10 @@ class ZazzyDialog {
   destroy() {
     if (this.bsModal) {
       this.bsModal.hide()
-      this.bsModal.destroy()
+      if (!this.defaultOptions.doAutoDestroy) {
+        this.bsModal.dispose() // removes stored data on DOM
+        this.modal.remove() // removes from DOM completely
+      }
     }
   }
 

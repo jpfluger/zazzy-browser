@@ -1,4 +1,4 @@
-//! zzb.js v2.3.0 (https://github.com/jpfluger/zazzy-browser)
+//! zzb.js v2.3.1 (https://github.com/jpfluger/zazzy-browser)
 //! MIT License; Copyright 2017-2021 Jaret Pfluger
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
@@ -77,7 +77,7 @@ _ajax.prototype.request = function(options, callback) {
               return
             } else if (zzb.types.isStringNotEmpty(data.message)) {
               zzb.dialogs.showMessage({
-                className: 'zzb-dialog-flash-message zzb-dialog-flash-redirect',
+                classDialog: 'zzb-dialog-flash-message zzb-dialog-flash-redirect' + zzb.strings.mergeElseEmpty(' zzb-dialog-flash-status-{0}', data.messageType),
                 dataBackdrop: 'static',
                 body: data.message,
                 onHide: function (ev) {
@@ -137,7 +137,7 @@ _ajax.prototype.request = function(options, callback) {
           if (zzb.types.isStringNotEmpty(data.message)) {
             noFinalResolve = true
             zzb.dialogs.showMessage({
-              className: 'zzb-dialog-flash-message ' + zzb.strings.format('zzb-dialog-flash-status-{0}', rob.hasErrors() ? 'error' : 'okay'),
+              classDialog: 'zzb-dialog-flash-message' + zzb.strings.mergeElseEmpty(' zzb-dialog-flash-status-{0}', data.messageType, rob.hasErrors() ? 'error' : 'okay'),
               dataBackdrop: 'static',
               body: data.message,
               onHide: function (ev) {
@@ -273,7 +273,7 @@ _ajax.prototype.showMessageFailedAction = function (options) {
     console.log(options.err)
   }
   zzb.dialogs.showMessage({
-    className: 'zzb-dialog-flash-message zzb-flash-invalid', // zzb-flash-valid
+    classDialog: 'zzb-dialog-flash-message zzb-flash-invalid', // zzb-flash-valid
     dataBackdrop: 'static',
     body: options.message + options.number
   })
@@ -353,7 +353,8 @@ class ZazzyDialog {
       }
       if (self.defaultOptions.doAutoDestroy) {
         if (self.bsModal) {
-          self.bsModal.dispose()
+          self.bsModal.dispose() // removes stored data on DOM
+          self.modal.remove() // removes from DOM completely
         }
       }
     })
@@ -395,7 +396,10 @@ class ZazzyDialog {
   destroy() {
     if (this.bsModal) {
       this.bsModal.hide()
-      this.bsModal.destroy()
+      if (!this.defaultOptions.doAutoDestroy) {
+        this.bsModal.dispose() // removes stored data on DOM
+        this.modal.remove() // removes from DOM completely
+      }
     }
   }
 
@@ -1162,6 +1166,8 @@ var _rob = function () {}
 
 _rob.prototype.newROB = function (options) {
   return zzb.types.merge({
+    message: null,
+    messageType: null,
     errs: null,
     recs: [],
     columns: [],
@@ -1884,6 +1890,17 @@ _strings.prototype.parseTypeElse = function (target, type, elseif, forceArray) {
     return target
   }
   return target[0]
+}
+
+_strings.prototype.mergeElseEmpty = function (mergeItem, mergeVar1, mergeVar2) {
+  let mergeVar = mergeVar1
+  if (!zzb.types.isStringNotEmpty(mergeVar)) {
+    mergeVar = mergeVar2
+    if (!zzb.types.isStringNotEmpty(mergeVar)) {
+      return ''
+    }
+  }
+  return zzb.strings.format(mergeItem, mergeVar)
 }
 
 exports.j = _strings
