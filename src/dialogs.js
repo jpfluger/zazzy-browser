@@ -49,6 +49,13 @@ class ZazzyDialog {
       }
     })
     this.modal.addEventListener('shown.bs.modal', function (ev) {
+      if (self.defaultOptions.hasAutoBackdrop) {
+        let backdrop = self.modal.nextElementSibling
+        if (backdrop && backdrop.classList.contains('modal-backdrop')) {
+          self.modal.style.zIndex = '2055'
+          backdrop.style.zIndex = '2050'
+        }
+      }
       if (self.defaultOptions.onShown && zzb.types.isFunction(self.defaultOptions.onShown)) {
         self.defaultOptions.onShown(ev)
       }
@@ -152,7 +159,8 @@ class ZazzyDialog {
       onHidden: null,
       doVerticalCenter: true,
       doAutoDestroy: true,
-      forceNoBootstrap: false
+      forceNoBootstrap: false,
+      hasAutoBackdrop: false
       // underlay: {
       //   isOn: false,
       //   id: null,
@@ -286,45 +294,6 @@ class ZazzyDialog {
       return document.getElementById(this.getId())
     }
 
-    // if (!this.isBootstrap) {
-    //   htmlModal = '<div id="' + options.id + '" class="modal" tabIndex="-1" role="dialog" aria-hidden="true">'
-    //     + '<div class="modal-dialog">'
-    //     + '<div class="modal-content">'
-    //     + '<div class="modal-header">'
-    //     + '<h5 class="modal-title">Modal Header</h5>'
-    //     + '<button type="button" data-bs-dismiss="modal" aria-label="Close">'
-    //     + '<svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-x" fill="currentColor" xmlns="http://www.w3.org/2000/svg">'
-    //     + '<path fill-rule="evenodd" d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>'
-    //     + '</svg>'
-    //     + '</button>'
-    //     + '</div>'
-    //     + '<div class="modal-body">'
-    //     + '<h1>My Modal</h1>'
-    //     + '<button type="button" class="btn" data-bs-dismiss="modal">Close</button>'
-    //     + '</div>'
-    //     + '</div>'
-    //     + '</div>'
-    //     + '</div>'
-    // } else {
-    //   htmlModal = '<div class="modal fade" id="' + options.id + '" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">'
-    //     + '<div class="modal-dialog">'
-    //     + '<div class="modal-content">'
-    //     + '<div class="modal-header">'
-    //     + '<h5 class="modal-title" id="staticBackdropLabel">Modal title</h5>'
-    //     + '<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>'
-    //     + '</div>'
-    //     + '<div class="modal-body">'
-    //     + 'some body content here'
-    //     + '</div>'
-    //     + '<div class="modal-footer">'
-    //     + '<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>'
-    //     + '<button type="button" class="btn btn-primary">Understood</button>'
-    //     + '</div>'
-    //     + '</div>'
-    //     + '</div>'
-    //     + '</div>'
-    // }
-
     var options = zzb.types.merge({
       id: this.getId(),
       arialabel: 'arialabel' + this.getId(),
@@ -356,7 +325,11 @@ class ZazzyDialog {
       options.classBackdrop = ' ' + options.classBackdrop
     }
 
+    if (options.hasAutoBackdrop === true && !zzb.types.isStringNotEmpty(options.dataBackdrop)) {
+      options.dataBackdrop = 'true'
+    }
     if (zzb.types.isStringNotEmpty(options.dataBackdrop)) {
+      options.hasAutoBackdrop = true
       options.extraAttributes += ' data-bs-backdrop="' + options.dataBackdrop + '"'
     }
 

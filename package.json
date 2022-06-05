@@ -1,6 +1,6 @@
 {
   "name": "zazzy-browser",
-  "version": "2.3.2",
+  "version": "2.3.3",
   "description": "A collection of general-purpose browser utilities used as higher-level building-blocks to assist in client-server communications.",
   "engines": {
     "node": ">= 14.0.0"
