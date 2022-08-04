@@ -1,6 +1,6 @@
 {
   "name": "zazzy-browser",
-  "version": "2.3.3",
+  "version": "2.4.0",
   "description": "A collection of general-purpose browser utilities used as higher-level building-blocks to assist in client-server communications.",
   "engines": {
     "node": ">= 14.0.0"
@@ -17,7 +17,7 @@
   },
   "main": "src/zzb.js",
   "scripts": {
-    "dist": "webpack --config webpack.config.js && ZZBMINIMZIZE=true webpack --config webpack.config.js",
+    "dist": "webpack --config webpack-zzb.config.js && ZZBMINIMZIZE=true webpack --config webpack-zzb.config.js && webpack --config webpack-ui.config.js && ZZBMINIMZIZE=true webpack --config webpack-ui.config.js",
     "test": "mocha",
     "mocha": "mocha",
     "syntax": "standard"

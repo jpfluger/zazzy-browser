@@ -20,6 +20,33 @@ Dialogs have been retained and follow [Bootstrap5](https://getbootstrap.com/docs
 * zzb.perms: permissions
 * zzb.dom: helpful dom functions
 
+`zzb.ui` includes
+
+* zzb.zaction: links html attributes to the event system
+* zzb.zui: extra ui elements. 
+
+## CSS
+
+Inside `zzb.zui` is an optional splitter panel. It keys off the class `zsplitter` which is implemented as a bootstrap flex column. 
+Some sample css follows.
+
+```css
+.zsplitter {
+    flex: none;
+    width: 17px;
+    /*cursor: col-resize;*/
+}
+.zsplitter a {
+    color:#ADFF2F;
+}
+.zsplitter a:hover {
+    color: #84c01b;
+}
+.zsplitter-resize {
+    cursor: col-resize;
+}
+```
+
 ## Usage
 
 Include in your html page:
