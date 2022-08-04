@@ -1,6 +1,6 @@
 # zazzy-browser (zzb)
 
-A collection of general-purpose browser utilities used as higher-level building-blocks to assist in client-server communications.
+A collection of general-purpose browser utilities used as higher-level building-blocks to assist in client-server communications. They favor [Bootstrap5](https://getbootstrap.com/).
 
 `zzb` is `vanilla js` - all prior dependencies have been removed (eg [jquery](https://jquery.com/) and [lodash](https://lodash.com/)).
 Dialogs have been retained and follow [Bootstrap5](https://getbootstrap.com/docs/5.1/components/modal/) html and css.  
