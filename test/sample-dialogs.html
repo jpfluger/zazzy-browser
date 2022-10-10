@@ -182,20 +182,20 @@
     // Non-bootstrap
     zzb.dialogs.showMessage({id: 'myModal3', target: 'button3', title: 'myModal3', body:'This is myModal3.', forceNoBootstrap: true, noAutoOpen: true})
 
-    zzb.ajax.getJSON({url: 'http://localhost:8080/ping-as-err', CATCHFLASHMESSAGE: errMessage}, function(drr, err) {
+    zzb.ajax.getJSON({url: 'http://localhost:16080/ping-as-err', CATCHFLASHMESSAGE: errMessage}, function(drr, err) {
       console.log(drr, err, drr.rob.errs[0].message)
     })
 
-    zzb.ajax.getJSON({url: 'http://localhost:8080/ping-as-errs-string', CATCHFLASHMESSAGE: errMessage}, function(drr, err) {
+    zzb.ajax.getJSON({url: 'http://localhost:16080/ping-as-errs-string', CATCHFLASHMESSAGE: errMessage}, function(drr, err) {
       console.log(drr, err, drr.rob.errs[0].message)
     })
 
-    zzb.ajax.getJSON({url: 'http://localhost:8080/ping-as-errs-array', CATCHFLASHMESSAGE: errMessage}, function(drr, err) {
+    zzb.ajax.getJSON({url: 'http://localhost:16080/ping-as-errs-array', CATCHFLASHMESSAGE: errMessage}, function(drr, err) {
       console.log(drr, err, drr.rob.errs[0].message)
     })
 
     document.getElementById('button4').addEventListener('click', function(ev){
-      zzb.ajax.getJSON({url: 'http://localhost:8080/ping-status-expect-404'}, function(drr, err) {
+      zzb.ajax.getJSON({url: 'http://localhost:16080/ping-status-expect-404'}, function(drr, err) {
         if (!err) {
           alert('should have erred')
         }
@@ -203,12 +203,12 @@
     })
 
     document.getElementById('button5').addEventListener('click', function(ev){
-      zzb.ajax.getJSON({url: 'http://localhost:8080/force-flash-message'}, function(drr, err) {
+      zzb.ajax.getJSON({url: 'http://localhost:16080/force-flash-message'}, function(drr, err) {
       })
     })
 
     document.getElementById('button6').addEventListener('click', function(ev){
-      zzb.ajax.getJSON({url: 'http://localhost:8080/force-redirect-with-flash'}, function(drr, err) {
+      zzb.ajax.getJSON({url: 'http://localhost:16080/force-redirect-with-flash'}, function(drr, err) {
       })
     })
 

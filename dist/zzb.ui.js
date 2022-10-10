@@ -1,4 +1,4 @@
-//! zzb.ui.js v2.4.1 (https://github.com/jpfluger/zazzy-browser)
+//! zzb.ui.js v2.4.2 (https://github.com/jpfluger/zazzy-browser)
 //! MIT License; Copyright 2017-2021 Jaret Pfluger
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
@@ -2129,7 +2129,6 @@ exports.V = _uuid
 /***/ 602:
 /***/ ((__unused_webpack_module, exports) => {
 
-var __webpack_unused_export__;
 // ---------------------------------------------------
 // _ajax
 // ---------------------------------------------------
@@ -3497,7 +3496,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 }, false);
 
-__webpack_unused_export__ = _zaction
+exports.n = _zaction
 
 
 /***/ }),
@@ -3505,7 +3504,6 @@ __webpack_unused_export__ = _zaction
 /***/ 844:
 /***/ ((__unused_webpack_module, exports) => {
 
-var __webpack_unused_export__;
 // ---------------------------------------------------
 // _ajax
 // ---------------------------------------------------
@@ -3844,7 +3842,7 @@ document.addEventListener('DOMContentLoaded', function () {
   zzb.zui.onElemInit()
 }, false);
 
-__webpack_unused_export__ = _zui
+exports.G = _zui
 
 
 /***/ }),
@@ -3918,13 +3916,13 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_RESULT__;(function (glo
   // _zaction
   // ---------------------------------------------------
 
-  var _zaction = (__webpack_require__(602).ajax)
+  var _zaction = (__webpack_require__(602)/* .zaction */ .n)
 
   // ---------------------------------------------------
   // _zui
   // ---------------------------------------------------
 
-  var _zui = (__webpack_require__(844).ajax)
+  var _zui = (__webpack_require__(844)/* .zui */ .G)
 
   // ---------------------------------------------------
   // zzb

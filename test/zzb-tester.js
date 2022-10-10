@@ -120,7 +120,7 @@ var _zzbServer = function() {
     res.json({message: 'pong-flash-message'})
   });
 
-  this.server = this.app.listen(8080, function () {})
+  this.server = this.app.listen(16080, function () {})
 }
 
 _zzbServer.prototype.getApp = function() {
