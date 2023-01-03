@@ -1,5 +1,5 @@
 // ---------------------------------------------------
-// _ajax
+// _zaction
 // ---------------------------------------------------
 
 /*
@@ -66,6 +66,14 @@ On the element itself:
 
     * `za-inject`: The element targeted for injection by the results of an action in a format similar to za-data.
 
+    * `zchange`: The element having this class will have its data-state checked for any changes and, if any, then `ztoggler` gets fired.
+    * `ztoggler`: An attribute on an element having class `zchange`.
+                  It points to the id of the element that should be toggled should any changes happen to child elements having class `zchange-field`.
+                  These are elements that have the `input` event fired.
+    * `ztoggler-display`: `disabled` or `none`. Default is `none`. If none, the target ztoggler element will not show unless there is a data-state change.
+    * `zref-zchange-ptr`: The `zchange` loader will auto-place this on the `ztoggler` element as a reference back to the `zchange` parent.
+                          It is required for post-zaction functionality.
+
     * `za-dlg`: The selector to the element having dlg attributes in a format similar to za-data.
       * zdlg-title="Dialog Title" // Force this title all the title, even if the server sends a title to use.
       * zdlg-alt-title="Alternative Title" // Use this title when the server does not send a title.
@@ -108,7 +116,7 @@ class ZActionHandler {
   }
 }
 
-var _zaction = function () {
+const _zaction = function () {
   this.handlers = []
   // Required
   // this.handlers = [
@@ -226,7 +234,7 @@ function buildZClosest($elem, obj, isFirstZAction, zaExtraHandler) {
   let isNew = false
   if (!obj) {
     isNew = true
-    obj = {zaction:{method:null},zdata:{},zdlg:{tryDialog: false},zurl:null,$data:null,arrInjects:null}
+    obj = {zaction:{method:null},zdata:{},zdlg:{tryDialog: false},zurl:null,$data:null,arrInjects:null,zref:{}}
   }
   if (!$elem) {
     return null
@@ -273,6 +281,7 @@ function buildZClosest($elem, obj, isFirstZAction, zaExtraHandler) {
 
   // The element itself can have dlg attributes and may also reference another element via 'za-dlg'.
   if (isNew || isFirstZAction) {
+    obj.zref = zzb.types.merge(zzb.dom.getAttributes($elem, /^zref-/, 5), obj.zref)
     obj.zdlg = zzb.types.merge(zzb.dom.getAttributes($elem, /^zdlg-/, 5), obj.zdlg)
     // Look for any referenced dlg attributes indicated by the `za-dlg` attribute.
     if (zzb.types.isStringNotEmpty(obj.zaction.dlg)) {
@@ -403,7 +412,7 @@ _zaction.prototype.newZAction = function(ev) {
         ajaxOptions.body.zaction = this._options.zaction
       }
 
-      if (zzb.types.isNonEmptyString(this._options.zaction.expectType)) {
+      if (zzb.types.isStringNotEmpty(this._options.zaction.expectType)) {
         ajaxOptions.expectType = this._options.zaction.expectType
       }
 
@@ -476,7 +485,7 @@ _zaction.prototype.newZAction = function(ev) {
           console.log('cannot determine zurl')
           this._options.zurl = null
         } else {
-          for (var ii = 0; ii < reservePH.length; ii++) {
+          for (let ii = 0; ii < reservePH.length; ii++) {
             if (zurl.indexOf(reservePH[ii]) > -1) {
               let keyNoColon = reservePH[ii].replace(':', '')
               if (zzb.types.isStringNotEmpty(this._options.zaction[keyNoColon])) {
@@ -515,7 +524,7 @@ function findZUrlByAttribute($elem, returnNull) {
     zurl = $elem.getAttribute('href')
     if (!zzb.types.isStringNotEmpty(zurl)) {
       zurl = $elem.getAttribute('action')
-      if (!zzb.types.isStringNotEmpty(zurl)) {
+      if (!zzb.types.isStringNotEmpty(zurl) && $elem.nodeName && $elem.nodeName.toLowerCase() !== 'img') {
         zurl = $elem.getAttribute('src')
       }
     }
@@ -559,7 +568,7 @@ function serialize (data, $elem) {
           }
         }
 
-        if (zzb.types.isNonEmptyString(zfType)) {
+        if (zzb.types.isStringNotEmpty(zfType)) {
           let forceArray = zfType.startsWith('[]')
           let type = zfType.replaceAll('[]', '')
           let elseif = (type === 'int' || type === 'float') ? 0 : ''
@@ -666,7 +675,7 @@ _zaction.prototype.actionHandler = function(ev, unregisteredHandler, callback) {
   // Handle the running of any 3rd-party zactions. Doing so allows the 3rd
   // party to override any built-in event handler functions, such as for "za-*"
   let handlers = zzb.zaction.getHandlers()
-  for (var ii = 0; ii < handlers.length; ii++) {
+  for (let ii = 0; ii < handlers.length; ii++) {
     isHandled = handlers[ii].run(zaction, callback)
     if (isHandled === true) {
       return
@@ -722,7 +731,7 @@ function runZValidate(zaction, rob, hideOnly) {
       if (!hideOnly && rob) {
         // find the name of the element
         let zval = zzb.dom.getAttributes($elem, /^zval-/, 5)
-        if (!zzb.types.isNonEmptyString(zval.name)) {
+        if (!zzb.types.isStringNotEmpty(zval.name)) {
           if (isInPlace) {
             zval.name = zzb.dom.getAttributeElse($elem, 'name')
           }
@@ -730,7 +739,7 @@ function runZValidate(zaction, rob, hideOnly) {
         // Are there matching error or message fields in rob?
         // Why an array? Remember, there could be multiple error/messages returned for a single field name.
         let arrAny = []
-        if (hasAny && zzb.types.isNonEmptyString(zval.name)) {
+        if (hasAny && zzb.types.isStringNotEmpty(zval.name)) {
           arrAny = rob.listErrs.getAnyByName(zval.name)
         }
         // Handle the results
@@ -743,7 +752,7 @@ function runZValidate(zaction, rob, hideOnly) {
             $elem.classList.add('is-invalid')
           } else {
             let html = zzb.rob.renderList({targets: arrAny, format: 'html'})
-            if (zzb.types.isNonEmptyString(html)) {
+            if (zzb.types.isStringNotEmpty(html)) {
               $elem.innerHTML = html
               $elem.classList.remove('d-none')
             }
@@ -825,7 +834,7 @@ function splitDlgButton(target) {
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/eval
 function jsonEval(srcObj, zaction){
   let options = null
-  if (zzb.types.isNonEmptyString(srcObj)) {
+  if (zzb.types.isStringNotEmpty(srcObj)) {
     options = Function('"use strict";return (' + srcObj + ')')(zaction);
   }
   return zzb.types.merge({actionHandler: null, onAccept: null, buttons: null}, options)
@@ -863,7 +872,7 @@ function handleDialog(zaction, callback, results) {
       return
     }
     // console.log('ztrigger', drr, err)
-    if (zzb.types.isNonEmptyString(zaction.getOptions().zdlg.postSave)) {
+    if (zzb.types.isStringNotEmpty(zaction.getOptions().zdlg.postSave)) {
       let ss = zaction.getOptions().zdlg.postSave.split(':')
       if (ss.length === 2) {
         let $target = document.querySelector(ss[1])
@@ -1018,7 +1027,7 @@ function handleDialog(zaction, callback, results) {
 
     // dialog themes
     if (dlgTheme) {
-      if (dlgTheme.type && !zzb.types.isNonEmptyString(dlgOptions.type)) {
+      if (dlgTheme.type && !zzb.types.isStringNotEmpty(dlgOptions.type)) {
         dlgOptions.type = dlgTheme.type
       }
       // The question is if we allow the client to override any server theme buttons?
@@ -1028,7 +1037,7 @@ function handleDialog(zaction, callback, results) {
   } else {
     // dialog themes
     if (dlgTheme) {
-      if (dlgTheme.type && !zzb.types.isNonEmptyString(dlgOptions.type)) {
+      if (dlgTheme.type && !zzb.types.isStringNotEmpty(dlgOptions.type)) {
         dlgOptions.type = dlgTheme.type
       }
       function setButton(but, ii) {
@@ -1050,7 +1059,7 @@ function handleDialog(zaction, callback, results) {
 
     // Individual button overrides
     let ovBut = zaction.getOptions().zdlg.buttons
-    if (zzb.types.isNonEmptyString(ovBut)) {
+    if (zzb.types.isStringNotEmpty(ovBut)) {
       ovBut = ovBut.split(';')
       if (ovBut.length !== dlgOptions.buttons.length) {
         console.log('zdlg-buttons definition does not match default options/theme')
@@ -1078,7 +1087,7 @@ function handleDialog(zaction, callback, results) {
 function findDlgAjaxValue(zaction, results, key, altKey, isHtmlBody) {
   let value = ''
   let hasZActionDlg = zzb.types.isObject(zaction.getOptions().zdlg)
-  if (zzb.types.isNonEmptyString(key)) {
+  if (zzb.types.isStringNotEmpty(key)) {
     if (hasZActionDlg) {
       value = zaction.getOptions().zdlg[key]
       if (zzb.types.isStringNotEmpty(value)) {
@@ -1098,7 +1107,7 @@ function findDlgAjaxValue(zaction, results, key, altKey, isHtmlBody) {
       }
     }
   }
-  if (hasZActionDlg && zzb.types.isNonEmptyString(altKey)) {
+  if (hasZActionDlg && zzb.types.isStringNotEmpty(altKey)) {
     value = zaction.getOptions().zdlg[altKey]
     if (zzb.types.isStringNotEmpty(value)) {
       return value
@@ -1218,6 +1227,13 @@ function handleZUrlAction(zaction, callback, doFormUpdate) {
       if (doFormUpdate === true) {
         runZFormUpdate(zaction, drr.rob)
       }
+      if (zaction.getOptions().arrInjects && drr.rob.hasRecords() && drr.rob.first().dInjects) {
+        runInjects(zaction.getOptions().arrInjects, drr.rob.first().dInjects)
+      }
+      let zref = zaction.getOptions().zref
+      if (zref && zzb.types.isStringNotEmpty(zref.zchangePtr)) {
+        zzb.zaction.loadZChanges(document.getElementById(zref.zchangePtr))
+      }
     }
 
     callback && callback(drr, null)
@@ -1227,7 +1243,7 @@ function handleZUrlAction(zaction, callback, doFormUpdate) {
 function handleZUrlBlobDownload(zaction, callback) {
   zaction.forceStopPropDef(true)
 
-  if (!zzb.types.isNonEmptyString(zaction.getOptions().zaction.expectType)) {
+  if (!zzb.types.isStringNotEmpty(zaction.getOptions().zaction.expectType)) {
     zaction.getOptions().zaction.expectType = 'blob'
   }
 
@@ -1240,11 +1256,11 @@ function handleZUrlBlobDownload(zaction, callback) {
     }
 
     if (drr.data) {
-      if (!zzb.types.isNonEmptyString(zaction.getOptions().zaction.blobType)) {
+      if (!zzb.types.isStringNotEmpty(zaction.getOptions().zaction.blobType)) {
         zaction.getOptions().zaction.blobType = 'application/octet-stream'
       }
 
-      if (!zzb.types.isNonEmptyString(zaction.getOptions().zaction.blobName)) {
+      if (!zzb.types.isStringNotEmpty(zaction.getOptions().zaction.blobName)) {
         zaction.getOptions().zaction.blobName = 'my-file'
       }
 
@@ -1336,6 +1352,70 @@ _zaction.prototype.runZLoadActions = function($parent) {
 
       $elem.dispatchEvent(new CustomEvent('zload-action'))
     })
+  }
+  zzb.zaction.loadZChanges($parent)
+  if ($parent.tagName && zzb.types.isStringNotEmpty($parent.tagName)) {
+    const $autoF = $parent.querySelector('.zui-autofocus')
+    if ($autoF && zzb.types.isObject($autoF)) {
+      $autoF.focus()
+    }
+  }
+}
+
+const cacheZChanges = {}
+
+_zaction.prototype.loadZChanges = function($parent) {
+  if (!$parent) {
+    $parent = document
+  }
+  const fnToggle = function ($toggler, useDisabled, noChange) {
+    if (noChange) {
+      useDisabled ? $toggler.disabled = false : $toggler.classList.add('d-none')
+    } else {
+      useDisabled ? $toggler.disabled = true : $toggler.classList.remove('d-none')
+    }
+  }
+  const fnDetectChanges = function($elem) {
+    let id = $elem.getAttribute('id')
+    if (!zzb.types.isStringNotEmpty(id)) {
+      id = zzb.uuid.newV4()
+      $elem.setAttribute('id', id)
+    }
+    let $toggler = document.getElementById($elem.getAttribute('ztoggler'))
+    if (zzb.types.isObject($toggler)) {
+      $toggler.setAttribute('zref-zchange-ptr', id)
+      let useDisabled = $toggler.getAttribute('ztoggler-display') === 'disabled'
+      fnToggle($toggler, useDisabled, true)
+      cacheZChanges[id] = {originals:{},changes:{}}
+      let $fields = $elem.querySelectorAll('.zchange-field')
+      if ($fields) {
+        $elem.querySelectorAll('.zchange-field').forEach(function($field) {
+          if (zzb.types.isStringNotEmpty($field.getAttribute('name'))) {
+            cacheZChanges[id].originals[$field.getAttribute('name')] = $field.value
+            $field.addEventListener('input', function(e) {
+              cacheZChanges[id].changes[e.target.name] = (cacheZChanges[id].originals[e.target.name] === e.target.value)
+              let noChange = true
+              for (const [ key, value ] of Object.entries(cacheZChanges[id].changes)) {
+                if (value === false) {
+                  noChange = false
+                }
+              }
+              fnToggle($toggler, useDisabled, noChange)
+            })
+          }
+        })
+      }
+    }
+  }
+  if ($parent.tagName && $parent['classList'] && $parent.classList.contains('zchange')) {
+    fnDetectChanges($parent)
+  } else {
+    let $elems = $parent.querySelectorAll('.zchange')
+    if ($elems) {
+      $elems.forEach(function($elem) {
+        fnDetectChanges($elem)
+      })
+    }
   }
 }
 

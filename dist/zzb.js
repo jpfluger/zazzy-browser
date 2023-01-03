@@ -1,4 +1,4 @@
-//! zzb.js v2.4.2 (https://github.com/jpfluger/zazzy-browser)
+//! zzb.js v2.5.0 (https://github.com/jpfluger/zazzy-browser)
 //! MIT License; Copyright 2017-2021 Jaret Pfluger
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
@@ -51,15 +51,15 @@ _ajax.prototype.request = function(options, callback) {
     })
     .then(function (data) {
 
-      var objReturn = {request: options, data: data}
+      const objReturn = {request: options, data: data}
 
       // allow an escape
       if (objReturn.request.RAWRETURN === true) {
         return callback(objReturn, null)
       }
 
-      var noFinalResolve = false
-      var rob = zzb.rob.newROB()
+      let noFinalResolve = false
+      const rob = zzb.rob.newROB()
 
       if (objReturn.request.expectType !== 'json') {
         // html or some other data type was returned
@@ -77,7 +77,7 @@ _ajax.prototype.request = function(options, callback) {
               return
             } else if (zzb.types.isStringNotEmpty(data.message)) {
               zzb.dialogs.showMessage({
-                type: zzb.types.isNonEmptyString(data.messageType) ? data.messageType : null,
+                type: zzb.types.isStringNotEmpty(data.messageType) ? data.messageType : null,
                 classDialog: 'zzb-dialog-flash-message zzb-dialog-flash-redirect' + zzb.strings.mergeElseEmpty(' zzb-dialog-flash-status-{0}', data.messageType),
                 dataBackdrop: 'static',
                 body: data.message,
@@ -138,7 +138,7 @@ _ajax.prototype.request = function(options, callback) {
           if (zzb.types.isStringNotEmpty(data.message)) {
             noFinalResolve = true
             zzb.dialogs.showMessage({
-              type: zzb.types.isNonEmptyString(data.messageType) ? data.messageType : null,
+              type: zzb.types.isStringNotEmpty(data.messageType) ? data.messageType : null,
               classDialog: 'zzb-dialog-flash-message' + zzb.strings.mergeElseEmpty(' zzb-dialog-flash-status-{0}', data.messageType, rob.hasErrors() ? 'error' : 'okay'),
               dataBackdrop: 'static',
               body: data.message,
@@ -256,7 +256,7 @@ _ajax.prototype.postJSON = function (options, callback) {
   zzb.ajax.request(options, callback)
 }
 
-var AjaxMessage = function (options) {}
+const AjaxMessage = function (options) {}
 
 // Default message is AjaxMessage.MSG_FAILED_ACTION_UNEXPECTED
 // If options.SHOWCATCHMESSAGE is true, then the following is appended to it: + '<div class="zzb-dialog-error-catch">Error: ' + caught err.message + '</div>'
@@ -333,7 +333,7 @@ class ZazzyDialog {
       })
     }
 
-    var self = this
+    const self = this
     this.modal.addEventListener('show.bs.modal', function (ev) {
       if (self.defaultOptions.onShow && zzb.types.isFunction(self.defaultOptions.onShow)) {
         self.defaultOptions.onShow(ev)
@@ -431,7 +431,7 @@ class ZazzyDialog {
   static TYPE_LINK = 'link'
 
   static getDialogDefaults(options) {
-    var dialog = {
+    const dialog = {
       // contains the full html, including id, title, body and buttons already formatted
       htmlDialog: '',
       // The remainder builds the htmlDialog
@@ -464,7 +464,7 @@ class ZazzyDialog {
   }
 
   static getButtonDefaults(options) {
-    var button = {
+    const button = {
       id: null,
       type: ZazzyDialog.TYPE_NONE,
       label: '',
@@ -478,7 +478,7 @@ class ZazzyDialog {
   }
 
   static getButtonPreset(preset, order, max) {
-    var button = ZazzyDialog.getButtonDefaults()
+    let button = ZazzyDialog.getButtonDefaults()
     button.isDismiss = true
 
     if (order === (max - 1)) {
@@ -585,7 +585,7 @@ class ZazzyDialog {
       return document.getElementById(this.getId())
     }
 
-    var options = zzb.types.merge({
+    const options = zzb.types.merge({
       id: this.getId(),
       arialabel: 'arialabel' + this.getId(),
       classBackdrop: this.getClassBackdrop(),
@@ -608,11 +608,11 @@ class ZazzyDialog {
       options.classModalHeader += ' alert-' + options.type
     }
 
-    if (zzb.types.isNonEmptyString(options.classDialog)) {
+    if (zzb.types.isStringNotEmpty(options.classDialog)) {
       options.classDialog = ' ' + options.classDialog
     }
 
-    if (zzb.types.isNonEmptyString(options.classBackdrop)) {
+    if (zzb.types.isStringNotEmpty(options.classBackdrop)) {
       options.classBackdrop = ' ' + options.classBackdrop
     }
 
@@ -633,7 +633,7 @@ class ZazzyDialog {
       //options.noHeaderCloseButtonButton = '<button type="button" class="close" data-bs-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>'
     }
 
-    var template =
+    const template =
       '<div class="modal {classFade} modal-fullscreen{classBackdrop}" {extraAttributes} id="{id}" tabindex="-1" role="dialog" aria-labelledby="{arialabel}" aria-hidden="true">' +
         '<div class="modal-dialog{classVerticalCenter}{classDialog}" role="document">' +
           '<div class="modal-content">' +
@@ -650,19 +650,19 @@ class ZazzyDialog {
 
     // Insert the template prior to adding events
     document.body.insertAdjacentHTML('beforeend', zzb.strings.format(template, options))
-    var $modal = document.getElementById(this.getId())
+    const $modal = document.getElementById(this.getId())
 
     if (!$modal) {
       throw new Error('unexpected that modal has not been created')
     }
 
-    var self = this
+    const self = this
 
     if (!Array.isArray(options.buttons)) {
       options.buttons = []
     }
 
-    var maxButtons = options.buttons.length
+    const maxButtons = options.buttons.length
 
     options.buttons.forEach(function (button, ii) {
       // If button is a string, then it has a predefined 'preset' value that needs assignment.
@@ -720,7 +720,7 @@ class ZazzyDialog {
 // _dialogs
 // ---------------------------------------------------
 
-var _dialogs = function () {
+const _dialogs = function () {
   this.modals = {}
 }
 
@@ -732,7 +732,7 @@ _dialogs.prototype.modal = function (options) {
       return this.modals[options.id]
     }
   }
-  var myModal = new ZazzyDialog(options)
+  const myModal = new ZazzyDialog(options)
   if (myModal && zzb.types.isStringNotEmpty(myModal.getId())) {
     return myModal
   }
@@ -740,7 +740,7 @@ _dialogs.prototype.modal = function (options) {
 }
 
 _dialogs.prototype.showMessage = function (options) {
-  var dialog = zzb.dialogs.modal(zzb.types.merge({
+  const dialog = zzb.dialogs.modal(zzb.types.merge({
     type: ZazzyDialog.TYPE_NONE,
     buttons: [ZazzyDialog.BUTTON_OK]
   }, options))
@@ -751,7 +751,7 @@ _dialogs.prototype.showMessage = function (options) {
 }
 
 _dialogs.prototype.showMessageChoice = function (options) {
-  var dialog = zzb.dialogs.modal(zzb.types.merge({
+  const dialog = zzb.dialogs.modal(zzb.types.merge({
     type: ZazzyDialog.TYPE_NONE,
     buttons: [
       ZazzyDialog.BUTTON_CANCEL,
@@ -771,7 +771,7 @@ _dialogs.prototype.showMessageChoice = function (options) {
 }
 
 _dialogs.prototype.handleError = function (options) {
-  var template = '<div class="zzb-dialog-errors">{errors}</div>' +
+  const template = '<div class="zzb-dialog-errors">{errors}</div>' +
     '<div class="zzb-dialog-message">{message}</div>'
 
   // this.dialogs.handleError({log: 'failed to retrieve login dialog form: ' + err, title: 'Unknown error', message: 'An unknown communications error occurred while retrieving the login form. Please check your connection settings and try again.'})
@@ -800,7 +800,7 @@ _dialogs.prototype.handleError = function (options) {
 
   if (!zzb.types.isStringNotEmpty(options.errors)) {
     if (zzb.types.isArray(options.errs)) {
-      var arrHtml = []
+      const arrHtml = []
 
       options.errs.forEach(function (err, index) {
         if (err.message && zzb.types.isStringNotEmpty(err.message)) {
@@ -855,7 +855,7 @@ _dom.prototype.getAttributeElse = function ($elem, name, elseValue) {
     return elseValue
   }
   let value = $elem.getAttribute(name)
-  if (zzb.types.isNonEmptyString(value)) {
+  if (zzb.types.isStringNotEmpty(value)) {
     return value
   }
   return elseValue
@@ -899,10 +899,10 @@ exports.v = _dom
 // perms (Permission Keys)
 // ---------------------------------------------------
 
-var _perms = function () {}
+const _perms = function () {}
 
 _perms.prototype.getPO = function (pos, key) {
-  var po = pos[key]
+  let po = pos[key]
 
   if (po) {
     return po
@@ -912,24 +912,24 @@ _perms.prototype.getPO = function (pos, key) {
 }
 
 _perms.prototype.getPermObjectFromPermkeys = function (permkeys) {
-  var pos = {}
-  var self = this
+  const pos = {}
+  const self = this
 
   if (Array.isArray(permkeys)) {
     permkeys.forEach(function (permkey) {
-      var po = self.getPermObject(permkey)
+      let po = self.getPermObject(permkey)
       if (po.key) {
         pos[po.key] = po
       }
     })
   } else if (zzb.types.isObject(permkeys)) {
     for (const key in permkeys) {
-      var perm = permkeys[key]
+      let perm = permkeys[key]
       // _.forOwn(permkeys, function (perm, key) {
       if (!perm) {
         perm = ''
       }
-      var po = null
+      let po = null
       if (perm.indexOf(':') < 0) {
         po = self.getPermObject(key + ':' + perm)
       } else {
@@ -953,9 +953,9 @@ _perms.prototype.mergePermkey = function (permkey, merge) {
     return merge
   }
 
-  var split = null
-  var po = {}
-  var mo = {}
+  let split = null
+  let po = {}
+  let mo = {}
 
   if (permkey.indexOf(':') <= 0) {
     po.key = permkey.trim()
@@ -981,7 +981,7 @@ _perms.prototype.mergePermkey = function (permkey, merge) {
     return merge
   }
 
-  for (var mm = 0; mm < mo.perm.length; mm++) {
+  for (let mm = 0; mm < mo.perm.length; mm++) {
     if (po.perm.indexOf(mo.perm[mm]) < 0) {
       po.perm += mo.perm[mm]
     }
@@ -991,7 +991,7 @@ _perms.prototype.mergePermkey = function (permkey, merge) {
 }
 
 _perms.prototype.getPermObject = function (permkey, available, merge) {
-  var po = { key: null, perm: null, attr: {}, toPermkey: function () { return this.key + ':' + this.perm } }
+  let po = { key: null, perm: null, attr: {}, toPermkey: function () { return this.key + ':' + this.perm } }
 
   if (merge || zzb.types.isStringNotEmpty(merge)) {
     permkey = this.mergePermkey(permkey, merge)
@@ -1009,7 +1009,7 @@ _perms.prototype.getPermObject = function (permkey, available, merge) {
     return po
   }
 
-  var split = permkey.split(':')
+  let split = permkey.split(':')
   po.key = split[0]
   po.perm = split[1]
 
@@ -1019,7 +1019,7 @@ _perms.prototype.getPermObject = function (permkey, available, merge) {
     // remove any permissions from the default that are not available
     if (available && zzb.types.isStringNotEmpty(available)) {
       available = available.trim().toUpperCase()
-      for (var mm = po.perm.length - 1; mm >= 0; mm--) {
+      for (let mm = po.perm.length - 1; mm >= 0; mm--) {
         if (available.indexOf(po.perm[mm]) < 0) {
           po.perm = po.perm.replace(po.perm[mm], '')
         }
@@ -1032,11 +1032,11 @@ _perms.prototype.getPermObject = function (permkey, available, merge) {
   return po
 }
 
-var reCRUDX = new RegExp('^[CRUDX]*$')
+const reCRUDX = new RegExp('^[CRUDX]*$')
 
 _perms.prototype.getPermAttributes = function (permkey) {
   // CRUDX
-  var attr = { canRead: false, canCreate: false, canUpdate: false, canDelete: false, canExecute: false }
+  let attr = { canRead: false, canCreate: false, canUpdate: false, canDelete: false, canExecute: false }
 
   if (!permkey || !zzb.types.isStringNotEmpty(permkey)) {
     return attr
@@ -1070,7 +1070,7 @@ _perms.prototype.hasMatch = function (permkey, target) {
     return false
   }
 
-  var po = permkey
+  let po = permkey
   if (zzb.types.isStringNotEmpty(permkey)) {
     po = this.getPermObject(permkey)
   }
@@ -1079,11 +1079,11 @@ _perms.prototype.hasMatch = function (permkey, target) {
     return false
   }
 
-  var tp = null
+  let tp = null
   if (zzb.types.isStringNotEmpty(target)) {
     tp = this.getPermObject(target)
   } else if (Array.isArray(target)) {
-    var self = this
+    const self = this
     target.forEach(function (item) {
       if (zzb.types.isStringNotEmpty(item)) {
         item = self.getPermObject(item)
@@ -1116,7 +1116,7 @@ _perms.prototype.hasMatch = function (permkey, target) {
     return false
   }
 
-  for (var ii = 0; ii < tp.perm.length; ii++) {
+  for (let ii = 0; ii < tp.perm.length; ii++) {
     if (po.perm.indexOf(tp.perm[ii]) >= 0) {
       return true
     }
@@ -1137,7 +1137,7 @@ exports.Q = _perms
 // rob (Return Object)
 // ---------------------------------------------------
 
-var _rob = function () {}
+const _rob = function () {}
 
 _rob.prototype.newROB = function (options) {
   return zzb.types.merge({
@@ -1167,7 +1167,7 @@ _rob.prototype.newROB = function (options) {
       return (this.recs && Array.isArray(this.recs) && this.recs.length > 0 ? this.recs[0] : null)
     },
     find: function (key, value) {
-      var hit = null
+      let hit = null
       this.recs.forEach(function (rec) {
         if (rec && zzb.types.isObject(rec) && !Array.isArray(rec) && rec[key] === value) {
           hit = rec
@@ -1187,7 +1187,7 @@ _rob.prototype.toObject = function (errs) {
   if (!errs || !Array.isArray(errs)) {
     return { _system: [errs] }
   }
-  var eo = {}
+  let eo = {}
   errs.forEach(function (err) {
     if (err) {
       if (!err.field) {
@@ -1242,7 +1242,7 @@ function mergeErrorDefaults (options) {
 
 // Creates a single ROB error object from an object (eg existing error) or from a string
 // options1 could be a string or object, whereas options2 expects an object
-var createError = function (options1, options2) {
+const createError = function (options1, options2) {
   if (!options1) {
     return mergeErrorDefaults()
   }
@@ -1260,7 +1260,7 @@ _rob.prototype.createError = createError
 // Sanitizes ROB error(s), which could be in the format of a string, array or object
 // Returns null or an array of errors
 _rob.prototype.sanitizeErrors = function (errs) {
-  var newErrs = null
+  let newErrs = null
   if (!errs) {
     return newErrs
   }
@@ -1293,11 +1293,11 @@ _rob.prototype.toListErrs = function (errs) {
 }
 
 _rob.prototype.toList = function (items) {
-  var arrFields = []
-  var arrSystem = []
+  let arrFields = []
+  let arrSystem = []
 
-  var arrSystemMessages = []
-  var arrFieldMessages = []
+  let arrSystemMessages = []
+  let arrFieldMessages = []
 
   if (items && Array.isArray(items) && items.length > 0) {
     items.forEach(function (item) {
@@ -1457,10 +1457,10 @@ exports.S = _rob
 // strings
 // ---------------------------------------------------
 
-var _strings = function () {}
+const _strings = function () {}
 
 function ValueError (message) {
-  var err = new Error(message)
+  let err = new Error(message)
   err.name = 'ValueError'
   return err
 }
@@ -1470,14 +1470,14 @@ function ValueError (message) {
 // zzb.strings.format('{0}, you have {1} mushroom{2}', 'Piggy', 2, 's')
 // zzb.strings.format('{0}, you have {1} mushroom{2}', ['Piggy', 2, 's'])
 // zzb.strings.format('{name}, you have {number} mushroom{ending}', {name: 'Piggy', number: 2, ending: 's'})
-var formatString = function (transformers) {
+const formatString = function (transformers) {
   return function (template) {
-    var args = Array.prototype.slice.call(arguments, 1)
-    var idx = 0
-    var state = 'UNDEFINED'
+    let args = Array.prototype.slice.call(arguments, 1)
+    let idx = 0
+    let state = 'UNDEFINED'
 
     if (Array.isArray(args) && args.length > 0 && Array.isArray(args[0])) {
-      var tmpArr = args[0].map(function (s) {
+      let tmpArr = args[0].map(function (s) {
         return s
       })
       args = tmpArr
@@ -1489,7 +1489,7 @@ var formatString = function (transformers) {
         if (literal != null) {
           return literal
         }
-        var key = _key
+        let key = _key
         if (key.length > 0) {
           if (state === 'IMPLICIT') {
             throw ValueError('cannot switch from ' +
@@ -1512,8 +1512,8 @@ var formatString = function (transformers) {
         //      succeeds the result is a singleton array containing the
         //      value at the lookup path; otherwise the result is [].
         //  4.  Unwrap the result by reducing with '' as the default value.
-        var path = key.split('.')
-        var value = (/^\d+$/.test(path[0]) ? path : ['0'].concat(path))
+        let path = key.split('.')
+        let value = (/^\d+$/.test(path[0]) ? path : ['0'].concat(path))
           .reduce(function (maybe, key) {
             return maybe.reduce(function (_, x) {
               return x != null && key in Object(x) ? [typeof x[key] === 'function' ? x[key]() : x[key]] : []
@@ -1551,7 +1551,7 @@ _strings.prototype.format = formatString({})
  * @returns {String} a merging of object with the supplied template
  **/
 _strings.prototype.formatEmpty = function (template) {
-  var args = Array.prototype.slice.call(arguments, 1)
+  let args = Array.prototype.slice.call(arguments, 1)
   if (Array.isArray(args)) {
     return template.replace(/{(\d+)}/g, function (match, number) {
       return typeof args[number] !== 'undefined'
@@ -1606,7 +1606,7 @@ _strings.prototype.joinArrToCommas = function (arr, fieldName) {
     return ''
   }
   return arr.map(arr, function (obj, idx) {
-    var comma = ''
+    let comma = ''
     if (idx < (arr.index - 1)) {
       comma = ''
     }
@@ -1666,10 +1666,10 @@ _strings.prototype.toFirstCapitalEndPeriod = function (target) {
   return target
 }
 
-var sizeUnitsFormatNameSingle = ['K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y']
-var sizeUnitsFormatNameDouble = ['KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
-var sizeUnitsFormatNameFull = ['Kilobyte', 'Megabyte', 'Gigabyte', 'Terabyte', 'Petabyte', 'Exabyte', 'Zettabyte', 'Yottabyte']
-var sizeUnitsFormatNameEIC = ['KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB']
+const sizeUnitsFormatNameSingle = ['K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y']
+const sizeUnitsFormatNameDouble = ['KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
+const sizeUnitsFormatNameFull = ['Kilobyte', 'Megabyte', 'Gigabyte', 'Terabyte', 'Petabyte', 'Exabyte', 'Zettabyte', 'Yottabyte']
+const sizeUnitsFormatNameEIC = ['KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB']
 
 // From https://stackoverflow.com/questions/10420352/converting-file-size-in-bytes-to-human-readable-string/10420404
 //      https://ux.stackexchange.com/questions/13815/files-size-units-kib-vs-kb-vs-kb
@@ -1679,7 +1679,7 @@ _strings.prototype.sizeToHumanReadable = function (bytes, unitsFormat, noSizeUni
   if (!zzb.types.isStringNotEmpty(unitsFormat)) {
     unitsFormat = 'single'
   }
-  var unitSeperateSpace = ' '
+  let unitSeperateSpace = ' '
   if (noSizeUnitSeparation === true) {
     unitSeperateSpace = ''
   }
@@ -1687,10 +1687,10 @@ _strings.prototype.sizeToHumanReadable = function (bytes, unitsFormat, noSizeUni
     dp = 1
   }
 
-  var thresh = 1024 // si ? 1000 : 1024
+  let thresh = 1024 // si ? 1000 : 1024
 
-  var units
-  var unitsBytes = 'B'
+  let units
+  let unitsBytes = 'B'
   switch (unitsFormat.toLowerCase()) {
     case 'full':
       units = sizeUnitsFormatNameFull
@@ -1711,19 +1711,19 @@ _strings.prototype.sizeToHumanReadable = function (bytes, unitsFormat, noSizeUni
     return bytes + unitSeperateSpace + unitsBytes
   }
 
-  // var units = si
+  // let units = si
   //   ? ['kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
   //   : ['KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB']
-  var u = -1
-  // var r = 10 ** dp
-  var r = Math.pow(dp, 10)
+  let u = -1
+  // let r = 10 ** dp
+  let r = Math.pow(dp, 10)
 
   do {
     bytes /= thresh
     ++u
   } while (Math.round(Math.abs(bytes) * r) / r >= thresh && u < units.length - 1)
 
-  var valFixed = bytes.toFixed(dp) + ''
+  let valFixed = bytes.toFixed(dp) + ''
   valFixed = zzb.strings.trimSuffix(valFixed, ['.00', '.0'])
 
   return valFixed + unitSeperateSpace + units[u]
@@ -1731,13 +1731,13 @@ _strings.prototype.sizeToHumanReadable = function (bytes, unitsFormat, noSizeUni
 
 _strings.prototype.trimPrefix = function(target, prefix) {
   target = zzb.types.toString(target)
-  var arr = []
+  let arr = []
   if (!zzb.types.isArray(prefix)) {
     arr.push(zzb.types.toString(prefix))
   } else {
     arr = prefix
   }
-  for (var ii = 0; ii < arr.length; ii++) {
+  for (let ii = 0; ii < arr.length; ii++) {
     if (target.startsWith(arr[ii])) {
       return target.slice(arr[ii])
     }
@@ -1747,13 +1747,13 @@ _strings.prototype.trimPrefix = function(target, prefix) {
 
 _strings.prototype.trimSuffix = function(target, suffix) {
   target = zzb.types.toString(target)
-  var arr = []
+  let arr = []
   if (!zzb.types.isArray(suffix)) {
     arr.push(zzb.types.toString(suffix))
   } else {
     arr = suffix
   }
-  for (var ii = 0; ii < arr.length; ii++) {
+  for (let ii = 0; ii < arr.length; ii++) {
     if (target.endsWith(arr[ii])) {
       return target.slice(0, arr[ii].length * -1)
     }
@@ -1763,12 +1763,12 @@ _strings.prototype.trimSuffix = function(target, suffix) {
 
 // https://stackoverflow.com/questions/8211744/convert-time-interval-given-in-seconds-into-more-human-readable-form
 _strings.prototype.millisecondsTimeToHumanReadable = function (milliseconds) {
-  var temp = milliseconds / 1000
-  var years = Math.floor(temp / 31536000)
-  var days = Math.floor((temp %= 31536000) / 86400)
-  var hours = Math.floor((temp %= 86400) / 3600)
-  var minutes = Math.floor((temp %= 3600) / 60)
-  var seconds = temp % 60
+  let temp = milliseconds / 1000
+  const years = Math.floor(temp / 31536000)
+  const days = Math.floor((temp %= 31536000) / 86400)
+  const hours = Math.floor((temp %= 86400) / 3600)
+  const minutes = Math.floor((temp %= 3600) / 60)
+  const seconds = temp % 60
 
   if (days || hours || seconds || minutes) {
     return (years ? years + 'y ' : '') +
@@ -1782,7 +1782,7 @@ _strings.prototype.millisecondsTimeToHumanReadable = function (milliseconds) {
 }
 
 _strings.prototype.toBool = function (target) {
-  if (!zzb.types.isNonEmptyString(target)) {
+  if (!zzb.types.isStringNotEmpty(target)) {
     return (target)
   }
   switch(target.toLowerCase().trim()){
@@ -1846,7 +1846,7 @@ _strings.prototype.parseTypeElse = function (target, type, elseif, forceArray) {
           break
         case 'date':
         case 'date-iso':
-          target[ii] = zzb.types.isNonEmptyString(target[ii]) ? target[ii] : elseif
+          target[ii] = zzb.types.isStringNotEmpty(target[ii]) ? target[ii] : elseif
           break
         default:
           if (!zzb.types.isString(target[ii])) {
@@ -1950,7 +1950,7 @@ _types.prototype.baseToString = function(value) {
     return value;
   }
   if (zzb.types.isNumber(value)) {
-    var result = (trimSuffix + '');
+    let result = (trimSuffix + '');
     return (result == '0' && (1 / value) == -INFINITY) ? '-0' : result;
   }
   return ''
@@ -2001,7 +2001,7 @@ _types.prototype.isString = function (s) {
 }
 
 _types.prototype.isFunction = function (fn) {
-  var getType = {}
+  let getType = {}
   return fn && getType.toString.call(fn) === '[object Function]'
 }
 
@@ -2039,7 +2039,7 @@ exports.V = _types
 // uuid
 // ---------------------------------------------------
 
-var _uuid = function () {}
+const _uuid = function () {}
 
 /**
  * zzb.uuid.newV4
@@ -2057,26 +2057,26 @@ var _uuid = function () {}
  */
 _uuid.prototype.newV4 = function () {
   function generateNumber(limit) {
-    var value = limit * Math.random();
+    let value = limit * Math.random();
     return value | 0;
   }
 
   function generateX() {
-    var value = generateNumber(16);
+    let value = generateNumber(16);
     return value.toString(16);
   }
 
   function generateXes(count) {
-    var result = '';
-    for(var i = 0; i < count; ++i) {
+    let result = '';
+    for(let i = 0; i < count; ++i) {
       result += generateX();
     }
     return result;
   }
 
   function generateVariant() {
-    var value = generateNumber(16);
-    var variant =  (value & 0x3) | 0x8;
+    let value = generateNumber(16);
+    let variant =  (value & 0x3) | 0x8;
     return variant.toString(16);
   }
 
@@ -2100,7 +2100,7 @@ _uuid.prototype.newV4 = function () {
  * @returns {Boolean} true if the uuid under test is a valid uuid
  **/
 _uuid.prototype.isV4 = function (uuid) {
-  var re = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+  const re = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
   return re.test(uuid)
 }
 
@@ -2117,7 +2117,7 @@ _uuid.prototype.isV4 = function (uuid) {
  * @returns {Boolean} true if the uuid under test is a valid uuid
  **/
 _uuid.prototype.isValid = function (uuid) {
-  var re = /^([a-f\d]{8}(-[a-f\d]{4}){3}-[a-f\d]{12}?)$/i
+  const re = /^([a-f\d]{8}(-[a-f\d]{4}){3}-[a-f\d]{12}?)$/i
   return re.test(uuid)
 }
 
@@ -2147,49 +2147,49 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_RESULT__;(function (glo
   // types
   // ---------------------------------------------------
 
-  var _types = (__webpack_require__(449)/* .types */ .V)
+  const _types = (__webpack_require__(449)/* .types */ .V)
 
   // ---------------------------------------------------
   // uuid
   // ---------------------------------------------------
 
-  var _uuid = (__webpack_require__(781)/* .uuid */ .V)
+  const _uuid = (__webpack_require__(781)/* .uuid */ .V)
 
   // ---------------------------------------------------
   // strings
   // ---------------------------------------------------
 
-  var _strings = (__webpack_require__(313)/* .strings */ .j)
+  const _strings = (__webpack_require__(313)/* .strings */ .j)
 
   // ---------------------------------------------------
   // _dialogs
   // ---------------------------------------------------
 
-  var _dom = (__webpack_require__(171)/* .dom */ .v)
+  const _dom = (__webpack_require__(171)/* .dom */ .v)
 
   // ---------------------------------------------------
   // _dialogs
   // ---------------------------------------------------
 
-  var _dialogs = (__webpack_require__(772)/* .dialogs */ .y)
+  const _dialogs = (__webpack_require__(772)/* .dialogs */ .y)
 
   // ---------------------------------------------------
   // _perms (Permission Keys)
   // ---------------------------------------------------
 
-  var _perms = (__webpack_require__(154)/* .perms */ .Q)
+  const _perms = (__webpack_require__(154)/* .perms */ .Q)
 
   // ---------------------------------------------------
   // _rob (Return Object)
   // ---------------------------------------------------
 
-  var _rob = (__webpack_require__(334)/* .rob */ .S)
+  const _rob = (__webpack_require__(334)/* .rob */ .S)
 
   // ---------------------------------------------------
   // _ajax
   // ---------------------------------------------------
 
-  var _ajax = (__webpack_require__(546)/* .ajax */ .h)
+  const _ajax = (__webpack_require__(546)/* .ajax */ .h)
 
   // ---------------------------------------------------
   // zzb

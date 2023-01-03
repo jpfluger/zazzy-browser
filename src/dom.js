@@ -29,7 +29,7 @@ _dom.prototype.getAttributeElse = function ($elem, name, elseValue) {
     return elseValue
   }
   let value = $elem.getAttribute(name)
-  if (zzb.types.isNonEmptyString(value)) {
+  if (zzb.types.isStringNotEmpty(value)) {
     return value
   }
   return elseValue

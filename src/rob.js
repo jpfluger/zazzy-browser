@@ -2,7 +2,7 @@
 // rob (Return Object)
 // ---------------------------------------------------
 
-var _rob = function () {}
+const _rob = function () {}
 
 _rob.prototype.newROB = function (options) {
   return zzb.types.merge({
@@ -32,7 +32,7 @@ _rob.prototype.newROB = function (options) {
       return (this.recs && Array.isArray(this.recs) && this.recs.length > 0 ? this.recs[0] : null)
     },
     find: function (key, value) {
-      var hit = null
+      let hit = null
       this.recs.forEach(function (rec) {
         if (rec && zzb.types.isObject(rec) && !Array.isArray(rec) && rec[key] === value) {
           hit = rec
@@ -52,7 +52,7 @@ _rob.prototype.toObject = function (errs) {
   if (!errs || !Array.isArray(errs)) {
     return { _system: [errs] }
   }
-  var eo = {}
+  let eo = {}
   errs.forEach(function (err) {
     if (err) {
       if (!err.field) {
@@ -107,7 +107,7 @@ function mergeErrorDefaults (options) {
 
 // Creates a single ROB error object from an object (eg existing error) or from a string
 // options1 could be a string or object, whereas options2 expects an object
-var createError = function (options1, options2) {
+const createError = function (options1, options2) {
   if (!options1) {
     return mergeErrorDefaults()
   }
@@ -125,7 +125,7 @@ _rob.prototype.createError = createError
 // Sanitizes ROB error(s), which could be in the format of a string, array or object
 // Returns null or an array of errors
 _rob.prototype.sanitizeErrors = function (errs) {
-  var newErrs = null
+  let newErrs = null
   if (!errs) {
     return newErrs
   }
@@ -158,11 +158,11 @@ _rob.prototype.toListErrs = function (errs) {
 }
 
 _rob.prototype.toList = function (items) {
-  var arrFields = []
-  var arrSystem = []
+  let arrFields = []
+  let arrSystem = []
 
-  var arrSystemMessages = []
-  var arrFieldMessages = []
+  let arrSystemMessages = []
+  let arrFieldMessages = []
 
   if (items && Array.isArray(items) && items.length > 0) {
     items.forEach(function (item) {

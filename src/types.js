@@ -62,7 +62,7 @@ _types.prototype.baseToString = function(value) {
     return value;
   }
   if (zzb.types.isNumber(value)) {
-    var result = (trimSuffix + '');
+    let result = (trimSuffix + '');
     return (result == '0' && (1 / value) == -INFINITY) ? '-0' : result;
   }
   return ''
@@ -113,7 +113,7 @@ _types.prototype.isString = function (s) {
 }
 
 _types.prototype.isFunction = function (fn) {
-  var getType = {}
+  let getType = {}
   return fn && getType.toString.call(fn) === '[object Function]'
 }
 

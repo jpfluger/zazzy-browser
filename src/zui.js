@@ -1,12 +1,12 @@
 // ---------------------------------------------------
-// _ajax
+// _zui
 // ---------------------------------------------------
 
 // FUTURE
 // 1. Disable back button
 //    https://stackoverflow.com/questions/12381563/how-can-i-stop-the-browser-back-button-using-javascript/34337617#34337617
 
-var _zui = function () {
+const _zui = function () {
   this.zsplitters = {}
 }
 
@@ -28,7 +28,7 @@ function initZSplitter($resizer, direction, arrToggableWidths) {
   }
 
   // set the id, if not present
-  if (!zzb.types.isNonEmptyString($resizer.id)) {
+  if (!zzb.types.isStringNotEmpty($resizer.id)) {
     $resizer.id = 'zsplitter' + zzb.zui.getZSplitters().length + direction
   }
 
@@ -84,7 +84,7 @@ function initZSplitter($resizer, direction, arrToggableWidths) {
   let isClosed = false
   if (doShow) {
     let isFound = false
-    for (var ii = 0; ii < $resizer.attributes.length; ii++) {
+    for (let ii = 0; ii < $resizer.attributes.length; ii++) {
       if ($resizer.attributes[ii].nodeName === 'zsplitter-show') {
         doShow = $resizer.attributes[ii].nodeValue === 'open'
         if (!doShow) {
@@ -231,6 +231,18 @@ _zui.prototype.onLoadInit = function() {
       }
     })
   });
+  document.querySelectorAll('.zuit-eo').forEach(function($elem) {
+    let e1 = $elem.getAttribute('zuitEO1')
+    if (zzb.types.isStringNotEmpty(e1)) {
+      let e2 = $elem.getAttribute('zuitEO2')
+      if (zzb.types.isStringNotEmpty(e2)) {
+        $elem.innerHTML = e1 + '@' + e2
+      }
+    }
+  });
+  document.querySelectorAll('.zuit-year').forEach(function($elem) {
+    $elem.innerHTML = new Date().getFullYear()
+  });
 }
 
 const enLocale = {
@@ -299,7 +311,7 @@ _zui.prototype.onElemInit = function($elem) {
         let isInput = ($elem.nodeName === 'INPUT')
         let dtCache = null
 
-        if (zzb.types.isNonEmptyString(dtAttribs.value)) {
+        if (zzb.types.isStringNotEmpty(dtAttribs.value)) {
           dtCache = (dtAttribs.value === 'now' ? new Date() : new Date(Date.parse(dtAttribs.value)))
         }
 

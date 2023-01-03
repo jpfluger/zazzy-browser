@@ -42,7 +42,7 @@ class ZazzyDialog {
       })
     }
 
-    var self = this
+    const self = this
     this.modal.addEventListener('show.bs.modal', function (ev) {
       if (self.defaultOptions.onShow && zzb.types.isFunction(self.defaultOptions.onShow)) {
         self.defaultOptions.onShow(ev)
@@ -140,7 +140,7 @@ class ZazzyDialog {
   static TYPE_LINK = 'link'
 
   static getDialogDefaults(options) {
-    var dialog = {
+    const dialog = {
       // contains the full html, including id, title, body and buttons already formatted
       htmlDialog: '',
       // The remainder builds the htmlDialog
@@ -173,7 +173,7 @@ class ZazzyDialog {
   }
 
   static getButtonDefaults(options) {
-    var button = {
+    const button = {
       id: null,
       type: ZazzyDialog.TYPE_NONE,
       label: '',
@@ -187,7 +187,7 @@ class ZazzyDialog {
   }
 
   static getButtonPreset(preset, order, max) {
-    var button = ZazzyDialog.getButtonDefaults()
+    let button = ZazzyDialog.getButtonDefaults()
     button.isDismiss = true
 
     if (order === (max - 1)) {
@@ -294,7 +294,7 @@ class ZazzyDialog {
       return document.getElementById(this.getId())
     }
 
-    var options = zzb.types.merge({
+    const options = zzb.types.merge({
       id: this.getId(),
       arialabel: 'arialabel' + this.getId(),
       classBackdrop: this.getClassBackdrop(),
@@ -317,11 +317,11 @@ class ZazzyDialog {
       options.classModalHeader += ' alert-' + options.type
     }
 
-    if (zzb.types.isNonEmptyString(options.classDialog)) {
+    if (zzb.types.isStringNotEmpty(options.classDialog)) {
       options.classDialog = ' ' + options.classDialog
     }
 
-    if (zzb.types.isNonEmptyString(options.classBackdrop)) {
+    if (zzb.types.isStringNotEmpty(options.classBackdrop)) {
       options.classBackdrop = ' ' + options.classBackdrop
     }
 
@@ -342,7 +342,7 @@ class ZazzyDialog {
       //options.noHeaderCloseButtonButton = '<button type="button" class="close" data-bs-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>'
     }
 
-    var template =
+    const template =
       '<div class="modal {classFade} modal-fullscreen{classBackdrop}" {extraAttributes} id="{id}" tabindex="-1" role="dialog" aria-labelledby="{arialabel}" aria-hidden="true">' +
         '<div class="modal-dialog{classVerticalCenter}{classDialog}" role="document">' +
           '<div class="modal-content">' +
@@ -359,19 +359,19 @@ class ZazzyDialog {
 
     // Insert the template prior to adding events
     document.body.insertAdjacentHTML('beforeend', zzb.strings.format(template, options))
-    var $modal = document.getElementById(this.getId())
+    const $modal = document.getElementById(this.getId())
 
     if (!$modal) {
       throw new Error('unexpected that modal has not been created')
     }
 
-    var self = this
+    const self = this
 
     if (!Array.isArray(options.buttons)) {
       options.buttons = []
     }
 
-    var maxButtons = options.buttons.length
+    const maxButtons = options.buttons.length
 
     options.buttons.forEach(function (button, ii) {
       // If button is a string, then it has a predefined 'preset' value that needs assignment.
@@ -429,7 +429,7 @@ class ZazzyDialog {
 // _dialogs
 // ---------------------------------------------------
 
-var _dialogs = function () {
+const _dialogs = function () {
   this.modals = {}
 }
 
@@ -441,7 +441,7 @@ _dialogs.prototype.modal = function (options) {
       return this.modals[options.id]
     }
   }
-  var myModal = new ZazzyDialog(options)
+  const myModal = new ZazzyDialog(options)
   if (myModal && zzb.types.isStringNotEmpty(myModal.getId())) {
     return myModal
   }
@@ -449,7 +449,7 @@ _dialogs.prototype.modal = function (options) {
 }
 
 _dialogs.prototype.showMessage = function (options) {
-  var dialog = zzb.dialogs.modal(zzb.types.merge({
+  const dialog = zzb.dialogs.modal(zzb.types.merge({
     type: ZazzyDialog.TYPE_NONE,
     buttons: [ZazzyDialog.BUTTON_OK]
   }, options))
@@ -460,7 +460,7 @@ _dialogs.prototype.showMessage = function (options) {
 }
 
 _dialogs.prototype.showMessageChoice = function (options) {
-  var dialog = zzb.dialogs.modal(zzb.types.merge({
+  const dialog = zzb.dialogs.modal(zzb.types.merge({
     type: ZazzyDialog.TYPE_NONE,
     buttons: [
       ZazzyDialog.BUTTON_CANCEL,
@@ -480,7 +480,7 @@ _dialogs.prototype.showMessageChoice = function (options) {
 }
 
 _dialogs.prototype.handleError = function (options) {
-  var template = '<div class="zzb-dialog-errors">{errors}</div>' +
+  const template = '<div class="zzb-dialog-errors">{errors}</div>' +
     '<div class="zzb-dialog-message">{message}</div>'
 
   // this.dialogs.handleError({log: 'failed to retrieve login dialog form: ' + err, title: 'Unknown error', message: 'An unknown communications error occurred while retrieving the login form. Please check your connection settings and try again.'})
@@ -509,7 +509,7 @@ _dialogs.prototype.handleError = function (options) {
 
   if (!zzb.types.isStringNotEmpty(options.errors)) {
     if (zzb.types.isArray(options.errs)) {
-      var arrHtml = []
+      const arrHtml = []
 
       options.errs.forEach(function (err, index) {
         if (err.message && zzb.types.isStringNotEmpty(err.message)) {

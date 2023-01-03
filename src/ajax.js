@@ -43,15 +43,15 @@ _ajax.prototype.request = function(options, callback) {
     })
     .then(function (data) {
 
-      var objReturn = {request: options, data: data}
+      const objReturn = {request: options, data: data}
 
       // allow an escape
       if (objReturn.request.RAWRETURN === true) {
         return callback(objReturn, null)
       }
 
-      var noFinalResolve = false
-      var rob = zzb.rob.newROB()
+      let noFinalResolve = false
+      const rob = zzb.rob.newROB()
 
       if (objReturn.request.expectType !== 'json') {
         // html or some other data type was returned
@@ -69,7 +69,7 @@ _ajax.prototype.request = function(options, callback) {
               return
             } else if (zzb.types.isStringNotEmpty(data.message)) {
               zzb.dialogs.showMessage({
-                type: zzb.types.isNonEmptyString(data.messageType) ? data.messageType : null,
+                type: zzb.types.isStringNotEmpty(data.messageType) ? data.messageType : null,
                 classDialog: 'zzb-dialog-flash-message zzb-dialog-flash-redirect' + zzb.strings.mergeElseEmpty(' zzb-dialog-flash-status-{0}', data.messageType),
                 dataBackdrop: 'static',
                 body: data.message,
@@ -130,7 +130,7 @@ _ajax.prototype.request = function(options, callback) {
           if (zzb.types.isStringNotEmpty(data.message)) {
             noFinalResolve = true
             zzb.dialogs.showMessage({
-              type: zzb.types.isNonEmptyString(data.messageType) ? data.messageType : null,
+              type: zzb.types.isStringNotEmpty(data.messageType) ? data.messageType : null,
               classDialog: 'zzb-dialog-flash-message' + zzb.strings.mergeElseEmpty(' zzb-dialog-flash-status-{0}', data.messageType, rob.hasErrors() ? 'error' : 'okay'),
               dataBackdrop: 'static',
               body: data.message,
@@ -248,7 +248,7 @@ _ajax.prototype.postJSON = function (options, callback) {
   zzb.ajax.request(options, callback)
 }
 
-var AjaxMessage = function (options) {}
+const AjaxMessage = function (options) {}
 
 // Default message is AjaxMessage.MSG_FAILED_ACTION_UNEXPECTED
 // If options.SHOWCATCHMESSAGE is true, then the following is appended to it: + '<div class="zzb-dialog-error-catch">Error: ' + caught err.message + '</div>'

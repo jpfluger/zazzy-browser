@@ -453,7 +453,7 @@ describe('Validate zzb.string methods', function () {
       let arr = ['hello', 'world', false, true, 0, 1, 1.1]
       for (let ii = 0; ii < arr.length; ii++) {
         let value = zzb.strings.parseTypeElse(arr[ii], 'string', '')
-        if (!zzb.types.isNonEmptyString(value)) {
+        if (!zzb.types.isStringNotEmpty(value)) {
           //console.log(ii, arr[ii], value)
           err = new Error('parseTypeElse should not be empty from parameter ' + ii + ' (='+ arr[ii] + ') and value=' + value)
           break

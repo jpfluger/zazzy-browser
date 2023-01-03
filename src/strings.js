@@ -2,10 +2,10 @@
 // strings
 // ---------------------------------------------------
 
-var _strings = function () {}
+const _strings = function () {}
 
 function ValueError (message) {
-  var err = new Error(message)
+  let err = new Error(message)
   err.name = 'ValueError'
   return err
 }
@@ -15,14 +15,14 @@ function ValueError (message) {
 // zzb.strings.format('{0}, you have {1} mushroom{2}', 'Piggy', 2, 's')
 // zzb.strings.format('{0}, you have {1} mushroom{2}', ['Piggy', 2, 's'])
 // zzb.strings.format('{name}, you have {number} mushroom{ending}', {name: 'Piggy', number: 2, ending: 's'})
-var formatString = function (transformers) {
+const formatString = function (transformers) {
   return function (template) {
-    var args = Array.prototype.slice.call(arguments, 1)
-    var idx = 0
-    var state = 'UNDEFINED'
+    let args = Array.prototype.slice.call(arguments, 1)
+    let idx = 0
+    let state = 'UNDEFINED'
 
     if (Array.isArray(args) && args.length > 0 && Array.isArray(args[0])) {
-      var tmpArr = args[0].map(function (s) {
+      let tmpArr = args[0].map(function (s) {
         return s
       })
       args = tmpArr
@@ -34,7 +34,7 @@ var formatString = function (transformers) {
         if (literal != null) {
           return literal
         }
-        var key = _key
+        let key = _key
         if (key.length > 0) {
           if (state === 'IMPLICIT') {
             throw ValueError('cannot switch from ' +
@@ -57,8 +57,8 @@ var formatString = function (transformers) {
         //      succeeds the result is a singleton array containing the
         //      value at the lookup path; otherwise the result is [].
         //  4.  Unwrap the result by reducing with '' as the default value.
-        var path = key.split('.')
-        var value = (/^\d+$/.test(path[0]) ? path : ['0'].concat(path))
+        let path = key.split('.')
+        let value = (/^\d+$/.test(path[0]) ? path : ['0'].concat(path))
           .reduce(function (maybe, key) {
             return maybe.reduce(function (_, x) {
               return x != null && key in Object(x) ? [typeof x[key] === 'function' ? x[key]() : x[key]] : []
@@ -96,7 +96,7 @@ _strings.prototype.format = formatString({})
  * @returns {String} a merging of object with the supplied template
  **/
 _strings.prototype.formatEmpty = function (template) {
-  var args = Array.prototype.slice.call(arguments, 1)
+  let args = Array.prototype.slice.call(arguments, 1)
   if (Array.isArray(args)) {
     return template.replace(/{(\d+)}/g, function (match, number) {
       return typeof args[number] !== 'undefined'
@@ -151,7 +151,7 @@ _strings.prototype.joinArrToCommas = function (arr, fieldName) {
     return ''
   }
   return arr.map(arr, function (obj, idx) {
-    var comma = ''
+    let comma = ''
     if (idx < (arr.index - 1)) {
       comma = ''
     }
@@ -211,10 +211,10 @@ _strings.prototype.toFirstCapitalEndPeriod = function (target) {
   return target
 }
 
-var sizeUnitsFormatNameSingle = ['K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y']
-var sizeUnitsFormatNameDouble = ['KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
-var sizeUnitsFormatNameFull = ['Kilobyte', 'Megabyte', 'Gigabyte', 'Terabyte', 'Petabyte', 'Exabyte', 'Zettabyte', 'Yottabyte']
-var sizeUnitsFormatNameEIC = ['KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB']
+const sizeUnitsFormatNameSingle = ['K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y']
+const sizeUnitsFormatNameDouble = ['KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
+const sizeUnitsFormatNameFull = ['Kilobyte', 'Megabyte', 'Gigabyte', 'Terabyte', 'Petabyte', 'Exabyte', 'Zettabyte', 'Yottabyte']
+const sizeUnitsFormatNameEIC = ['KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB']
 
 // From https://stackoverflow.com/questions/10420352/converting-file-size-in-bytes-to-human-readable-string/10420404
 //      https://ux.stackexchange.com/questions/13815/files-size-units-kib-vs-kb-vs-kb
@@ -224,7 +224,7 @@ _strings.prototype.sizeToHumanReadable = function (bytes, unitsFormat, noSizeUni
   if (!zzb.types.isStringNotEmpty(unitsFormat)) {
     unitsFormat = 'single'
   }
-  var unitSeperateSpace = ' '
+  let unitSeperateSpace = ' '
   if (noSizeUnitSeparation === true) {
     unitSeperateSpace = ''
   }
@@ -232,10 +232,10 @@ _strings.prototype.sizeToHumanReadable = function (bytes, unitsFormat, noSizeUni
     dp = 1
   }
 
-  var thresh = 1024 // si ? 1000 : 1024
+  let thresh = 1024 // si ? 1000 : 1024
 
-  var units
-  var unitsBytes = 'B'
+  let units
+  let unitsBytes = 'B'
   switch (unitsFormat.toLowerCase()) {
     case 'full':
       units = sizeUnitsFormatNameFull
@@ -256,19 +256,19 @@ _strings.prototype.sizeToHumanReadable = function (bytes, unitsFormat, noSizeUni
     return bytes + unitSeperateSpace + unitsBytes
   }
 
-  // var units = si
+  // let units = si
   //   ? ['kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
   //   : ['KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB']
-  var u = -1
-  // var r = 10 ** dp
-  var r = Math.pow(dp, 10)
+  let u = -1
+  // let r = 10 ** dp
+  let r = Math.pow(dp, 10)
 
   do {
     bytes /= thresh
     ++u
   } while (Math.round(Math.abs(bytes) * r) / r >= thresh && u < units.length - 1)
 
-  var valFixed = bytes.toFixed(dp) + ''
+  let valFixed = bytes.toFixed(dp) + ''
   valFixed = zzb.strings.trimSuffix(valFixed, ['.00', '.0'])
 
   return valFixed + unitSeperateSpace + units[u]
@@ -276,13 +276,13 @@ _strings.prototype.sizeToHumanReadable = function (bytes, unitsFormat, noSizeUni
 
 _strings.prototype.trimPrefix = function(target, prefix) {
   target = zzb.types.toString(target)
-  var arr = []
+  let arr = []
   if (!zzb.types.isArray(prefix)) {
     arr.push(zzb.types.toString(prefix))
   } else {
     arr = prefix
   }
-  for (var ii = 0; ii < arr.length; ii++) {
+  for (let ii = 0; ii < arr.length; ii++) {
     if (target.startsWith(arr[ii])) {
       return target.slice(arr[ii])
     }
@@ -292,13 +292,13 @@ _strings.prototype.trimPrefix = function(target, prefix) {
 
 _strings.prototype.trimSuffix = function(target, suffix) {
   target = zzb.types.toString(target)
-  var arr = []
+  let arr = []
   if (!zzb.types.isArray(suffix)) {
     arr.push(zzb.types.toString(suffix))
   } else {
     arr = suffix
   }
-  for (var ii = 0; ii < arr.length; ii++) {
+  for (let ii = 0; ii < arr.length; ii++) {
     if (target.endsWith(arr[ii])) {
       return target.slice(0, arr[ii].length * -1)
     }
@@ -308,12 +308,12 @@ _strings.prototype.trimSuffix = function(target, suffix) {
 
 // https://stackoverflow.com/questions/8211744/convert-time-interval-given-in-seconds-into-more-human-readable-form
 _strings.prototype.millisecondsTimeToHumanReadable = function (milliseconds) {
-  var temp = milliseconds / 1000
-  var years = Math.floor(temp / 31536000)
-  var days = Math.floor((temp %= 31536000) / 86400)
-  var hours = Math.floor((temp %= 86400) / 3600)
-  var minutes = Math.floor((temp %= 3600) / 60)
-  var seconds = temp % 60
+  let temp = milliseconds / 1000
+  const years = Math.floor(temp / 31536000)
+  const days = Math.floor((temp %= 31536000) / 86400)
+  const hours = Math.floor((temp %= 86400) / 3600)
+  const minutes = Math.floor((temp %= 3600) / 60)
+  const seconds = temp % 60
 
   if (days || hours || seconds || minutes) {
     return (years ? years + 'y ' : '') +
@@ -327,7 +327,7 @@ _strings.prototype.millisecondsTimeToHumanReadable = function (milliseconds) {
 }
 
 _strings.prototype.toBool = function (target) {
-  if (!zzb.types.isNonEmptyString(target)) {
+  if (!zzb.types.isStringNotEmpty(target)) {
     return (target)
   }
   switch(target.toLowerCase().trim()){
@@ -391,7 +391,7 @@ _strings.prototype.parseTypeElse = function (target, type, elseif, forceArray) {
           break
         case 'date':
         case 'date-iso':
-          target[ii] = zzb.types.isNonEmptyString(target[ii]) ? target[ii] : elseif
+          target[ii] = zzb.types.isStringNotEmpty(target[ii]) ? target[ii] : elseif
           break
         default:
           if (!zzb.types.isString(target[ii])) {

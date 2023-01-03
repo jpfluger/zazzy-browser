@@ -16,49 +16,49 @@
   // types
   // ---------------------------------------------------
 
-  var _types = require('./types.js').types
+  const _types = require('./types.js').types
 
   // ---------------------------------------------------
   // uuid
   // ---------------------------------------------------
 
-  var _uuid = require('./uuid.js').uuid
+  const _uuid = require('./uuid.js').uuid
 
   // ---------------------------------------------------
   // strings
   // ---------------------------------------------------
 
-  var _strings = require('./strings.js').strings
+  const _strings = require('./strings.js').strings
 
   // ---------------------------------------------------
   // _dialogs
   // ---------------------------------------------------
 
-  var _dom = require('./dom.js').dom
+  const _dom = require('./dom.js').dom
 
   // ---------------------------------------------------
   // _dialogs
   // ---------------------------------------------------
 
-  var _dialogs = require('./dialogs.js').dialogs
+  const _dialogs = require('./dialogs.js').dialogs
 
   // ---------------------------------------------------
   // _perms (Permission Keys)
   // ---------------------------------------------------
 
-  var _perms = require('./perms.js').perms
+  const _perms = require('./perms.js').perms
 
   // ---------------------------------------------------
   // _rob (Return Object)
   // ---------------------------------------------------
 
-  var _rob = require('./rob.js').rob
+  const _rob = require('./rob.js').rob
 
   // ---------------------------------------------------
   // _ajax
   // ---------------------------------------------------
 
-  var _ajax = require('./ajax.js').ajax
+  const _ajax = require('./ajax.js').ajax
 
   // ---------------------------------------------------
   // zzb

@@ -2,7 +2,7 @@
 // uuid
 // ---------------------------------------------------
 
-var _uuid = function () {}
+const _uuid = function () {}
 
 /**
  * zzb.uuid.newV4
@@ -20,26 +20,26 @@ var _uuid = function () {}
  */
 _uuid.prototype.newV4 = function () {
   function generateNumber(limit) {
-    var value = limit * Math.random();
+    let value = limit * Math.random();
     return value | 0;
   }
 
   function generateX() {
-    var value = generateNumber(16);
+    let value = generateNumber(16);
     return value.toString(16);
   }
 
   function generateXes(count) {
-    var result = '';
-    for(var i = 0; i < count; ++i) {
+    let result = '';
+    for(let i = 0; i < count; ++i) {
       result += generateX();
     }
     return result;
   }
 
   function generateVariant() {
-    var value = generateNumber(16);
-    var variant =  (value & 0x3) | 0x8;
+    let value = generateNumber(16);
+    let variant =  (value & 0x3) | 0x8;
     return variant.toString(16);
   }
 
@@ -63,7 +63,7 @@ _uuid.prototype.newV4 = function () {
  * @returns {Boolean} true if the uuid under test is a valid uuid
  **/
 _uuid.prototype.isV4 = function (uuid) {
-  var re = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+  const re = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
   return re.test(uuid)
 }
 
@@ -80,7 +80,7 @@ _uuid.prototype.isV4 = function (uuid) {
  * @returns {Boolean} true if the uuid under test is a valid uuid
  **/
 _uuid.prototype.isValid = function (uuid) {
-  var re = /^([a-f\d]{8}(-[a-f\d]{4}){3}-[a-f\d]{12}?)$/i
+  const re = /^([a-f\d]{8}(-[a-f\d]{4}){3}-[a-f\d]{12}?)$/i
   return re.test(uuid)
 }
 
