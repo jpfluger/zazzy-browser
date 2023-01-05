@@ -1,4 +1,4 @@
-//! zzb.ui.js v2.5.0 (https://github.com/jpfluger/zazzy-browser)
+//! zzb.ui.js v2.6.0 (https://github.com/jpfluger/zazzy-browser)
 //! MIT License; Copyright 2017-2021 Jaret Pfluger
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
@@ -451,7 +451,12 @@ class ZazzyDialog {
       doVerticalCenter: true,
       doAutoDestroy: true,
       forceNoBootstrap: false,
-      hasAutoBackdrop: false
+      hasAutoBackdrop: false,
+      isScrollable: false,
+      isNoFooter: false,
+      classWidthMod: '',
+      isFullscreen: false,
+      classFullscreenMod: ''
       // underlay: {
       //   isOn: false,
       //   id: null,
@@ -597,9 +602,13 @@ class ZazzyDialog {
       noHeaderCloseButton: false,
       noHeaderCloseButtonButton: '',
       dataKeyboard: null,
+      classScrollable: (this.defaultOptions.isScrollable ? ' modal-dialog-scrollable' : ''),
+      classNoFooter: (this.defaultOptions.isNoFooter ? ' d-none' : ''),
+      classWidthMod: '',
+      classFullscreen: ''
     }, this.defaultOptions)
 
-    options.classFade = 'fade'
+    options.classFade = ' fade'
     if (zzb.types.isBoolean(options.noFade) && options.noFade === true) {
       options.classFade = ''
     }
@@ -624,6 +633,17 @@ class ZazzyDialog {
       options.extraAttributes += ' data-bs-backdrop="' + options.dataBackdrop + '"'
     }
 
+    if (zzb.types.isStringNotEmpty(options.classWidthMod)) {
+      options.classWidthMod = ' modal-' + options.classWidthMod
+    }
+
+    if (options.isFullscreen == true) {
+      options.classFullscreen = ' modal-fullscreen'
+      if (zzb.types.isStringNotEmpty(options.classFullscreenMod)) {
+        options.classFullscreen = options.classFullscreen + '-' + options.classFullscreenMod + '-down'
+      }
+    }
+
     if (zzb.types.isBoolean(options.dataKeyboard)) {
       options.extraAttributes += ' data-bs-keyboard="' + options.dataKeyboard + '"'
     }
@@ -634,15 +654,15 @@ class ZazzyDialog {
     }
 
     const template =
-      '<div class="modal {classFade} modal-fullscreen{classBackdrop}" {extraAttributes} id="{id}" tabindex="-1" role="dialog" aria-labelledby="{arialabel}" aria-hidden="true">' +
-        '<div class="modal-dialog{classVerticalCenter}{classDialog}" role="document">' +
+      '<div class="modal{classFade}{classBackdrop}" {extraAttributes} id="{id}" tabindex="-1" role="dialog" aria-labelledby="{arialabel}" aria-hidden="true">' +
+        '<div class="modal-dialog{classVerticalCenter}{classFullscreen}{classWidthMod}{classScrollable}{classDialog}" role="document">' +
           '<div class="modal-content">' +
             '<div class="modal-header{classModalHeader}">' +
               '<h5 class="modal-title" id="{arialabel}">{title}</h5>' +
               '{noHeaderCloseButtonButton}' +
             '</div>' +
             '<div class="modal-body">{body}</div>' +
-            '<div class="modal-footer">' +
+            '<div class="modal-footer{classNoFooter}">' +
             '</div>' +
           '</div>' +
         '</div>' +
@@ -2197,12 +2217,14 @@ On the element itself:
 
     * `za-inject`: The element targeted for injection by the results of an action in a format similar to za-data.
 
-    * `zchange`: The element having this class will have its data-state checked for any changes and, if any, then `ztoggler` gets fired.
-    * `ztoggler`: An attribute on an element having class `zchange`.
-                  It points to the id of the element that should be toggled should any changes happen to child elements having class `zchange-field`.
+    * `zinput`: The element having this class will have its data-state checked for any changes and, if any, then `ztoggler` gets fired.
+    * `zinput-event`: Default is `input`. For example, specify `change` for a change event.
+    * `zinput-field`: An `input`, `select` or `textarea` that should get an input handler. For textarea, set `zinput-event` to `change`.
+    * `ztoggler`: An attribute on an element having class `zinput`.
+                  It points to the id of the element that should be toggled should any changes happen to child elements having class `zinput-field`.
                   These are elements that have the `input` event fired.
     * `ztoggler-display`: `disabled` or `none`. Default is `none`. If none, the target ztoggler element will not show unless there is a data-state change.
-    * `zref-zchange-ptr`: The `zchange` loader will auto-place this on the `ztoggler` element as a reference back to the `zchange` parent.
+    * `zref-zinput-ptr`: The `zinput` loader will auto-place this on the `ztoggler` element as a reference back to the `zinput` parent.
                           It is required for post-zaction functionality.
 
     * `za-dlg`: The selector to the element having dlg attributes in a format similar to za-data.
@@ -2221,6 +2243,16 @@ On the element itself:
       * zdlg-alt-class-backdrop="class2 class3" // Add classes to the backdrop of a .modal-dialog. The backdrop class is already "fullscreen".
       * zdlg-class="modal-fullscreen class2 class3" // Add classes to a .modal-dialog.
       * zdlg-alt-class="modal-fullscreen class2 class3" // Add classes to a .modal-dialog.
+      * zdlg-class-width-mod="sm | lg | xl" // Adds optional size to dialog width, even if the server sends data to use.
+      * zdlg-alt-class-width-mod="sm | lg | xl" // Use this when server does not send data.
+      * zdlg-class-fullscreen-mod="sm | md | lg | xl | xxl" // Adds optional fullscreen down-sizing width, even if the server sends data to use.
+      * zdlg-alt-class-fullscreen-mod="sm | md | lg | xl | xxl" // Use this when server does not send data.
+      * zdlg-is-scrollable="true | false" // Adds scrollbars to dialog, even if the server sends data to use.
+      * zdlg-alt-is-scrollable="true | false" // Use this when server does not send data.
+      * zdlg-is-fullscreen="true | false" // Adds fullscreen to dialog, even if the server sends data to use. Optionally use in conjunction with `zdlg-class-fullscreen-mod .
+      * zdlg-alt-is-fullscreen="true | false" // Use this when server does not send data.
+      * zdlg-is-no-footer="true | false" // Hides the footer completely, even if the server sends data to use.
+      * zdlg-alt-is-no-footer="true | false" // Use this when server does not send data.
 
     REMOVED: DOM Manipulation (this was tucked inside handleZUrlAction)
     * `za-post-inject-action`:  Optional action to run after injection. Current supported is 'delete' inside handleZUrlAction.
@@ -2605,7 +2637,6 @@ _zaction.prototype.newZAction = function(ev) {
       // transition from string to boolean
       if (this._options.zdlg) {
         this._options.zdlg.tryDialog = Object.keys(this._options.zdlg).length > 0
-        this._options.zdlg.noHeaderCloseButton = this._options.zdlg.noHeaderCloseButton === "true"
       }
 
       if (!this._options.forceIgnoreZUrl) {
@@ -3065,6 +3096,8 @@ function handleDialog(zaction, callback, results) {
       //       inside '.modal-body', which is what the logic below does.
       if ($elem) {
 
+        zzb.zaction.loadZInputs($elem)
+
         if (zzb.zui) {
           zzb.zui.onElemInit($elem)
         }
@@ -3141,10 +3174,12 @@ function handleDialog(zaction, callback, results) {
   dlgOptions.classBackdrop = findDlgAjaxValue(zaction, results, 'classBackdrop', 'altClassBackdrop', false)
   dlgOptions.classDialog = findDlgAjaxValue(zaction, results, 'class', 'altClass', false)
   dlgOptions.dataBackdrop = ''
-
-  if (zaction.getOptions().zdlg.noHeaderCloseButton === true || results.js.noHeaderCloseButton === true) {
-    dlgOptions.noHeaderCloseButton = true
-  }
+  dlgOptions.classWidthMod = findDlgAjaxValue(zaction, results, 'classWidthMod', 'altClassWidthMod', false)
+  dlgOptions.classFullscreenMod = findDlgAjaxValue(zaction, results, 'classFullscreenMod', 'altClassFullscreenMod', false)
+  dlgOptions.isScrollable = findDlgAjaxValue(zaction, results, 'isScrollable', 'altIsScrollable', false) === 'true'
+  dlgOptions.isFullscreen = findDlgAjaxValue(zaction, results, 'isFullscreen', 'altIsFullscreen', false) === 'true'
+  dlgOptions.isNoFooter = findDlgAjaxValue(zaction, results, 'isNoFooter', 'altIsNoFooter', false) === 'true'
+  dlgOptions.noHeaderCloseButton = (zaction.getOptions().zdlg.noHeaderCloseButton === 'true' || results.js.noHeaderCloseButton === true)
 
   let dlgTheme = null
   dlgTheme = findDlgAjaxValue(zaction, results, 'theme', 'altTheme', false)
@@ -3362,8 +3397,8 @@ function handleZUrlAction(zaction, callback, doFormUpdate) {
         runInjects(zaction.getOptions().arrInjects, drr.rob.first().dInjects)
       }
       let zref = zaction.getOptions().zref
-      if (zref && zzb.types.isStringNotEmpty(zref.zchangePtr)) {
-        zzb.zaction.loadZChanges(document.getElementById(zref.zchangePtr))
+      if (zref && zzb.types.isStringNotEmpty(zref.zinputPtr)) {
+        zzb.zaction.loadZInputs(document.getElementById(zref.zinputPtr))
       }
     }
 
@@ -3484,7 +3519,7 @@ _zaction.prototype.runZLoadActions = function($parent) {
       $elem.dispatchEvent(new CustomEvent('zload-action'))
     })
   }
-  zzb.zaction.loadZChanges($parent)
+  zzb.zaction.loadZInputs($parent)
   if ($parent.tagName && zzb.types.isStringNotEmpty($parent.tagName)) {
     const $autoF = $parent.querySelector('.zui-autofocus')
     if ($autoF && zzb.types.isObject($autoF)) {
@@ -3493,55 +3528,86 @@ _zaction.prototype.runZLoadActions = function($parent) {
   }
 }
 
-const cacheZChanges = {}
+const cacheZInputs = {}
 
-_zaction.prototype.loadZChanges = function($parent) {
+_zaction.prototype.loadZInputs = function($parent) {
   if (!$parent) {
     $parent = document
   }
   const fnToggle = function ($toggler, useDisabled, noChange) {
     if (noChange) {
-      useDisabled ? $toggler.disabled = false : $toggler.classList.add('d-none')
+      useDisabled ? $toggler.disabled = true : $toggler.classList.add('d-none')
     } else {
-      useDisabled ? $toggler.disabled = true : $toggler.classList.remove('d-none')
+      useDisabled ? $toggler.disabled = false : $toggler.classList.remove('d-none')
     }
+  }
+  const fnUpdateToggler = function(id, $toggler, useDisabled) {
+    let noChange = true
+    for (const [ key, value ] of Object.entries(cacheZInputs[id].changes)) {
+      if (value === false) {
+        noChange = false
+      }
+    }
+    fnToggle($toggler, useDisabled, noChange)
+  }
+  const fnFindFieldType = function($field) {
+    let fldType = $field.getAttribute('type')
+    return fldType ? fldType.toLowerCase() : $field.tagName.toLowerCase()
   }
   const fnDetectChanges = function($elem) {
     let id = $elem.getAttribute('id')
     if (!zzb.types.isStringNotEmpty(id)) {
-      id = zzb.uuid.newV4()
+      id = zzb.uuid.newV4().replace(/-/g, '')
       $elem.setAttribute('id', id)
     }
     let $toggler = document.getElementById($elem.getAttribute('ztoggler'))
     if (zzb.types.isObject($toggler)) {
-      $toggler.setAttribute('zref-zchange-ptr', id)
+      $toggler.setAttribute('zref-zinput-ptr', id)
       let useDisabled = $toggler.getAttribute('ztoggler-display') === 'disabled'
       fnToggle($toggler, useDisabled, true)
-      cacheZChanges[id] = {originals:{},changes:{}}
-      let $fields = $elem.querySelectorAll('.zchange-field')
+      cacheZInputs[id] = {originals:{},changes:{}}
+      let $fields = $elem.querySelectorAll('.zinput-field')
       if ($fields) {
-        $elem.querySelectorAll('.zchange-field').forEach(function($field) {
-          if (zzb.types.isStringNotEmpty($field.getAttribute('name'))) {
-            cacheZChanges[id].originals[$field.getAttribute('name')] = $field.value
-            $field.addEventListener('input', function(e) {
-              cacheZChanges[id].changes[e.target.name] = (cacheZChanges[id].originals[e.target.name] === e.target.value)
-              let noChange = true
-              for (const [ key, value ] of Object.entries(cacheZChanges[id].changes)) {
-                if (value === false) {
-                  noChange = false
+        $elem.querySelectorAll('.zinput-field').forEach(function($field) {
+          const fldName = $field.getAttribute('name')
+          if (zzb.types.isStringNotEmpty(fldName)) {
+            const fldType = fnFindFieldType($field)
+            if (fldType === 'checkbox' || fldType === 'radio') {
+              cacheZInputs[id].originals[fldName] = $field.checked + ''
+            } else {
+              cacheZInputs[id].originals[fldName] = $field.value
+            }
+            let chEvent = $field.getAttribute('zinput-event')
+            if (zzb.types.isStringEmpty(chEvent)) {
+              chEvent = 'input'
+            }
+            const zInputEvent = $field.getAttribute('zinput-event')
+            if (zInputEvent === 'change') {
+              $field.addEventListener('change', function (e) {
+                if (fldType === 'checkbox' || fldType === 'radio') {
+                  cacheZInputs[id].changes[fldName] = cacheZInputs[id].originals[fldName] === this.checked + ''
+                } else if (fldType === 'textarea') {
+                  cacheZInputs[id].changes[fldName] = cacheZInputs[id].originals[fldName] === this.value
+                } else {
+                  cacheZInputs[id].changes[e.target.name] = cacheZInputs[id].originals[e.target.name] === e.target.value
                 }
-              }
-              fnToggle($toggler, useDisabled, noChange)
-            })
+                fnUpdateToggler(id, $toggler, useDisabled)
+              })
+            } else {
+              $field.addEventListener('input', function(e) {
+                cacheZInputs[id].changes[e.target.name] = cacheZInputs[id].originals[e.target.name] === e.target.value
+                fnUpdateToggler(id, $toggler, useDisabled)
+              })
+            }
           }
         })
       }
     }
   }
-  if ($parent.tagName && $parent['classList'] && $parent.classList.contains('zchange')) {
+  if ($parent.tagName && $parent['classList'] && $parent.classList.contains('zinput')) {
     fnDetectChanges($parent)
   } else {
-    let $elems = $parent.querySelectorAll('.zchange')
+    let $elems = $parent.querySelectorAll('.zinput')
     if ($elems) {
       $elems.forEach(function($elem) {
         fnDetectChanges($elem)
@@ -3594,6 +3660,7 @@ exports.n = _zaction
 
 const _zui = function () {
   this.zsplitters = {}
+  this.elemIniters = []
 }
 
 function initZSplitter($resizer, direction, arrToggableWidths) {
@@ -3863,10 +3930,32 @@ _zui.prototype.getLocale = function(locale, callback) {
   }
 }
 
+_zui.prototype.setElemIniter = function(target) {
+  let initer = zzb.types.merge({name:null, fn: null}, target)
+  if (initer.name && initer.fn) {
+    let isFound = false
+    for (let ii = 0; ii < this.elemIniters.length; ii++) {
+      if (this.elemIniters[ii].name === initer.name) {
+        this.elemIniters[ii] = intiter
+        isFound = true
+        break
+      }
+    }
+    if (!isFound) {
+      this.elemIniters.push(initer)
+    }
+  }
+}
+
 _zui.prototype.onElemInit = function($elem) {
   if (!$elem) {
     $elem = document.body
   }
+
+  for (let ii = 0; ii < this.elemIniters.length; ii++) {
+    this.elemIniters[ii].fn($elem)
+  }
+
   // Date/Time Picker
   // https://air-datepicker.com/
   if (typeof AirDatepicker !== 'undefined') {

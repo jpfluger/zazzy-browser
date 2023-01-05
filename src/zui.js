@@ -8,6 +8,7 @@
 
 const _zui = function () {
   this.zsplitters = {}
+  this.elemIniters = []
 }
 
 function initZSplitter($resizer, direction, arrToggableWidths) {
@@ -277,10 +278,32 @@ _zui.prototype.getLocale = function(locale, callback) {
   }
 }
 
+_zui.prototype.setElemIniter = function(target) {
+  let initer = zzb.types.merge({name:null, fn: null}, target)
+  if (initer.name && initer.fn) {
+    let isFound = false
+    for (let ii = 0; ii < this.elemIniters.length; ii++) {
+      if (this.elemIniters[ii].name === initer.name) {
+        this.elemIniters[ii] = intiter
+        isFound = true
+        break
+      }
+    }
+    if (!isFound) {
+      this.elemIniters.push(initer)
+    }
+  }
+}
+
 _zui.prototype.onElemInit = function($elem) {
   if (!$elem) {
     $elem = document.body
   }
+
+  for (let ii = 0; ii < this.elemIniters.length; ii++) {
+    this.elemIniters[ii].fn($elem)
+  }
+
   // Date/Time Picker
   // https://air-datepicker.com/
   if (typeof AirDatepicker !== 'undefined') {

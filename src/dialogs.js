@@ -160,7 +160,12 @@ class ZazzyDialog {
       doVerticalCenter: true,
       doAutoDestroy: true,
       forceNoBootstrap: false,
-      hasAutoBackdrop: false
+      hasAutoBackdrop: false,
+      isScrollable: false,
+      isNoFooter: false,
+      classWidthMod: '',
+      isFullscreen: false,
+      classFullscreenMod: ''
       // underlay: {
       //   isOn: false,
       //   id: null,
@@ -306,9 +311,13 @@ class ZazzyDialog {
       noHeaderCloseButton: false,
       noHeaderCloseButtonButton: '',
       dataKeyboard: null,
+      classScrollable: (this.defaultOptions.isScrollable ? ' modal-dialog-scrollable' : ''),
+      classNoFooter: (this.defaultOptions.isNoFooter ? ' d-none' : ''),
+      classWidthMod: '',
+      classFullscreen: ''
     }, this.defaultOptions)
 
-    options.classFade = 'fade'
+    options.classFade = ' fade'
     if (zzb.types.isBoolean(options.noFade) && options.noFade === true) {
       options.classFade = ''
     }
@@ -333,6 +342,17 @@ class ZazzyDialog {
       options.extraAttributes += ' data-bs-backdrop="' + options.dataBackdrop + '"'
     }
 
+    if (zzb.types.isStringNotEmpty(options.classWidthMod)) {
+      options.classWidthMod = ' modal-' + options.classWidthMod
+    }
+
+    if (options.isFullscreen == true) {
+      options.classFullscreen = ' modal-fullscreen'
+      if (zzb.types.isStringNotEmpty(options.classFullscreenMod)) {
+        options.classFullscreen = options.classFullscreen + '-' + options.classFullscreenMod + '-down'
+      }
+    }
+
     if (zzb.types.isBoolean(options.dataKeyboard)) {
       options.extraAttributes += ' data-bs-keyboard="' + options.dataKeyboard + '"'
     }
@@ -343,15 +363,15 @@ class ZazzyDialog {
     }
 
     const template =
-      '<div class="modal {classFade} modal-fullscreen{classBackdrop}" {extraAttributes} id="{id}" tabindex="-1" role="dialog" aria-labelledby="{arialabel}" aria-hidden="true">' +
-        '<div class="modal-dialog{classVerticalCenter}{classDialog}" role="document">' +
+      '<div class="modal{classFade}{classBackdrop}" {extraAttributes} id="{id}" tabindex="-1" role="dialog" aria-labelledby="{arialabel}" aria-hidden="true">' +
+        '<div class="modal-dialog{classVerticalCenter}{classFullscreen}{classWidthMod}{classScrollable}{classDialog}" role="document">' +
           '<div class="modal-content">' +
             '<div class="modal-header{classModalHeader}">' +
               '<h5 class="modal-title" id="{arialabel}">{title}</h5>' +
               '{noHeaderCloseButtonButton}' +
             '</div>' +
             '<div class="modal-body">{body}</div>' +
-            '<div class="modal-footer">' +
+            '<div class="modal-footer{classNoFooter}">' +
             '</div>' +
           '</div>' +
         '</div>' +
