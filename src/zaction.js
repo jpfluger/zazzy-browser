@@ -65,6 +65,8 @@ On the element itself:
                      za-data="label.closest@outer:criteria" // outerHTML
 
     * `za-inject`: The element targeted for injection by the results of an action in a format similar to za-data.
+    * `za-post-save`: The elements targeted to invoke after a normal zaction, if no errors.
+                      It is similar to `zdlg-post-save` but the latter is attached to a dialog footer button whereas `za-post-save` is not.
 
     * `zinput`: The element having this class will have its data-state checked for any changes and, if any, then `ztoggler` gets fired.
     * `zinput-event`: Default is `input`. For example, specify `change` for a change event.
@@ -77,6 +79,7 @@ On the element itself:
                           It is required for post-zaction functionality.
 
     * `za-dlg`: The selector to the element having dlg attributes in a format similar to za-data.
+      * zdlg-post-save="selector" // See `za-post-save`. The version for zdlg is attached to a dialog button.
       * zdlg-title="Dialog Title" // Force this title all the title, even if the server sends a title to use.
       * zdlg-alt-title="Alternative Title" // Use this title when the server does not send a title.
       * zdlg-body="Do you want to save?" // Evaluation order is zaction.getOptions().zdlg.body (from element), results.html (from server), results.js.body (or optionally from server if results.html is empty)
@@ -884,22 +887,23 @@ function handleDialog(zaction, callback, results) {
     }
     // console.log('ztrigger', drr, err)
     if (zzb.types.isStringNotEmpty(zaction.getOptions().zdlg.postSave)) {
-      let ss = zaction.getOptions().zdlg.postSave.split(':')
-      if (ss.length === 2) {
-        let $target = document.querySelector(ss[1])
-        if ($target) {
-          if ($target.getAttribute('za1x2') !== 'true') {
-            $target.setAttribute('za1x2', 'true')
-            $target.addEventListener('za-post-action', function(ev){
-              zzb.zaction.actionHandler(ev, null, null)
-            })
-          }
-          //console.log('ztrigger', ev.detail, err, zaction)
-          let ev = new CustomEvent('za-post-action')
-          ev.zaExtraHandler = 'za-post-action'
-          $target.dispatchEvent(ev)
-        }
-      }
+      fnPostSave(zaction.getOptions().zdlg.postSave)
+      // let ss = zaction.getOptions().zdlg.postSave.split(':')
+      // if (ss.length === 2) {
+      //   let $target = document.querySelector(ss[1])
+      //   if ($target) {
+      //     if ($target.getAttribute('za1x2') !== 'true') {
+      //       $target.setAttribute('za1x2', 'true')
+      //       $target.addEventListener('za-post-action', function(ev){
+      //         zzb.zaction.actionHandler(ev, null, null)
+      //       })
+      //     }
+      //     //console.log('ztrigger', ev.detail, err, zaction)
+      //     let ev = new CustomEvent('za-post-action')
+      //     ev.zaExtraHandler = 'za-post-action'
+      //     $target.dispatchEvent(ev)
+      //   }
+      // }
     } else if (zaction.getOptions().hasLoopType) {
       runInjects(zaction.getOptions().arrInjects, drr.rob.first().dInjects)
       // Old method is not an array
@@ -1249,10 +1253,35 @@ function handleZUrlAction(zaction, callback, doFormUpdate) {
       if (zref && zzb.types.isStringNotEmpty(zref.zinputPtr)) {
         zzb.zaction.loadZInputs(document.getElementById(zref.zinputPtr))
       }
+      let za = zaction.getOptions().zaction
+      if (za && zzb.types.isStringNotEmpty(za.postSave)) {
+        fnPostSave(za.postSave)
+      }
     }
 
     callback && callback(drr, null)
   })
+}
+
+const fnPostSave = function(zaSelector) {
+  if (zaSelector && zzb.types.isStringNotEmpty(zaSelector)) {
+    let ss = zaSelector.split(':')
+    if (ss.length === 2) {
+      let $target = document.querySelector(ss[1])
+      if ($target) {
+        if ($target.getAttribute('za1x2') !== 'true') {
+          $target.setAttribute('za1x2', 'true')
+          $target.addEventListener('za-post-action', function(ev){
+            zzb.zaction.actionHandler(ev, null, null)
+          })
+        }
+        //console.log('ztrigger', ev.detail, err, zaction)
+        let ev = new CustomEvent('za-post-action')
+        ev.zaExtraHandler = 'za-post-action'
+        $target.dispatchEvent(ev)
+      }
+    }
+  }
 }
 
 function handleZUrlBlobDownload(zaction, callback) {
