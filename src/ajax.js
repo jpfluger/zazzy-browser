@@ -248,6 +248,12 @@ _ajax.prototype.postJSON = function (options, callback) {
   zzb.ajax.request(options, callback)
 }
 
+_ajax.prototype.postFORM = function (options, callback) {
+  options.method = 'POST'
+  options.expectType = 'json'
+  zzb.ajax.request(options, callback)
+}
+
 const AjaxMessage = function (options) {}
 
 // Default message is AjaxMessage.MSG_FAILED_ACTION_UNEXPECTED

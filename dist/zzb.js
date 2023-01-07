@@ -1,4 +1,4 @@
-//! zzb.js v2.6.1 (https://github.com/jpfluger/zazzy-browser)
+//! zzb.js v2.6.2 (https://github.com/jpfluger/zazzy-browser)
 //! MIT License; Copyright 2017-2021 Jaret Pfluger
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
@@ -253,6 +253,12 @@ _ajax.prototype.postJSON = function (options, callback) {
   } else {
     options.body = '{}'
   }
+  zzb.ajax.request(options, callback)
+}
+
+_ajax.prototype.postFORM = function (options, callback) {
+  options.method = 'POST'
+  options.expectType = 'json'
   zzb.ajax.request(options, callback)
 }
 

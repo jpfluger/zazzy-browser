@@ -1,4 +1,4 @@
-//! zzb.ui.js v2.6.1 (https://github.com/jpfluger/zazzy-browser)
+//! zzb.ui.js v2.6.2 (https://github.com/jpfluger/zazzy-browser)
 //! MIT License; Copyright 2017-2021 Jaret Pfluger
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
@@ -253,6 +253,12 @@ _ajax.prototype.postJSON = function (options, callback) {
   } else {
     options.body = '{}'
   }
+  zzb.ajax.request(options, callback)
+}
+
+_ajax.prototype.postFORM = function (options, callback) {
+  options.method = 'POST'
+  options.expectType = 'json'
   zzb.ajax.request(options, callback)
 }
 
@@ -2185,7 +2191,7 @@ On the element itself:
                   * zurl-nav-tab
                   * zurl-nav-self
     * `za-mod`: If used, it is sent to the server as zaction.mod (eg 'delete', 'create', 'edit', 'paginate').
-    * `za-method`: The type of call to initiate with the server. Available: `getJSON`, `postJSON`. Default is `postJSON`.
+    * `za-method`: The type of call to initiate with the server. Available: `getJSON`, `postJSON`, `postFORM`. Default is `postJSON`.
 
     * `za-zid`: The id of an element. Optional. If used, it is sent to the server as zaction.zid.
     * `za-zid-parent`: The parent-id of an element. Optional. If used, it is sent to the server as zaction.zidParent.
@@ -2400,7 +2406,7 @@ function buildZClosest($elem, obj, isFirstZAction, zaExtraHandler) {
   let isNew = false
   if (!obj) {
     isNew = true
-    obj = {zaction:{method:null},zdata:{},zdlg:{tryDialog: false},zurl:null,$data:null,arrInjects:null,zref:{}}
+    obj = {zaction:{},zdata:{},zdlg:{tryDialog: false},zurl:null,$data:null,arrInjects:null,zref:{}}
   }
   if (!$elem) {
     return null
@@ -2561,7 +2567,7 @@ _zaction.prototype.newZAction = function(ev) {
       let ajaxOptions = {
         url: this._options.zurl
       }
-      if (this._hasBody === true) {
+      if (this._options.zaction.method === 'postJSON') {
         ajaxOptions.body = {}
         if (!this._options.forceIgnoreZData) {
           if (this._options.isForm) {
@@ -2576,6 +2582,8 @@ _zaction.prototype.newZAction = function(ev) {
           }
         }
         ajaxOptions.body.zaction = this._options.zaction
+      } else if (this._options.zaction.method === 'postFORM') {
+        ajaxOptions.body = this._options.formData
       }
 
       if (zzb.types.isStringNotEmpty(this._options.zaction.expectType)) {
@@ -2626,13 +2634,14 @@ _zaction.prototype.newZAction = function(ev) {
       }
 
       // assign method
-      switch (this._options.method) {
+      switch (this._options.zaction.method) {
         case 'getJSON':
-          this._hasBody = false
           this._runAJAX = zzb.ajax.getJSON
           break
+        case 'postFORM':
+          this._runAJAX = zzb.ajax.postFORM
+          break
         default:
-          this._hasBody = true
           this._runAJAX = zzb.ajax.postJSON
           break
       }
