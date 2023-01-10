@@ -1,4 +1,4 @@
-//! zzb.js v2.6.2 (https://github.com/jpfluger/zazzy-browser)
+//! zzb.js v2.6.3 (https://github.com/jpfluger/zazzy-browser)
 //! MIT License; Copyright 2017-2021 Jaret Pfluger
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
@@ -328,7 +328,7 @@ class ZazzyDialog {
     this.defaultOptions.body = ''
 
     if (this.isBootstrap) {
-      this.bsModal = new bootstrap.Modal(this.modal, {})
+      this.bsModal = new bootstrap.Modal(this.modal, {focus: this.defaultOptions.focus === true, keyboard: this.defaultOptions.keyboard === true})
     } else {
       this.closeModal = this.modal.querySelectorAll('[data-bs-dismiss]');
 
@@ -447,6 +447,8 @@ class ZazzyDialog {
       classBackdrop: '',
       extraAttributes: '',
       noFade: false,
+      noFocus: false,
+      noKeyboard: false,
       title: '',
       body: '',
       buttons: [],
@@ -608,6 +610,8 @@ class ZazzyDialog {
       noHeaderCloseButton: false,
       noHeaderCloseButtonButton: '',
       dataKeyboard: null,
+      focus: this.defaultOptions.noFocus != true,
+      keyboard: this.defaultOptions.noKeyboard != true,
       classScrollable: (this.defaultOptions.isScrollable ? ' modal-dialog-scrollable' : ''),
       classNoFooter: (this.defaultOptions.isNoFooter ? ' d-none' : ''),
       classWidthMod: '',
@@ -650,6 +654,7 @@ class ZazzyDialog {
       }
     }
 
+    // Pertains to static backdrop.
     if (zzb.types.isBoolean(options.dataKeyboard)) {
       options.extraAttributes += ' data-bs-keyboard="' + options.dataKeyboard + '"'
     }

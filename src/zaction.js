@@ -919,7 +919,7 @@ function handleDialog(zaction, callback, results) {
     }
   }
 
-  results = zzb.types.merge({html: null, js: {title: null, altTitle: null, body: null, type: null, buttons: null, noHeaderCloseButton: false}}, (results) ? results : {})
+  results = zzb.types.merge({html: null, js: {title: null, altTitle: null, body: null, type: null, buttons: null, noHeaderCloseButton: false, focus: true, keyboard: true}}, (results) ? results : {})
 
   let dlgOptions = {
     title: '',
@@ -1036,6 +1036,8 @@ function handleDialog(zaction, callback, results) {
   dlgOptions.isFullscreen = findDlgAjaxValue(zaction, results, 'isFullscreen', 'altIsFullscreen', false) === 'true'
   dlgOptions.isNoFooter = findDlgAjaxValue(zaction, results, 'isNoFooter', 'altIsNoFooter', false) === 'true'
   dlgOptions.noHeaderCloseButton = (zaction.getOptions().zdlg.noHeaderCloseButton === 'true' || results.js.noHeaderCloseButton === true)
+  dlgOptions.noFocus = (zaction.getOptions().zdlg.noFocus === 'true' || results.js.noFocus === true)
+  dlgOptions.noKeyboard = (zaction.getOptions().zdlg.noKeyboard === 'true' || results.js.noKeyboard === true)
 
   let dlgTheme = null
   dlgTheme = findDlgAjaxValue(zaction, results, 'theme', 'altTheme', false)
