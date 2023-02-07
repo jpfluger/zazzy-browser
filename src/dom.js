@@ -4,6 +4,10 @@
 
 function _dom () {}
 
+_dom.prototype.hasUIHover = function () {
+  return (!window.matchMedia("(hover: none)").matches)
+}
+
 _dom.prototype.hasElement = function ($elem) {
   return ($elem)
 }

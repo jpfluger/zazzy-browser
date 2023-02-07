@@ -139,8 +139,10 @@ const _zaction = function () {
   // ]
 }
 
+_zaction.prototype.ZActionHandler = ZActionHandler
+
 _zaction.prototype.registerHandler = function(options) {
-  zzb.setHandler(new ZActionHandler(options))
+  zzb.zaction.setHandler(new ZActionHandler(options))
 }
 
 _zaction.prototype.getHandlers = function() {
@@ -1409,6 +1411,36 @@ _zaction.prototype.runZLoadActions = function($parent) {
       $autoF.focus()
     }
   }
+  $parent.querySelectorAll('.zzb-zui-navtab-buttons').forEach(function ($btns) {
+    $btns.querySelectorAll('button').forEach(function ($elem) {
+      const tabTrigger = new bootstrap.Tab($elem)
+      $elem.addEventListener('click', function(ev) {
+        ev.preventDefault()
+
+        if ($elem.getAttribute('za1x') === "true") {
+          // console.log('tab-za1x')
+          tabTrigger.show()
+          return
+        }
+
+        let zevent = $elem.getAttribute('za-event')
+        if (!zzb.types.isStringNotEmpty(zevent)) {
+          // console.log('tab-no-za-event')
+          tabTrigger.show()
+          return
+        }
+
+        $elem.setAttribute('za1x', 'true')
+
+        zzb.zaction.actionHandler(ev, null, function(drr, err) {
+          if (!err) {
+            // console.log('tab-click!')
+            tabTrigger.show()
+          }
+        })
+      })
+    })
+  })
 }
 
 const cacheZInputs = {}

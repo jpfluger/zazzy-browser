@@ -1,5 +1,5 @@
-//! zzb.ui.js v2.6.3 (https://github.com/jpfluger/zazzy-browser)
-//! MIT License; Copyright 2017-2021 Jaret Pfluger
+//! zzb.ui.js v2.6.4 (https://github.com/jpfluger/zazzy-browser)
+//! MIT License; Copyright 2017-2023 Jaret Pfluger
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
@@ -860,6 +860,10 @@ exports.y = _dialogs
 // ---------------------------------------------------
 
 function _dom () {}
+
+_dom.prototype.hasUIHover = function () {
+  return (!window.matchMedia("(hover: none)").matches)
+}
 
 _dom.prototype.hasElement = function ($elem) {
   return ($elem)
@@ -2301,8 +2305,10 @@ const _zaction = function () {
   // ]
 }
 
+_zaction.prototype.ZActionHandler = ZActionHandler
+
 _zaction.prototype.registerHandler = function(options) {
-  zzb.setHandler(new ZActionHandler(options))
+  zzb.zaction.setHandler(new ZActionHandler(options))
 }
 
 _zaction.prototype.getHandlers = function() {
@@ -3571,6 +3577,36 @@ _zaction.prototype.runZLoadActions = function($parent) {
       $autoF.focus()
     }
   }
+  $parent.querySelectorAll('.zzb-zui-navtab-buttons').forEach(function ($btns) {
+    $btns.querySelectorAll('button').forEach(function ($elem) {
+      const tabTrigger = new bootstrap.Tab($elem)
+      $elem.addEventListener('click', function(ev) {
+        ev.preventDefault()
+
+        if ($elem.getAttribute('za1x') === "true") {
+          // console.log('tab-za1x')
+          tabTrigger.show()
+          return
+        }
+
+        let zevent = $elem.getAttribute('za-event')
+        if (!zzb.types.isStringNotEmpty(zevent)) {
+          // console.log('tab-no-za-event')
+          tabTrigger.show()
+          return
+        }
+
+        $elem.setAttribute('za1x', 'true')
+
+        zzb.zaction.actionHandler(ev, null, function(drr, err) {
+          if (!err) {
+            // console.log('tab-click!')
+            tabTrigger.show()
+          }
+        })
+      })
+    })
+  })
 }
 
 const cacheZInputs = {}
@@ -3706,9 +3742,137 @@ exports.n = _zaction
 const _zui = function () {
   this.zsplitters = {}
   this.elemIniters = []
+  this.defaultRWidth = 576 // default responsive width
+  this.handlers = []
+}
+
+_zui.prototype.getDefaultRWdith = function () {
+  return this.defaultRWidth
+}
+
+// RESPONSIVE CHECK
+function getViewport () {
+  // https://stackoverflow.com/a/8876069
+  const width = Math.max(
+    document.documentElement.clientWidth, window.innerWidth || 0
+  )
+  return width
+  // if (width <= 576) return 576 // 'xs'
+  // if (width <= 768) return 768 // 'sm'
+  // if (width <= 992) return 992 // 'md'
+  // if (width <= 1200) return 1200 // 'lg'
+  // return 99999 // 'xl'
+}
+
+_zui.prototype.isViewportGTRSize = function (rsize) {
+  if (!zzb.types.isNumber(rsize) || rsize <= 0) {
+    rsize = this.defaultRWidth
+  }
+  return (getViewport() > rsize)
+}
+
+_zui.prototype.getZUICache = function () {
+  let c = {zsplitter:{}}
+  try {
+    let s = localStorage.getItem('zuiC')
+    if (zzb.types.isStringNotEmpty(s)) {
+      let o = JSON.parse(s)
+      if (zzb.types.isObject(o)) {
+        // console.log('c-saved', o.zsplitter)
+        return zzb.types.merge(c, o)
+      }
+    }
+  } catch (e) {
+    console.log(e)
+  }
+  // console.log('c-new', c)
+  return c
+}
+
+_zui.prototype.setZUICache = function (zuiC) {
+  localStorage.setItem('zuiC', JSON.stringify(zuiC))
+}
+
+_zui.prototype.removeZUICache = function () {
+  localStorage.removeItem('zuiC')
+}
+
+_zui.prototype.registerZSplitterResize = function (options) {
+  let handler = new zzb.zaction.ZActionHandler(options)
+  for (let ii = 0; ii < this.handlers.length; ii++) {
+    if (this.handlers[ii].getId() === handler.id) {
+      this.handlers[ii] = handler
+      return
+    }
+  }
+  this.handlers.push(handler)
+}
+
+_zui.prototype.triggerZSplitterResize = function () {
+  for (let ii = 0; ii < this.handlers.length; ii++) {
+    this.handlers[ii].getHandler()()
+  }
+}
+
+function setZUICacheZSplitter(zsplitter) {
+  if (zsplitter && zzb.types.isStringNotEmpty(zsplitter.id)) {
+    try {
+      let zuiC = zzb.zui.getZUICache()
+      zuiC.zsplitter[zsplitter.id] = zsplitter
+      zzb.zui.setZUICache(zuiC)
+    } catch (e) {
+      console.log(e)
+    }
+  }
 }
 
 function initZSplitter($resizer, direction, arrToggableWidths) {
+  let zsplitter = zzb.dom.getAttributes($resizer, /^zsplitter-/, 10)
+  zsplitter.id = $resizer.getAttribute('id')
+
+  let usingCache = zzb.types.isStringNotEmpty(zsplitter.id)
+  let isCacheNew = true
+  if (usingCache) {
+    let zuiC = zzb.zui.getZUICache()
+    isCacheNew = (!zuiC.zsplitter[zsplitter.id])
+    if (isCacheNew) {
+      zuiC.zsplitter[zsplitter.id] = zsplitter
+      zzb.zui.setZUICache(zuiC)
+    } else {
+      zsplitter = zuiC.zsplitter[zsplitter.id]
+    }
+  }
+
+  if (zsplitter.show !== 'open' && zsplitter.show !== 'close') {
+    zsplitter.show = null
+  }
+
+  if (zzb.types.isStringNotEmpty(zsplitter.rsize)) {
+    zsplitter.rsize = Number(zsplitter.rsize)
+  }
+  if (!zzb.types.isNumber(zsplitter.rsize) || zsplitter.rsize < 0) {
+    zsplitter.rsize = zzb.zui.getDefaultRWdith()
+  }
+
+  const setCacheZSplitter = function(state) {
+    if (usingCache) {
+      zsplitter.show = state
+      setZUICacheZSplitter(zsplitter)
+      // console.log(state)
+    }
+  }
+
+  let doRSizeOpen = zzb.zui.isViewportGTRSize(zsplitter.rsize) // (getViewport() > zsplitter.rsize)
+  if (usingCache && isCacheNew && !doRSizeOpen) {
+    if (zsplitter.show === 'open') {
+      setCacheZSplitter('close')
+    }
+  } else if (!usingCache && !doRSizeOpen) {
+    zsplitter.show = 'close'
+  }
+  // console.log('responsive-check', zsplitter, 'doRSizeShow=' + doRSizeOpen)
+
+
   if (!arrToggableWidths) {
     arrToggableWidths = []
   } else if (!Array.isArray(arrToggableWidths)) {
@@ -3726,7 +3890,7 @@ function initZSplitter($resizer, direction, arrToggableWidths) {
   }
 
   // set the id, if not present
-  if (!zzb.types.isStringNotEmpty($resizer.id)) {
+  if (!usingCache) {
     $resizer.id = 'zsplitter' + zzb.zui.getZSplitters().length + direction
   }
 
@@ -3764,11 +3928,15 @@ function initZSplitter($resizer, direction, arrToggableWidths) {
       idxWidthStatic++
 
       if (idxWidthStatic < arrToggableWidths.length) {
+        setCacheZSplitter('open')
         setStaticWidth()
       } else if (idxWidthStatic === arrToggableWidths.length) {
+        setCacheZSplitter('close')
         idxWidthStatic = -1
         $targetSide.style.width = '0'
       }
+
+      zzb.zui.triggerZSplitterResize()
 
     }, false);
   })
@@ -3778,35 +3946,14 @@ function initZSplitter($resizer, direction, arrToggableWidths) {
   // 2. Use value from zsplitter-show="true" ("false").
   //    a. if not found, examine class on $resizer for 'd-none'
   //    b. if not found, examine class on $targetSide for 'd-none'
-  let doShow = arrToggableWidths.length > 0
-  let isClosed = false
-  if (doShow) {
-    let isFound = false
-    for (let ii = 0; ii < $resizer.attributes.length; ii++) {
-      if ($resizer.attributes[ii].nodeName === 'zsplitter-show') {
-        doShow = $resizer.attributes[ii].nodeValue === 'open'
-        if (!doShow) {
-          isClosed = $resizer.attributes[ii].nodeValue === 'closed'
-          if (isClosed) {
-            doShow = true
-          }
-        }
-        isFound = true
-        break
-      }
-    }
-    if (!isFound) {
-      if ($resizer.classList.contains('d-none')) {
-        doShow = false
-      } else if ($targetSide.classList.contains('d-none')) {
-        doShow = false
-      }
-    }
-    if (isClosed) {
+  let doReveal = arrToggableWidths.length > 0
+  let doOpenOrClose = zsplitter.show === 'open' || zsplitter.show === 'close'
+  if (doOpenOrClose) {
+    if (zsplitter.show === 'close') {
       $targetSide.style.width = 0
       idxWidthStatic = -1
     }
-    if (doShow) {
+    if (doReveal) {
       $resizer.classList.remove('d-none')
       $targetSide.classList.remove('d-none')
     } else {
@@ -3821,17 +3968,20 @@ function initZSplitter($resizer, direction, arrToggableWidths) {
       idxWidthStatic = 0
       $resizer.classList.remove('d-none')
       $targetSide.classList.remove('d-none')
+      setCacheZSplitter(state)
       setStaticWidth()
     } else if (state === 'close') {
       $targetSide.style.width = 0
       idxWidthStatic = -1
       $resizer.classList.remove('d-none')
       $targetSide.classList.remove('d-none')
+      setCacheZSplitter(state)
     } else if (state === 'dismiss') {
       idxWidthStatic = -1
       $resizer.classList.add('d-none')
       $targetSide.classList.add('d-none')
     }
+    zzb.zui.triggerZSplitterResize()
   }
 
   zzb.zui.setZSplitter($resizer.id, obj)
@@ -3871,6 +4021,8 @@ function initZSplitter($resizer, direction, arrToggableWidths) {
 
     $altSide.style.userSelect = 'none';
     $altSide.style.pointerEvents = 'none';
+
+    zzb.zui.triggerZSplitterResize()
   };
 
   const mouseUpHandler = function () {
@@ -3886,6 +4038,8 @@ function initZSplitter($resizer, direction, arrToggableWidths) {
     // Remove the handlers of `mousemove` and `mouseup`
     document.removeEventListener('mousemove', mouseMoveHandler);
     document.removeEventListener('mouseup', mouseUpHandler);
+
+    zzb.zui.triggerZSplitterResize()
   };
 
   // Attach the handler
@@ -3929,6 +4083,7 @@ _zui.prototype.onLoadInit = function() {
       }
     })
   });
+  zzb.zui.triggerZSplitterResize()
   document.querySelectorAll('.zuit-eo').forEach(function($elem) {
     let e1 = $elem.getAttribute('zuitEO1')
     if (zzb.types.isStringNotEmpty(e1)) {

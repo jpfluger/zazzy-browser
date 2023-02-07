@@ -1,5 +1,5 @@
-//! zzb.js v2.6.3 (https://github.com/jpfluger/zazzy-browser)
-//! MIT License; Copyright 2017-2021 Jaret Pfluger
+//! zzb.js v2.6.4 (https://github.com/jpfluger/zazzy-browser)
+//! MIT License; Copyright 2017-2023 Jaret Pfluger
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
@@ -860,6 +860,10 @@ exports.y = _dialogs
 // ---------------------------------------------------
 
 function _dom () {}
+
+_dom.prototype.hasUIHover = function () {
+  return (!window.matchMedia("(hover: none)").matches)
+}
 
 _dom.prototype.hasElement = function ($elem) {
   return ($elem)

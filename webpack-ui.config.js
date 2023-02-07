@@ -15,7 +15,7 @@ if (minimizeAndMangle) {
 
 const pckInfo = []
 pckInfo.push(util.format('//! %s v%s (%s)', filename, pkg.version, pkg.homepage))
-pckInfo.push(util.format('//! MIT License; Copyright 2017-2021 %s', pkg.author.name))
+pckInfo.push(util.format('//! MIT License; Copyright 2017-2023 %s', pkg.author.name))
 
 module.exports = {
   mode: 'production',
