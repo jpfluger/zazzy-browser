@@ -1,23 +1,21 @@
-var _types = require('../src/types.js').types
-var _uuid = require('../src/uuid.js').uuid
-var _strings = require('../src/strings.js').strings
-var _rob = require('../src/rob.js').rob
-var _perms = require('../src/perms.js').perms
-var _ajax = require('../src/ajax.js').ajax
-var _dialogs = require('../src/dialogs.js').dialogs
+const _types = require('../src/types.js').types
+const _uuid = require('../src/uuid.js').uuid
+const _strings = require('../src/strings.js').strings
+const _rob = require('../src/rob.js').rob
+const _perms = require('../src/perms.js').perms
+const _ajax = require('../src/ajax.js').ajax
+const _dialogs = require('../src/dialogs.js').dialogs
 
-const fetch = require('node-fetch');
+const fetch = require('node-fetch')
 
 if (!globalThis.fetch) {
-  globalThis.fetch = fetch;
+  globalThis.fetch = fetch
 }
 
 // designed to work with a nodejs server
 // Uses only those zzb features not dependent on jquery/BootstrapDialog
-
 // name
 //   the name of the global cache object to use
-
 exports.zzbLoader = function (options) {
 
   options = new _types().merge({ name: 'zzb', overwriteCached: false }, options)
@@ -27,7 +25,7 @@ exports.zzbLoader = function (options) {
     return global[options.name]
   }
 
-  var _zzb = function () {}
+  const _zzb = function () {}
   _zzb.prototype.types = new _types()
   _zzb.prototype.uuid = new _uuid()
   _zzb.prototype.strings = new _strings()
@@ -67,71 +65,71 @@ exports.zzbLoader = function (options) {
   return global[options.name]
 }
 
-var _zzbServer = function() {
+const _zzbServer = function () {
 
-  const express = require('express');
-  const cors = require('cors');
+  const express = require('express')
+  const cors = require('cors')
 
-  this.app = express();
+  this.app = express()
 
   // Access-Control-Allow-Origin: https://amazing.site
-  this.app.use(cors({origin: '*', optionsSuccesStatus: 200}));
+  this.app.use(cors({ origin: '*', optionsSuccesStatus: 200 }))
 
   this.app.get('/', function (req, res) {
-    res.status(200).send('ok');
+    res.status(200).send('ok')
   })
 
   this.app.get('/ping', function (req, res) {
-    res.status(200).send('pong');
-  });
+    res.status(200).send('pong')
+  })
 
   this.app.get('/ping-json', function (req, res) {
     res.setHeader('Content-Type', 'application/json')
-    res.json({recs: ['pong']})
-  });
+    res.json({ recs: ['pong'] })
+  })
 
   this.app.post('/ping', function (req, res) {
     res.setHeader('Content-Type', 'application/json')
-    res.json({recs: ['pong']})
-  });
+    res.json({ recs: ['pong'] })
+  })
 
   this.app.get('/ping-as-err', function (req, res) {
     res.setHeader('Content-Type', 'application/json')
-    res.json({err: 'pong'})
-  });
+    res.json({ err: 'pong' })
+  })
 
   this.app.get('/ping-as-errs-string', function (req, res) {
     res.setHeader('Content-Type', 'application/json')
-    res.json({errs: 'pong'})
-  });
+    res.json({ errs: 'pong' })
+  })
 
   this.app.get('/ping-as-errs-array', function (req, res) {
     res.setHeader('Content-Type', 'application/json')
-    res.json({errs: ['pong']})
-  });
+    res.json({ errs: ['pong'] })
+  })
 
   this.app.get('/force-redirect-with-flash', function (req, res) {
     res.setHeader('Content-Type', 'application/json')
-    res.json({redirect: '/', message: 'pong-flash-message'})
-  });
+    res.json({ redirect: '/', message: 'pong-flash-message' })
+  })
 
   this.app.get('/force-flash-message', function (req, res) {
     res.setHeader('Content-Type', 'application/json')
-    res.json({message: 'pong-flash-message'})
-  });
+    res.json({ message: 'pong-flash-message' })
+  })
 
   this.server = this.app.listen(16080, function () {})
 }
 
-_zzbServer.prototype.getApp = function() {
+_zzbServer.prototype.getApp = function () {
   return this.app
 }
 
-_zzbServer.prototype.getServer = function() {
+_zzbServer.prototype.getServer = function () {
   return this.server
 }
 
-_zzbServer.prototype.stop = function() {
+_zzbServer.prototype.stop = function () {
   if (this.server) {
     this.server.close()
   }

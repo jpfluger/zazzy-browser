@@ -298,7 +298,7 @@ describe('Validate zzb.string methods', function () {
     })
     it('should equal false', function (done) {
       let err = null
-      let arr = [false, 'false', 'no', '0', null, undefined, '']
+      let arr = [false, 'false', 'no', '0', null, undefined, '', ""]
       for (let ii = 0; ii < arr.length; ii++) {
         let value = zzb.strings.toBool(arr[ii])
         if (value) {

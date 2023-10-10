@@ -38,6 +38,8 @@ On the element itself:
 
     * `za-zid`: The id of an element. Optional. If used, it is sent to the server as zaction.zid.
     * `za-zid-parent`: The parent-id of an element. Optional. If used, it is sent to the server as zaction.zidParent.
+    * `za-zseq`: The sequence number, if used as a second zid identifier. This id is a passive passenger in that zaction does
+                 not use it. You may create or rename other zids to suit your needs. For example, we could have called this slot "zid2".
 
     * `za-page-on`: When pagination is active, it is sent to the server as zaction.pageOn.
     * `za-page-limit`: When pagination is active, it is the number of records to show on a page.
@@ -247,6 +249,10 @@ function findSelectorTargets($elem, bundle) {
   return arr
 }
 
+_zaction.prototype.newZClosest = function($elem, obj, isFirstZAction, zaExtraHandler) {
+  return buildZClosest($elem, obj, isFirstZAction, zaExtraHandler)
+}
+
 function buildZClosest($elem, obj, isFirstZAction, zaExtraHandler) {
   let isNew = false
   if (!obj) {
@@ -403,6 +409,11 @@ _zaction.prototype.newZAction = function(ev) {
         callback && callback(null, new Error('_runAJAX not defined'))
       } else {
         this._runAJAX(options, callback)
+      }
+    },
+    runInjects: function(drr) {
+      if (this.getOptions().arrInjects && drr && drr.rob && drr.rob.hasRecords() && drr.rob.first().dInjects) {
+        runInjects(this.getOptions().arrInjects, drr.rob.first().dInjects)
       }
     },
     buildAJAXOptions: function() {
@@ -730,6 +741,10 @@ function runZFormUpdate(zaction, rob) {
       console.log('failed runZFormUpdate', e)
     }
   }
+}
+
+_zaction.prototype.runZValidate = function(zaction, rob, hideOnly) {
+  runZValidate(zaction, rob, hideOnly)
 }
 
 function runZValidate(zaction, rob, hideOnly) {

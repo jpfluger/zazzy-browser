@@ -1,4 +1,4 @@
-//! zzb.js v2.6.4 (https://github.com/jpfluger/zazzy-browser)
+//! zzb.js v2.7.0 (https://github.com/jpfluger/zazzy-browser)
 //! MIT License; Copyright 2017-2023 Jaret Pfluger
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
@@ -111,15 +111,16 @@ _ajax.prototype.request = function(options, callback) {
         }
 
         // Records are ALWAYS an array
+        let tmpRecs = data.recs
         if (!data.ISROBRECS) {
           if (data.recs) {
-            data.recs = zzb.rob.sanitizeRecords(data.recs)
+            tmpRecs = zzb.rob.sanitizeRecords(data.recs)
           } else if (data.rec) {
-            data.recs = zzb.rob.sanitizeRecords(data.rec)
+            tmpRecs = zzb.rob.sanitizeRecords(data.rec)
             data.rec = null
           } else if (!Array.isArray(data.errs) || data.errs.length === 0) {
             // pass in self
-            data.recs = zzb.rob.sanitizeRecords(data)
+            tmpRecs = zzb.rob.sanitizeRecords(data)
           }
         }
 
@@ -129,7 +130,8 @@ _ajax.prototype.request = function(options, callback) {
         }
 
         rob.errs = data.errs
-        rob.recs = data.recs
+        rob.recs = tmpRecs
+        tmpRecs = null
         rob.columns = data.columns
 
         rob.listErrs = zzb.rob.toList(rob.errs)
@@ -1685,7 +1687,7 @@ _strings.prototype.toPlural = function (word, number, options) {
 
 _strings.prototype.capitalize = function (target) {
   if (zzb.types.isStringNotEmpty(target)) {
-    return target.charAt(0).toUpperCase() + string.slice(1);
+    return target.charAt(0).toUpperCase() + target.slice(1);
   }
   return ''
 }
@@ -1829,7 +1831,9 @@ _strings.prototype.toBool = function (target) {
     case "false":
     case "no":
     case "0":
+    case "":
     case null:
+    case undefined:
       return false;
 
     default:

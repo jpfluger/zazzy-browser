@@ -195,7 +195,7 @@ _strings.prototype.toPlural = function (word, number, options) {
 
 _strings.prototype.capitalize = function (target) {
   if (zzb.types.isStringNotEmpty(target)) {
-    return target.charAt(0).toUpperCase() + string.slice(1);
+    return target.charAt(0).toUpperCase() + target.slice(1);
   }
   return ''
 }
@@ -339,7 +339,9 @@ _strings.prototype.toBool = function (target) {
     case "false":
     case "no":
     case "0":
+    case "":
     case null:
+    case undefined:
       return false;
 
     default:

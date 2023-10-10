@@ -423,6 +423,73 @@ _zui.prototype.onElemInit = function($elem) {
     this.elemIniters[ii].fn($elem)
   }
 
+  // Autocomplete
+  // Fork: https://github.com/jpfluger/bootstrap-5-autocomplete
+  // Derived from: https://github.com/gch1p/bootstrap-5-autocomplete
+  if (typeof Autocomplete !== 'undefined') {
+    let $elems = document.querySelectorAll('.zautocomplete')
+    if ($elems && $elems.length > 0) {
+      $elems.forEach(function ($elem) {
+
+        // let opts = zzb.zaction.newZClosest($elem, null, null, null)
+        // opts.data = []
+        // opts.locale = 'en'
+        // opts.maximumItems = 7
+        // opts.threshold = 3
+        // let opts = zzb.types.merge(opts, zzb.dom.getAttributes($elem, /^zacom-/, 6))
+        let opts = zzb.types.merge({
+          data: [],
+          locale: 'en',
+          maximumItems: 7,
+          threshold: 3,
+          zurl: $elem.getAttribute('zurl'),
+          zmod: $elem.getAttribute('zmod'),
+        }, zzb.dom.getAttributes($elem, /^zacom-/, 6))
+        if (!zzb.types.isArray(opts.data)) {
+          opts.data = []
+        }
+        opts.maximumItems = zzb.strings.parseIntOrZero(opts.maximumItems)
+        if (opts.maximumItems <= 0) {
+          opts.maximumItems = 7
+        }
+        opts.threshold = zzb.strings.parseIntOrZero(opts.threshold)
+        if (opts.threshold <= 0) {
+          opts.threshold = 3
+        }
+        if (!zzb.types.isStringNotEmpty(opts.zurl)) {
+          console.log('zautocomplete zurl not found')
+          return
+        }
+        if (zzb.types.isStringNotEmpty(opts.zmod)) {
+          opts.zurl = opts.zurl.replace(':mod', opts.zmod)
+        }
+
+        const ac = new Autocomplete($elem, {
+          // data: [{label: "One", value: 1},{label: "OneOne", value: 11},{label: "Two", value: 2},{label: "Three", value: 3}],
+          // maximumItems: 7,
+          // threshold: 1,
+          data: opts.data,
+          locale: opts.locale,
+          maximumItems: opts.maximumItems,
+          threshold: opts.threshold,
+          onSelectItem: function(label, value){
+            // console.log("user selected:", label, value);
+          },
+          onInput: function (inData) {
+            zzb.ajax.postJSON({url: opts.zurl, body: {input: inData, limit: opts.maximumItems}}, function(drr, err) {
+              if (err || !drr.rob.hasRecords()) {
+                return
+              }
+              // console.log(drr.rob.recs)
+              ac.setData(drr.rob.recs)
+            })
+          }
+        });
+
+      })
+    }
+  }
+
   // Date/Time Picker
   // https://air-datepicker.com/
   if (typeof AirDatepicker !== 'undefined') {
@@ -441,13 +508,29 @@ _zui.prototype.onElemInit = function($elem) {
         // zdate-locale = The locale to use. default is "en" (English).
         // zdate-auto-close = [ "true" | "false" ] = If false, do not automatically close the calendar pop-up after the date is selected. Default is "true".
         // zdate-use-iso-val = [ "true" | "false" ] = If false, do not use ISO dates but default to whatever the Picker selects. Default is "false" unless 'zf-type="date-iso".
-        let dtAttribs = zzb.types.merge(zzb.dom.getAttributes($elem, /^zdate-/, 6), {
+        let dtAttribs = zzb.types.merge({
           value: zzb.dom.getAttributeElse($elem, 'value', null),
           locale: 'en',
           autoClose: true,
-          useISOVal: zzb.dom.getAttributeElse($elem, 'zf-type', null) === 'date-iso'
-        })
+          useISOVal: zzb.dom.getAttributeElse($elem, 'zf-type', null) === 'date-iso',
+          addBtnToday: true,
+          addBtnClear: true,
+          autoEvInput: false,
+          autoEvBlur: false,
+        }, zzb.dom.getAttributes($elem, /^zdate-/, 6))
         dtAttribs.autoClose = zzb.strings.toBool(dtAttribs.autoClose)
+        dtAttribs.addBtnToday = zzb.strings.toBool(dtAttribs.addBtnToday)
+        dtAttribs.addBtnClear = zzb.strings.toBool(dtAttribs.addBtnClear)
+        dtAttribs.autoEvInput = zzb.strings.toBool(dtAttribs.autoEvInput)
+        dtAttribs.autoEvBlur = zzb.strings.toBool(dtAttribs.autoEvBlur)
+
+        let dpButtons = []
+        if (dtAttribs.addBtnToday) {
+          dpButtons.push('today')
+        }
+        if (dtAttribs.addBtnClear) {
+          dpButtons.push('clear')
+        }
 
         // Update the date if an input field.
         let isInput = ($elem.nodeName === 'INPUT')
@@ -463,14 +546,16 @@ _zui.prototype.onElemInit = function($elem) {
           let adp = new AirDatepicker($elem, {
             locale: myLocale.date,
             autoClose: dtAttribs.autoClose,
+            buttons: dpButtons,
             onSelect: function (ops) {
               if (isInput) {
                 //console.log(ops, dtAttribs, ops.date.toISOString(), ops.date.getTimezoneOffset())
                 if (dtAttribs.useISOVal) {
                   //zzb.dom.setAttribute($elem, 'value', ops.date.toISOString())
-                  if (name) {
+                  if (name && ops && ops.date) {
                     // Set the cached value, which overrides the AirPicker value on form submit.
                     zzb.dom.setAttribute($elem, 'zf-cval', ops.date.toISOString())
+                    // console.log('onSelect')
                   }
                 }
               }
@@ -478,6 +563,40 @@ _zui.prototype.onElemInit = function($elem) {
           })
           if (dtCache) {
             adp.selectDate(dtCache)
+          }
+          if (!luxon) {
+            if (dtAttribs.autoEvInput === true || dtAttribs.autoEvBlur === true) {
+              console.log('advanced date processing using "luxon.js"')
+            }
+          } else {
+            // Ref: https://github.com/t1m0n/air-datepicker/issues/41
+            if (dtAttribs.autoEvInput === true) {
+              $elem.addEventListener('input', function(evt) {
+                const vInput = $elem.value
+                if (zzb.types.isNonEmptyString(vInput)) {
+                  // is vInput valid?
+                  let vTemp = luxon.DateTime.fromFormat(vInput, myLocale.date.dateFormat)
+                  if (vTemp.isValid) {
+                    // console.log('input-isValid', vTemp.toJSDate())
+                    adp.selectDate(vTemp.toJSDate())
+                  }
+                }
+              })
+            }
+            if (dtAttribs.autoEvBlur === true) {
+              $elem.addEventListener('blur', function(evt) {
+                const vPick = $elem.getAttribute('zf-cval')
+                const vInput = $elem.value
+
+                // console.log('onBlur', vPick, vInput, adp.viewDate.toISOString())
+
+                let vTemp = luxon.DateTime.fromFormat(vInput, myLocale.date.dateFormat)
+                if (!vTemp.isValid) {
+                  zzb.dom.setAttribute($elem, 'zf-cval', '')
+                  $elem.value = ''
+                }
+              })
+            }
           }
         })
       })
