@@ -33,14 +33,28 @@ class ZazzyInterval {
     if (!zzb.types.isFunction(options.new)) {
       options.new = function() {
         options._itoken = setInterval(options.refresh, this.interval)
+        options._isPaused = false
       }
     }
     if (!zzb.types.isFunction(options.clear)) {
-      options.clear = function() {
+      options.clear = function(doPause) {
         if (options._itoken == null) {
           return
         }
         clearInterval(options._itoken)
+        options._itoken = null
+        if (doPause === true) {
+          options._isPaused = true
+        }
+      }
+    }
+    if (!zzb.types.isFunction(options.unpause)) {
+      options.unpause = function() {
+        if (options._isPaused !== true) {
+          return
+        }
+        options._itoken = setInterval(options.refresh, this.interval)
+        options._isPaused = false
       }
     }
     if (!zzb.types.isFunction(options.refresh)) {
@@ -48,6 +62,7 @@ class ZazzyInterval {
         if (options._itoken == null) {
           return
         }
+        options._isPaused = false
         options.action && options.action()
         // document.getElementById("butMainSearch").click()
       }
@@ -59,9 +74,14 @@ class ZazzyInterval {
       this.options.new()
     }
   }
-  clear() {
+  clear(doPause) {
     if (zzb.types.isFunction(this.options.clear)) {
-      this.options.clear()
+      this.options.clear(doPause === true)
+    }
+  }
+  unpause() {
+    if (zzb.types.isFunction(this.options.unpause)) {
+      this.options.unpause()
     }
   }
   refresh() {
@@ -89,12 +109,21 @@ _time.prototype.getInterval = function (id) {
   return this.myIntervals[id]
 }
 
-_time.prototype.clearAll = function () {
-  if (!this.myIntervals || !zzb.types.isArray(this.myIntervals)) {
+_time.prototype.clearAll = function (doPause) {
+  if (!this.myIntervals || !zzb.types.isObject(this.myIntervals)) {
     return
   }
-  for (let ii = 0; ii < this.myIntervals.length; ii++) {
-    this.myIntervals[ii].clear()
+  for (const key in this.myIntervals) {
+    this.myIntervals[key].clear(doPause)
+  }
+}
+
+_time.prototype.unpauseAll = function () {
+  if (!this.myIntervals || !zzb.types.isObject(this.myIntervals)) {
+    return
+  }
+  for (const key in this.myIntervals) {
+    this.myIntervals[key].unpause()
   }
 }
 
@@ -135,7 +164,15 @@ _time.prototype.newUIInterval = function ($elem) {
     targetClick: $elem.getAttribute('id'),
     datacache: $elem.getAttribute('zi-datacache') === 'true',
     action: function() {
+
       //console.log('myInterval.action', this.targetClick)
+
+      // Detect modal dialogs open. If open, then ignore b/c the new injects can junk-up the dom, creating wierd bugs.
+      // console.log('modals showing', document.querySelectorAll('.modal.show').length)
+      if (document.querySelectorAll('.modal.show').length > 0) {
+        return
+      }
+
       document.getElementById(this.targetClick).setAttribute('zi-noclick', 'true');
       document.getElementById(this.targetClick).click();
     }
