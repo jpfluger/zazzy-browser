@@ -28,6 +28,7 @@ On the element itself:
                   * zurl-dialog
                   * zurl-confirm // show a confirmation dialog prior to running an action
                   * zurl-replace
+                  * zurl-search // allows interval for page refresh and data-caching
                   * zurl-action
                   * zurl-field-update // updates fields using json key-values
                   * zurl-blob-download
@@ -257,10 +258,18 @@ function buildZClosest($elem, obj, isFirstZAction, zaExtraHandler) {
   let isNew = false
   if (!obj) {
     isNew = true
-    obj = {zaction:{},zdata:{},zdlg:{tryDialog: false},zurl:null,$data:null,arrInjects:null,zref:{}}
+    obj = {zaction:{},zdata:{},zdlg:{tryDialog: false},zurl:null,$data:null,arrInjects:null,zref:{},zinterval:{}}
   }
   if (!$elem) {
     return null
+  }
+
+  if (isNew) {
+    obj.zinterval.id = $elem.getAttribute('zi-id')
+    if (zzb.types.isStringNotEmpty(obj.zinterval.id)) {
+      obj.zinterval.noClick = $elem.getAttribute('zi-noclick') === 'true'
+      $elem.setAttribute('zi-noclick', 'false');
+    }
   }
 
   // Apply 'obj.zaction' over the top of the newest found attributes, since 'obj.zaction' overrides these.
@@ -423,23 +432,50 @@ _zaction.prototype.newZAction = function(ev) {
       let ajaxOptions = {
         url: this._options.zurl
       }
+
+      const myInterval = zzb.time.getInterval(this._options.zinterval.id)
+      if (myInterval && !this._options.zinterval.noClick) {
+        //console.log('setCache from noClick')
+        myInterval.setCache(null)
+      }
+      const hasCache = (myInterval && myInterval.hasCache())
+      let doSetCache = false
+
       if (this._options.zaction.method === 'postJSON') {
         ajaxOptions.body = {}
         if (!this._options.forceIgnoreZData) {
           if (this._options.isForm) {
-            ajaxOptions.body = zzb.types.merge(serialize(this._options.formData, this._options.$data), ajaxOptions.body)
-            ajaxOptions.body = zzb.types.merge(this._options.zdata, ajaxOptions.body)
-            ajaxOptions.body = objToTree(ajaxOptions.body)
-            // Forms can internally have data that may override that in zaction: zid, zidParent, pageLimit, pageOn.
-            // We "could" check if formData.pageLimit has a value and then replace that of zaction.pageLimit
-            // but if we do this, then where do the "exceptions" end? Instead, let the server handle new pageLimit requests
-            // to create new zaction.pageLimits.
-            // ajaxOptions.body.data.zaction.pageLimit = ajaxOptions.body.dat
+            if (hasCache) {
+              ajaxOptions.body = myInterval.getCache()
+              //console.log('using cached search')
+            } else {
+              ajaxOptions.body = zzb.types.merge(serialize(this._options.formData, this._options.$data), ajaxOptions.body)
+              ajaxOptions.body = zzb.types.merge(this._options.zdata, ajaxOptions.body)
+              ajaxOptions.body = objToTree(ajaxOptions.body)
+              // Forms can internally have data that may override that in zaction: zid, zidParent, pageLimit, pageOn.
+              // We "could" check if formData.pageLimit has a value and then replace that of zaction.pageLimit
+              // but if we do this, then where do the "exceptions" end? Instead, let the server handle new pageLimit requests
+              // to create new zaction.pageLimits.
+              // ajaxOptions.body.data.zaction.pageLimit = ajaxOptions.body.dat
+
+              // Save the interval cache
+              doSetCache = true
+              //console.log('regular search')
+            }
           }
         }
         ajaxOptions.body.zaction = this._options.zaction
       } else if (this._options.zaction.method === 'postFORM') {
-        ajaxOptions.body = this._options.formData
+        if (hasCache) {
+          ajaxOptions.body = myInterval.getCache()
+        } else {
+          ajaxOptions.body = this._options.formData
+          doSetCache = true
+        }
+      }
+
+      if (doSetCache && myInterval) {
+        myInterval.setCache(ajaxOptions.body)
       }
 
       if (zzb.types.isStringNotEmpty(this._options.zaction.expectType)) {
@@ -590,7 +626,7 @@ function serialize (data, $elem) {
         // The cached value, if set, overrides the actual value.
         let zfCVal = zzb.dom.getAttributeElse($field, 'zf-cval', null)
         if (zfCVal) {
-          if (zfType === 'date-iso' && obj[keys[ii]].trim() === '') {
+          if (zfType === 'date-iso' && (obj[keys[ii]] && obj[keys[ii]].trim() === '')) {
             // A different datepicker object picker may have better results.
             obj[keys[ii]] = null
           } else {
@@ -1249,6 +1285,34 @@ function handleZUrlReplace(zaction, callback) {
   })
 }
 
+// handleZUrlSearch is a version of handleZUrlAction that submits a form
+// and handles injects. It can be used with ZazzyInterval, including smart search-caching.
+function handleZUrlSearch(zaction, callback) {
+  zaction.forceStopPropDef(true)
+  const myInterval = zzb.time.getInterval(zaction.getOptions().zinterval.id)
+  if (myInterval) {
+    myInterval.clear()
+  }
+  zaction.runAJAX(zaction.buildAJAXOptions(), function(drr, err) {
+    if (err) {
+      if (callback) {
+        callback(null, err)
+      }
+      return
+    }
+    if (drr && drr.rob) {
+      if (!drr.rob.hasRecords()) {
+        callback && callback(drr, null)
+      }
+      zaction.runInjects(drr)
+    }
+    if (myInterval) {
+      myInterval.new()
+    }
+    callback && callback(drr, true)
+  })
+}
+
 function handleZUrlAction(zaction, callback, doFormUpdate) {
   zaction.forceStopPropDef(true)
   zaction.runAJAX(zaction.buildAJAXOptions(), function(drr, err) {
@@ -1362,6 +1426,10 @@ _zaction.prototype.handleZUrl = function(zaction, callback) {
       break
     case 'zurl-replace':
       handleZUrlReplace(zaction, callback)
+      isHandled = true
+      break
+    case 'zurl-search':
+      handleZUrlSearch(zaction, callback)
       isHandled = true
       break
     case 'zurl-action':

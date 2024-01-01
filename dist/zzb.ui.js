@@ -1,4 +1,4 @@
-//! zzb.ui.js v2.7.0 (https://github.com/jpfluger/zazzy-browser)
+//! zzb.ui.js v2.8.0 (https://github.com/jpfluger/zazzy-browser)
 //! MIT License; Copyright 2017-2023 Jaret Pfluger
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
@@ -858,7 +858,7 @@ exports.y = _dialogs
 /***/ ((__unused_webpack_module, exports) => {
 
 // ---------------------------------------------------
-// types
+// dom
 // ---------------------------------------------------
 
 function _dom () {}
@@ -1922,6 +1922,159 @@ exports.j = _strings
 
 /***/ }),
 
+/***/ 932:
+/***/ ((__unused_webpack_module, exports) => {
+
+// ---------------------------------------------------
+// time
+// ---------------------------------------------------
+
+function _time () {}
+
+class ZazzyInterval {
+  constructor(options) {
+    this.options = ZazzyInterval.getZazzyDefaults(options)
+    if (this.options.autostart === true) {
+      this.options.new()
+    }
+  }
+  static getZazzyDefaults(options) {
+    const myInterval = {
+      interval: 60000,
+      autostart: false,
+      id: null,
+      targetClick: null,
+      datacache: false,
+      action: function() {console.log('ZazzyInterval no-op')}
+    }
+    options = (zzb.types.isObject(options) ? zzb.types.merge(myInterval, options) : myInterval)
+    options.autostart = options.autostart === true
+    if (!(zzb.types.isStringNotEmpty(options.id))) {
+      options.id = zzb.uuid.newV4()
+    }
+    if (!zzb.types.isFunction(options.action)) {
+      throw new Error('required action')
+    }
+    options._cache = null
+    options._itoken = null
+    if (!zzb.types.isFunction(options.new)) {
+      options.new = function() {
+        options._itoken = setInterval(options.refresh, this.interval)
+      }
+    }
+    if (!zzb.types.isFunction(options.clear)) {
+      options.clear = function() {
+        if (options._itoken == null) {
+          return
+        }
+        clearInterval(options._itoken)
+      }
+    }
+    if (!zzb.types.isFunction(options.refresh)) {
+      options.refresh = function() {
+        if (options._itoken == null) {
+          return
+        }
+        options.action && options.action()
+        // document.getElementById("butMainSearch").click()
+      }
+    }
+    return options
+  }
+  new() {
+    if (zzb.types.isFunction(this.options.new)) {
+      this.options.new()
+    }
+  }
+  clear() {
+    if (zzb.types.isFunction(this.options.clear)) {
+      this.options.clear()
+    }
+  }
+  refresh() {
+    if (zzb.types.isFunction(this.options.refresh)) {
+      this.options.refresh()
+    }
+  }
+  setCache(obj) {
+    this.options._cache = this.options.datacache ? obj : null
+  }
+  getCache() {
+    return this.options.datacache ? this.options._cache : null
+  }
+  hasCache() {
+    return this.options.datacache && this.options._cache
+  }
+}
+
+_time.prototype.ZazzyInterval = ZazzyInterval
+
+_time.prototype.getInterval = function (id) {
+  if (!this.myIntervals || !zzb.types.isStringNotEmpty(id) || !this.myIntervals[id]) {
+    return null
+  }
+  return this.myIntervals[id]
+}
+
+_time.prototype.clearAll = function () {
+  if (!this.myIntervals || !zzb.types.isArray(this.myIntervals)) {
+    return
+  }
+  for (let ii = 0; ii < this.myIntervals.length; ii++) {
+    this.myIntervals[ii].clear()
+  }
+}
+
+_time.prototype.newInterval = function (options) {
+  if (!this.myIntervals) {
+    this.myIntervals = {}
+  }
+  if (options && options.id && zzb.types.isStringNotEmpty(options.id)) {
+    if (this.myIntervals[options.id]) {
+      return this.myIntervals[options.id]
+    }
+  }
+  const myInterval = new ZazzyInterval(options)
+  if (myInterval && myInterval.options && zzb.types.isStringNotEmpty(myInterval.options.id)) {
+    this.myIntervals[myInterval.options.id] = myInterval
+    return myInterval
+  }
+  throw new Error('Failed to create ZazzyInterval')
+}
+
+_time.prototype.newUIInterval = function ($elem) {
+  if (!$elem) {
+    return
+  }
+  if ($elem.getAttribute('zi-inited') === 'true') {
+    return
+  }
+  if (!zzb.types.isStringNotEmpty($elem.getAttribute('id'))) {
+    $elem.setAttribute('id', zzb.uuid.newV4())
+  }
+  // zi-interval = The interval in milliseconds. Default is 60000 (1 minute).
+  // zi-id = The name of identifying this interval object. Default is a new uuid4 value.
+  // zi-autostart = [ "true" | "false" ] If true, then begin the timer immediately otherwise do not start.
+  zzb.time.newInterval({
+    interval: zzb.dom.getAttributeElse($elem, 'zi-interval', null),
+    id: zzb.dom.getAttributeElse($elem, 'zi-id', null),
+    autostart: $elem.getAttribute('zi-autostart') === 'true',
+    targetClick: $elem.getAttribute('id'),
+    datacache: $elem.getAttribute('zi-datacache') === 'true',
+    action: function() {
+      //console.log('myInterval.action', this.targetClick)
+      document.getElementById(this.targetClick).setAttribute('zi-noclick', 'true');
+      document.getElementById(this.targetClick).click();
+    }
+  })
+  $elem.setAttribute('zi-inited', 'true')
+}
+
+exports.X = _time
+
+
+/***/ }),
+
 /***/ 449:
 /***/ ((__unused_webpack_module, exports) => {
 
@@ -2198,6 +2351,7 @@ On the element itself:
                   * zurl-dialog
                   * zurl-confirm // show a confirmation dialog prior to running an action
                   * zurl-replace
+                  * zurl-search // allows interval for page refresh and data-caching
                   * zurl-action
                   * zurl-field-update // updates fields using json key-values
                   * zurl-blob-download
@@ -2427,10 +2581,18 @@ function buildZClosest($elem, obj, isFirstZAction, zaExtraHandler) {
   let isNew = false
   if (!obj) {
     isNew = true
-    obj = {zaction:{},zdata:{},zdlg:{tryDialog: false},zurl:null,$data:null,arrInjects:null,zref:{}}
+    obj = {zaction:{},zdata:{},zdlg:{tryDialog: false},zurl:null,$data:null,arrInjects:null,zref:{},zinterval:{}}
   }
   if (!$elem) {
     return null
+  }
+
+  if (isNew) {
+    obj.zinterval.id = $elem.getAttribute('zi-id')
+    if (zzb.types.isStringNotEmpty(obj.zinterval.id)) {
+      obj.zinterval.noClick = $elem.getAttribute('zi-noclick') === 'true'
+      $elem.setAttribute('zi-noclick', 'false');
+    }
   }
 
   // Apply 'obj.zaction' over the top of the newest found attributes, since 'obj.zaction' overrides these.
@@ -2593,23 +2755,50 @@ _zaction.prototype.newZAction = function(ev) {
       let ajaxOptions = {
         url: this._options.zurl
       }
+
+      const myInterval = zzb.time.getInterval(this._options.zinterval.id)
+      if (myInterval && !this._options.zinterval.noClick) {
+        //console.log('setCache from noClick')
+        myInterval.setCache(null)
+      }
+      const hasCache = (myInterval && myInterval.hasCache())
+      let doSetCache = false
+
       if (this._options.zaction.method === 'postJSON') {
         ajaxOptions.body = {}
         if (!this._options.forceIgnoreZData) {
           if (this._options.isForm) {
-            ajaxOptions.body = zzb.types.merge(serialize(this._options.formData, this._options.$data), ajaxOptions.body)
-            ajaxOptions.body = zzb.types.merge(this._options.zdata, ajaxOptions.body)
-            ajaxOptions.body = objToTree(ajaxOptions.body)
-            // Forms can internally have data that may override that in zaction: zid, zidParent, pageLimit, pageOn.
-            // We "could" check if formData.pageLimit has a value and then replace that of zaction.pageLimit
-            // but if we do this, then where do the "exceptions" end? Instead, let the server handle new pageLimit requests
-            // to create new zaction.pageLimits.
-            // ajaxOptions.body.data.zaction.pageLimit = ajaxOptions.body.dat
+            if (hasCache) {
+              ajaxOptions.body = myInterval.getCache()
+              //console.log('using cached search')
+            } else {
+              ajaxOptions.body = zzb.types.merge(serialize(this._options.formData, this._options.$data), ajaxOptions.body)
+              ajaxOptions.body = zzb.types.merge(this._options.zdata, ajaxOptions.body)
+              ajaxOptions.body = objToTree(ajaxOptions.body)
+              // Forms can internally have data that may override that in zaction: zid, zidParent, pageLimit, pageOn.
+              // We "could" check if formData.pageLimit has a value and then replace that of zaction.pageLimit
+              // but if we do this, then where do the "exceptions" end? Instead, let the server handle new pageLimit requests
+              // to create new zaction.pageLimits.
+              // ajaxOptions.body.data.zaction.pageLimit = ajaxOptions.body.dat
+
+              // Save the interval cache
+              doSetCache = true
+              //console.log('regular search')
+            }
           }
         }
         ajaxOptions.body.zaction = this._options.zaction
       } else if (this._options.zaction.method === 'postFORM') {
-        ajaxOptions.body = this._options.formData
+        if (hasCache) {
+          ajaxOptions.body = myInterval.getCache()
+        } else {
+          ajaxOptions.body = this._options.formData
+          doSetCache = true
+        }
+      }
+
+      if (doSetCache && myInterval) {
+        myInterval.setCache(ajaxOptions.body)
       }
 
       if (zzb.types.isStringNotEmpty(this._options.zaction.expectType)) {
@@ -2760,7 +2949,7 @@ function serialize (data, $elem) {
         // The cached value, if set, overrides the actual value.
         let zfCVal = zzb.dom.getAttributeElse($field, 'zf-cval', null)
         if (zfCVal) {
-          if (zfType === 'date-iso' && obj[keys[ii]].trim() === '') {
+          if (zfType === 'date-iso' && (obj[keys[ii]] && obj[keys[ii]].trim() === '')) {
             // A different datepicker object picker may have better results.
             obj[keys[ii]] = null
           } else {
@@ -3419,6 +3608,34 @@ function handleZUrlReplace(zaction, callback) {
   })
 }
 
+// handleZUrlSearch is a version of handleZUrlAction that submits a form
+// and handles injects. It can be used with ZazzyInterval, including smart search-caching.
+function handleZUrlSearch(zaction, callback) {
+  zaction.forceStopPropDef(true)
+  const myInterval = zzb.time.getInterval(zaction.getOptions().zinterval.id)
+  if (myInterval) {
+    myInterval.clear()
+  }
+  zaction.runAJAX(zaction.buildAJAXOptions(), function(drr, err) {
+    if (err) {
+      if (callback) {
+        callback(null, err)
+      }
+      return
+    }
+    if (drr && drr.rob) {
+      if (!drr.rob.hasRecords()) {
+        callback && callback(drr, null)
+      }
+      zaction.runInjects(drr)
+    }
+    if (myInterval) {
+      myInterval.new()
+    }
+    callback && callback(drr, true)
+  })
+}
+
 function handleZUrlAction(zaction, callback, doFormUpdate) {
   zaction.forceStopPropDef(true)
   zaction.runAJAX(zaction.buildAJAXOptions(), function(drr, err) {
@@ -3532,6 +3749,10 @@ _zaction.prototype.handleZUrl = function(zaction, callback) {
       break
     case 'zurl-replace':
       handleZUrlReplace(zaction, callback)
+      isHandled = true
+      break
+    case 'zurl-search':
+      handleZUrlSearch(zaction, callback)
       isHandled = true
       break
     case 'zurl-action':
@@ -3753,10 +3974,6 @@ exports.n = _zaction
 // ---------------------------------------------------
 // _zui
 // ---------------------------------------------------
-
-// FUTURE
-// 1. Disable back button
-//    https://stackoverflow.com/questions/12381563/how-can-i-stop-the-browser-back-button-using-javascript/34337617#34337617
 
 const _zui = function () {
   this.zsplitters = {}
@@ -4115,6 +4332,12 @@ _zui.prototype.onLoadInit = function() {
   document.querySelectorAll('.zuit-year').forEach(function($elem) {
     $elem.innerHTML = new Date().getFullYear()
   });
+  document.querySelectorAll('.zpagenohistory').forEach(function($elem) {
+    history.pushState(null, null, location.href);
+    history.back();
+    history.forward();
+    window.onpopstate = function () { history.go(1); };
+  });
 }
 
 const enLocale = {
@@ -4288,8 +4511,15 @@ _zui.prototype.onElemInit = function($elem) {
         let isInput = ($elem.nodeName === 'INPUT')
         let dtCache = null
 
+        const mycfval = $elem.getAttribute('zf-cval')
         if (zzb.types.isStringNotEmpty(dtAttribs.value)) {
-          dtCache = (dtAttribs.value === 'now' ? new Date() : new Date(Date.parse(dtAttribs.value)))
+          if (!zzb.types.isStringNotEmpty(mycfval)) {
+            dtCache = (dtAttribs.value === 'now' ? new Date() : new Date(Date.parse(dtAttribs.value)))
+            zzb.dom.setAttribute($elem, 'zdate-value', '')
+          }
+        }
+        if (zzb.types.isStringNotEmpty(mycfval)) {
+          dtCache = (dtAttribs.value === 'now' ? new Date() : new Date(Date.parse(mycfval)))
         }
 
         let name = zzb.dom.getAttributeElse($elem, 'name', null)
@@ -4307,7 +4537,7 @@ _zui.prototype.onElemInit = function($elem) {
                   if (name && ops && ops.date) {
                     // Set the cached value, which overrides the AirPicker value on form submit.
                     zzb.dom.setAttribute($elem, 'zf-cval', ops.date.toISOString())
-                    // console.log('onSelect')
+                    // console.log(name, 'onSelect', ops.date.toISOString())
                   }
                 }
               }
@@ -4315,6 +4545,7 @@ _zui.prototype.onElemInit = function($elem) {
           })
           if (dtCache) {
             adp.selectDate(dtCache)
+            // console.log('adp.selectDate dtCache', dtCache)
           }
           if (!luxon) {
             if (dtAttribs.autoEvInput === true || dtAttribs.autoEvBlur === true) {
@@ -4356,9 +4587,36 @@ _zui.prototype.onElemInit = function($elem) {
   }
 }
 
+_zui.prototype.onZLoadSection = function($elem, isCustom) {
+  if (!$elem) {
+    $elem = document.body
+  }
+  // Have a catch22 situation.
+  // Custom actions at a higher-level need to be created prior to the calling of `zloadsection`. How to resolve?
+  // When `isCustom` is `false`, then run `zloadsection` otherwise run `zloadsection-custom`.
+  let classZInterval = 'zinterval' + (isCustom === true ? '-custom' : '')
+  $elem.querySelectorAll('.' + classZInterval).forEach(function($elem) {
+    $elem.classList.remove(classZInterval)
+    if ($elem.classList.contains('zaction')) {
+      //console.log('clicking ' + classZInterval)
+      zzb.time.newUIInterval($elem)
+    }
+  })
+  // `zloadsection` must come after zinterval otherwise data-caching will break.
+  let classZLoadSection = 'zloadsection' + (isCustom === true ? '-custom' : '')
+  $elem.querySelectorAll('.' + classZLoadSection).forEach(function($elem) {
+    $elem.classList.remove(classZLoadSection)
+    if ($elem.classList.contains('zaction')) {
+      //console.log('clicking ' + classZLoadSection)
+      $elem.click()
+    }
+  })
+}
+
 document.addEventListener('DOMContentLoaded', function () {
   zzb.zui.onLoadInit()
   zzb.zui.onElemInit()
+  zzb.zui.onZLoadSection(null)
 }, false);
 
 exports.G = _zui
@@ -4402,10 +4660,16 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_RESULT__;(function (glo
   const _strings = (__webpack_require__(313)/* .strings */ .j)
 
   // ---------------------------------------------------
-  // _dialogs
+  // _dom
   // ---------------------------------------------------
 
   const _dom = (__webpack_require__(171)/* .dom */ .v)
+
+  // ---------------------------------------------------
+  // _time
+  // ---------------------------------------------------
+
+  const _time = (__webpack_require__(932)/* .time */ .X)
 
   // ---------------------------------------------------
   // _dialogs
@@ -4457,6 +4721,8 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_RESULT__;(function (glo
   _zzb.prototype.strings = new _strings()
   // dom helpers
   _zzb.prototype.dom = new _dom()
+  // time functions
+  _zzb.prototype.time = new _time()
   // dialog functions
   _zzb.prototype.dialogs = new _dialogs()
   // _perms

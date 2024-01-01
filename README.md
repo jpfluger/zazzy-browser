@@ -22,6 +22,7 @@ Dialogs have been retained and follow [Bootstrap5](https://getbootstrap.com/docs
 
 `zzb.ui` includes
 
+* zzb.time: includes interval for page refresh and data-caching
 * zzb.zaction: links html attributes to the event system
 * zzb.zui: extra ui elements. 
 

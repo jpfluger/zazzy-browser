@@ -31,10 +31,16 @@
   const _strings = require('./strings.js').strings
 
   // ---------------------------------------------------
-  // _dialogs
+  // _dom
   // ---------------------------------------------------
 
   const _dom = require('./dom.js').dom
+
+  // ---------------------------------------------------
+  // _time
+  // ---------------------------------------------------
+
+  const _time = require('./time.js').time
 
   // ---------------------------------------------------
   // _dialogs
@@ -86,6 +92,8 @@
   _zzb.prototype.strings = new _strings()
   // dom helpers
   _zzb.prototype.dom = new _dom()
+  // time functions
+  _zzb.prototype.time = new _time()
   // dialog functions
   _zzb.prototype.dialogs = new _dialogs()
   // _perms

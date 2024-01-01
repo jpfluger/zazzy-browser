@@ -2,10 +2,6 @@
 // _zui
 // ---------------------------------------------------
 
-// FUTURE
-// 1. Disable back button
-//    https://stackoverflow.com/questions/12381563/how-can-i-stop-the-browser-back-button-using-javascript/34337617#34337617
-
 const _zui = function () {
   this.zsplitters = {}
   this.elemIniters = []
@@ -363,6 +359,12 @@ _zui.prototype.onLoadInit = function() {
   document.querySelectorAll('.zuit-year').forEach(function($elem) {
     $elem.innerHTML = new Date().getFullYear()
   });
+  document.querySelectorAll('.zpagenohistory').forEach(function($elem) {
+    history.pushState(null, null, location.href);
+    history.back();
+    history.forward();
+    window.onpopstate = function () { history.go(1); };
+  });
 }
 
 const enLocale = {
@@ -536,8 +538,15 @@ _zui.prototype.onElemInit = function($elem) {
         let isInput = ($elem.nodeName === 'INPUT')
         let dtCache = null
 
+        const mycfval = $elem.getAttribute('zf-cval')
         if (zzb.types.isStringNotEmpty(dtAttribs.value)) {
-          dtCache = (dtAttribs.value === 'now' ? new Date() : new Date(Date.parse(dtAttribs.value)))
+          if (!zzb.types.isStringNotEmpty(mycfval)) {
+            dtCache = (dtAttribs.value === 'now' ? new Date() : new Date(Date.parse(dtAttribs.value)))
+            zzb.dom.setAttribute($elem, 'zdate-value', '')
+          }
+        }
+        if (zzb.types.isStringNotEmpty(mycfval)) {
+          dtCache = (dtAttribs.value === 'now' ? new Date() : new Date(Date.parse(mycfval)))
         }
 
         let name = zzb.dom.getAttributeElse($elem, 'name', null)
@@ -555,7 +564,7 @@ _zui.prototype.onElemInit = function($elem) {
                   if (name && ops && ops.date) {
                     // Set the cached value, which overrides the AirPicker value on form submit.
                     zzb.dom.setAttribute($elem, 'zf-cval', ops.date.toISOString())
-                    // console.log('onSelect')
+                    // console.log(name, 'onSelect', ops.date.toISOString())
                   }
                 }
               }
@@ -563,6 +572,7 @@ _zui.prototype.onElemInit = function($elem) {
           })
           if (dtCache) {
             adp.selectDate(dtCache)
+            // console.log('adp.selectDate dtCache', dtCache)
           }
           if (!luxon) {
             if (dtAttribs.autoEvInput === true || dtAttribs.autoEvBlur === true) {
@@ -604,9 +614,36 @@ _zui.prototype.onElemInit = function($elem) {
   }
 }
 
+_zui.prototype.onZLoadSection = function($elem, isCustom) {
+  if (!$elem) {
+    $elem = document.body
+  }
+  // Have a catch22 situation.
+  // Custom actions at a higher-level need to be created prior to the calling of `zloadsection`. How to resolve?
+  // When `isCustom` is `false`, then run `zloadsection` otherwise run `zloadsection-custom`.
+  let classZInterval = 'zinterval' + (isCustom === true ? '-custom' : '')
+  $elem.querySelectorAll('.' + classZInterval).forEach(function($elem) {
+    $elem.classList.remove(classZInterval)
+    if ($elem.classList.contains('zaction')) {
+      //console.log('clicking ' + classZInterval)
+      zzb.time.newUIInterval($elem)
+    }
+  })
+  // `zloadsection` must come after zinterval otherwise data-caching will break.
+  let classZLoadSection = 'zloadsection' + (isCustom === true ? '-custom' : '')
+  $elem.querySelectorAll('.' + classZLoadSection).forEach(function($elem) {
+    $elem.classList.remove(classZLoadSection)
+    if ($elem.classList.contains('zaction')) {
+      //console.log('clicking ' + classZLoadSection)
+      $elem.click()
+    }
+  })
+}
+
 document.addEventListener('DOMContentLoaded', function () {
   zzb.zui.onLoadInit()
   zzb.zui.onElemInit()
+  zzb.zui.onZLoadSection(null)
 }, false);
 
 exports.zui = _zui
