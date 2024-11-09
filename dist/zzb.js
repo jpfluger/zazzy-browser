@@ -1,9 +1,9 @@
-//! zzb.js v2.8.2 (https://github.com/jpfluger/zazzy-browser)
+//! zzb.js v2.8.3 (https://github.com/jpfluger/zazzy-browser)
 //! MIT License; Copyright 2017-2023 Jaret Pfluger
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 546:
+/***/ 964:
 /***/ ((__unused_webpack_module, exports) => {
 
 // ---------------------------------------------------
@@ -291,12 +291,12 @@ _ajax.prototype.showMessageFailedAction = function (options) {
   })
 }
 
-exports.h = _ajax
+exports.R = _ajax
 
 
 /***/ }),
 
-/***/ 772:
+/***/ 149:
 /***/ ((__unused_webpack_module, exports) => {
 
 // ---------------------------------------------------
@@ -851,12 +851,12 @@ _dialogs.prototype.handleError = function (options) {
   this.showMessage(options)
 }
 
-exports.y = _dialogs
+exports.i = _dialogs
 
 
 /***/ }),
 
-/***/ 171:
+/***/ 636:
 /***/ ((__unused_webpack_module, exports) => {
 
 // ---------------------------------------------------
@@ -926,12 +926,12 @@ _dom.prototype.getAttributes = function ($elem, regex, camelCaseStrip) {
   return data
 }
 
-exports.v = _dom
+exports.t = _dom
 
 
 /***/ }),
 
-/***/ 154:
+/***/ 531:
 /***/ ((__unused_webpack_module, exports) => {
 
 // ---------------------------------------------------
@@ -1164,12 +1164,12 @@ _perms.prototype.hasMatch = function (permkey, target) {
   return false
 }
 
-exports.Q = _perms
+exports.k = _perms
 
 
 /***/ }),
 
-/***/ 334:
+/***/ 247:
 /***/ ((__unused_webpack_module, exports) => {
 
 // ---------------------------------------------------
@@ -1484,12 +1484,12 @@ _rob.prototype.renderList = function (options) {
   return arr.join('')
 }
 
-exports.S = _rob
+exports.I = _rob
 
 
 /***/ }),
 
-/***/ 313:
+/***/ 462:
 /***/ ((__unused_webpack_module, exports) => {
 
 // ---------------------------------------------------
@@ -1919,12 +1919,12 @@ _strings.prototype.mergeElseEmpty = function (mergeItem, mergeVar1, mergeVar2) {
   return zzb.strings.format(mergeItem, mergeVar)
 }
 
-exports.j = _strings
+exports.P = _strings
 
 
 /***/ }),
 
-/***/ 449:
+/***/ 305:
 /***/ ((__unused_webpack_module, exports) => {
 
 // ---------------------------------------------------
@@ -2068,12 +2068,12 @@ _types.prototype.compare = function (x, y, isDesc) {
   }
 }
 
-exports.V = _types
+exports.g = _types
 
 
 /***/ }),
 
-/***/ 781:
+/***/ 169:
 /***/ ((__unused_webpack_module, exports) => {
 
 // ---------------------------------------------------
@@ -2162,12 +2162,12 @@ _uuid.prototype.isValid = function (uuid) {
   return re.test(uuid)
 }
 
-exports.V = _uuid
+exports.u = _uuid
 
 
 /***/ }),
 
-/***/ 936:
+/***/ 482:
 /***/ (function(module, exports, __webpack_require__) {
 
 var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_RESULT__;(function (global, factory) {
@@ -2188,49 +2188,49 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_RESULT__;(function (glo
   // types
   // ---------------------------------------------------
 
-  const _types = (__webpack_require__(449)/* .types */ .V)
+  const _types = (__webpack_require__(305)/* .types */ .g)
 
   // ---------------------------------------------------
   // uuid
   // ---------------------------------------------------
 
-  const _uuid = (__webpack_require__(781)/* .uuid */ .V)
+  const _uuid = (__webpack_require__(169)/* .uuid */ .u)
 
   // ---------------------------------------------------
   // strings
   // ---------------------------------------------------
 
-  const _strings = (__webpack_require__(313)/* .strings */ .j)
+  const _strings = (__webpack_require__(462)/* .strings */ .P)
 
   // ---------------------------------------------------
   // _dialogs
   // ---------------------------------------------------
 
-  const _dom = (__webpack_require__(171)/* .dom */ .v)
+  const _dom = (__webpack_require__(636)/* .dom */ .t)
 
   // ---------------------------------------------------
   // _dialogs
   // ---------------------------------------------------
 
-  const _dialogs = (__webpack_require__(772)/* .dialogs */ .y)
+  const _dialogs = (__webpack_require__(149)/* .dialogs */ .i)
 
   // ---------------------------------------------------
   // _perms (Permission Keys)
   // ---------------------------------------------------
 
-  const _perms = (__webpack_require__(154)/* .perms */ .Q)
+  const _perms = (__webpack_require__(531)/* .perms */ .k)
 
   // ---------------------------------------------------
   // _rob (Return Object)
   // ---------------------------------------------------
 
-  const _rob = (__webpack_require__(334)/* .rob */ .S)
+  const _rob = (__webpack_require__(247)/* .rob */ .I)
 
   // ---------------------------------------------------
   // _ajax
   // ---------------------------------------------------
 
-  const _ajax = (__webpack_require__(546)/* .ajax */ .h)
+  const _ajax = (__webpack_require__(964)/* .ajax */ .R)
 
   // ---------------------------------------------------
   // zzb
@@ -2292,7 +2292,7 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_RESULT__;(function (glo
 /******/ 	// startup
 /******/ 	// Load entry module and return exports
 /******/ 	// This entry module is referenced by other modules so it can't be inlined
-/******/ 	var __webpack_exports__ = __webpack_require__(936);
+/******/ 	var __webpack_exports__ = __webpack_require__(482);
 /******/ 	
 /******/ })()
 ;
