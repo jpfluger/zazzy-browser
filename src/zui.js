@@ -2,62 +2,74 @@
 // _zui
 // ---------------------------------------------------
 
+/**
+ * ZUI (Zazzy UI) utility class
+ * Handles viewport detection, splitter/cache handling, and element initialization
+ */
 const _zui = function () {
-  this.zsplitters = {}
-  this.elemIniters = []
-  this.defaultRWidth = 576 // default responsive width
-  this.handlers = []
+  this.zsplitters = {}                  // Stores splitter states
+  this.elemIniters = []                 // Initialization callbacks for UI elements
+  this.defaultRWidth = 576              // Default responsive width fallback (e.g., for mobile detection)
+  this.handlers = []                    // General event or mutation handlers
+  this.breakpoints = {                  // Optional named breakpoints
+    xs: 576,
+    sm: 768,
+    md: 992,
+    lg: 1200,
+    xl: 1400
+  }
 }
 
-_zui.prototype.getDefaultRWdith = function () {
+/**
+ * Returns the default responsive width.
+ * @returns {number}
+ */
+_zui.prototype.getDefaultRWidth = function () {
   return this.defaultRWidth
 }
 
-// RESPONSIVE CHECK
-function getViewport () {
-  // https://stackoverflow.com/a/8876069
-  const width = Math.max(
-    document.documentElement.clientWidth, window.innerWidth || 0
-  )
-  return width
-  // if (width <= 576) return 576 // 'xs'
-  // if (width <= 768) return 768 // 'sm'
-  // if (width <= 992) return 992 // 'md'
-  // if (width <= 1200) return 1200 // 'lg'
-  // return 99999 // 'xl'
+/**
+ * Returns the current viewport width.
+ * @returns {number} - Max of window.innerWidth and document.clientWidth
+ */
+function getViewportWidth () {
+  return Math.max(document.documentElement.clientWidth, window.innerWidth || 0)
 }
 
+/**
+ * Checks if the viewport width is greater than a given breakpoint.
+ * Accepts numeric or string alias (e.g., 'md').
+ *
+ * @param {number|string} rsize - Target responsive width or breakpoint alias.
+ * @returns {boolean}
+ */
 _zui.prototype.isViewportGTRSize = function (rsize) {
+  const bp = this.breakpoints
+
+  if (typeof rsize === 'string' && bp[rsize]) {
+    rsize = bp[rsize]
+  }
+
   if (!zzb.types.isNumber(rsize) || rsize <= 0) {
     rsize = this.defaultRWidth
   }
-  return (getViewport() > rsize)
+
+  return getViewportWidth() > rsize
 }
 
-_zui.prototype.getZUICache = function () {
-  let c = {zsplitter:{}}
-  try {
-    let s = localStorage.getItem('zuiC')
-    if (zzb.types.isStringNotEmpty(s)) {
-      let o = JSON.parse(s)
-      if (zzb.types.isObject(o)) {
-        // console.log('c-saved', o.zsplitter)
-        return zzb.types.merge(c, o)
-      }
-    }
-  } catch (e) {
-    console.log(e)
-  }
-  // console.log('c-new', c)
-  return c
-}
+/**
+ * Gets current viewport label (e.g., 'xs', 'sm', 'md', etc.) based on breakpoints.
+ * @returns {string}
+ */
+_zui.prototype.getViewportLabel = function () {
+  const width = getViewportWidth()
+  const bp = this.breakpoints
 
-_zui.prototype.setZUICache = function (zuiC) {
-  localStorage.setItem('zuiC', JSON.stringify(zuiC))
-}
-
-_zui.prototype.removeZUICache = function () {
-  localStorage.removeItem('zuiC')
+  if (width <= bp.xs) return 'xs'
+  if (width <= bp.sm) return 'sm'
+  if (width <= bp.md) return 'md'
+  if (width <= bp.lg) return 'lg'
+  return 'xl'
 }
 
 _zui.prototype.registerZSplitterResize = function (options) {
@@ -80,233 +92,233 @@ _zui.prototype.triggerZSplitterResize = function () {
 function setZUICacheZSplitter(zsplitter) {
   if (zsplitter && zzb.types.isStringNotEmpty(zsplitter.id)) {
     try {
-      let zuiC = zzb.zui.getZUICache()
+      let zuiC = zzb.dom.cache.get('zuiC', { mode: 'persist' }) || { zsplitter: {} }
       zuiC.zsplitter[zsplitter.id] = zsplitter
-      zzb.zui.setZUICache(zuiC)
+      zzb.dom.cache.set('zuiC', zuiC, { mode: 'persist' })
     } catch (e) {
       console.log(e)
     }
   }
 }
 
-function initZSplitter($resizer, direction, arrToggableWidths) {
-  let zsplitter = zzb.dom.getAttributes($resizer, /^zsplitter-/, 10)
-  zsplitter.id = $resizer.getAttribute('id')
-
-  let usingCache = zzb.types.isStringNotEmpty(zsplitter.id)
-  let isCacheNew = true
-  if (usingCache) {
-    let zuiC = zzb.zui.getZUICache()
-    isCacheNew = (!zuiC.zsplitter[zsplitter.id])
-    if (isCacheNew) {
-      zuiC.zsplitter[zsplitter.id] = zsplitter
-      zzb.zui.setZUICache(zuiC)
-    } else {
-      zsplitter = zuiC.zsplitter[zsplitter.id]
-    }
+function createZSplitterToggle($resizer, $targetSide, setStaticWidth, setCacheZSplitter) {
+  // Defensive: return no-op if elements are missing
+  if (!$targetSide || !$resizer || typeof setStaticWidth !== 'function' || typeof setCacheZSplitter !== 'function') {
+    return function () {}
   }
 
-  if (zsplitter.show !== 'open' && zsplitter.show !== 'close') {
-    zsplitter.show = null
-  }
+  return function(state) {
+    let idxWidthStatic = 0
 
-  if (zzb.types.isStringNotEmpty(zsplitter.rsize)) {
-    zsplitter.rsize = Number(zsplitter.rsize)
-  }
-  if (!zzb.types.isNumber(zsplitter.rsize) || zsplitter.rsize < 0) {
-    zsplitter.rsize = zzb.zui.getDefaultRWdith()
-  }
-
-  const setCacheZSplitter = function(state) {
-    if (usingCache) {
-      zsplitter.show = state
-      setZUICacheZSplitter(zsplitter)
-      // console.log(state)
-    }
-  }
-
-  let doRSizeOpen = zzb.zui.isViewportGTRSize(zsplitter.rsize) // (getViewport() > zsplitter.rsize)
-  if (usingCache && isCacheNew && !doRSizeOpen) {
-    if (zsplitter.show === 'open') {
-      setCacheZSplitter('close')
-    }
-  } else if (!usingCache && !doRSizeOpen) {
-    zsplitter.show = 'close'
-  }
-  // console.log('responsive-check', zsplitter, 'doRSizeShow=' + doRSizeOpen)
-
-
-  if (!arrToggableWidths) {
-    arrToggableWidths = []
-  } else if (!Array.isArray(arrToggableWidths)) {
-    arrToggableWidths = arrToggableWidths.split(',')
-  }
-  function isCharNumber(c) {
-    return c >= '0' && c <= '9';
-  }
-  for (let ii = 0; ii < arrToggableWidths.length; ii++) {
-    if (isCharNumber(arrToggableWidths[ii].slice(-1))) {
-      if (arrToggableWidths[ii] !== '') {
-        arrToggableWidths[ii] += 'px'
-      }
-    }
-  }
-
-  // set the id, if not present
-  if (!usingCache) {
-    $resizer.id = 'zsplitter' + zzb.zui.getZSplitters().length + direction
-  }
-
-  // "left" or "right"
-  const $targetSide = (direction === 'left' ? $resizer.previousElementSibling : $resizer.nextElementSibling)
-  const $altSide = (direction === 'left' ? $resizer.nextElementSibling : $resizer.previousElementSibling)
-
-  let idxWidthStatic = 0
-  function setStaticWidth() {
-    if (arrToggableWidths.length > 0) {
-      if (!arrToggableWidths[idxWidthStatic].endsWith('%')) {
-        $targetSide.style.width = arrToggableWidths[idxWidthStatic]
-      } else {
-        let pwidth = 0
-        let total = 0
-        try {
-          let pwidth = parseFloat(arrToggableWidths[idxWidthStatic].slice(0, -1)) / 100
-          let total = $resizer.getBoundingClientRect().width + $targetSide.getBoundingClientRect().width + $altSide.getBoundingClientRect().width
-          // console.log($resizer.parentNode.getBoundingClientRect().width, $resizer.getBoundingClientRect().width, $targetSide.getBoundingClientRect().width, $altSide.getBoundingClientRect().width, total, total / 2, $resizer.parentNode.getBoundingClientRect().width - total)
-          $targetSide.style.width = (total * pwidth) + 'px'
-        } catch {
-          console.log('failed to set targetSide width', pwidth, total)
-          $targetSide.style.width = '200px'
-        }
-      }
-    }
-  }
-
-  setStaticWidth()
-
-  $resizer.querySelectorAll('[zsplitter-toggable]').forEach(function($elem) {
-    $elem.addEventListener('click', function (ev) {
-      ev.preventDefault();
-
-      idxWidthStatic++
-
-      if (idxWidthStatic < arrToggableWidths.length) {
-        setCacheZSplitter('open')
+    switch (state) {
+      case 'open':
+        idxWidthStatic = 0
+        $resizer.classList.remove('d-none')
+        $targetSide.classList.remove('d-none')
+        setCacheZSplitter(state)
         setStaticWidth()
-      } else if (idxWidthStatic === arrToggableWidths.length) {
-        setCacheZSplitter('close')
+        break
+      case 'close':
+        $targetSide.style.width = 0
         idxWidthStatic = -1
-        $targetSide.style.width = '0'
+        $resizer.classList.remove('d-none')
+        $targetSide.classList.remove('d-none')
+        setCacheZSplitter(state)
+        break
+      case 'dismiss':
+        idxWidthStatic = -1
+        $resizer.classList.add('d-none')
+        $targetSide.classList.add('d-none')
+        break
+    }
+
+    zzb.zui.triggerZSplitterResize()
+  }
+}
+
+function normalizeWidths(widths) {
+  return widths.map(w => {
+    return (!w || typeof w !== 'string') ? w : (/^\d+$/.test(w) ? `${w}px` : w)
+  })
+}
+
+_zui.prototype.initZSplitter = function ($resizer, direction, arrToggableWidths) {
+  const zsplitter = this.zsplitter.loadConfig($resizer)
+  this.zsplitter.normalizeConfig(zsplitter)
+
+  if (!arrToggableWidths) arrToggableWidths = []
+  else if (!Array.isArray(arrToggableWidths)) arrToggableWidths = arrToggableWidths.split(',')
+
+  const widths = this.zsplitter.normalizeWidths(arrToggableWidths)
+  const $target = direction === 'left' ? $resizer.previousElementSibling : $resizer.nextElementSibling
+  const $alt = direction === 'left' ? $resizer.nextElementSibling : $resizer.previousElementSibling
+  const idxRef = { current: 0 }
+
+  if (!zzb.types.isStringNotEmpty($resizer.id)) {
+    $resizer.id = `zsplitter${Object.keys(this.zsplitters).length}${direction}`
+  }
+
+  const setWidth = () =>
+    this.zsplitter.setStaticWidth(widths, idxRef.current, $target, $alt, $resizer)
+  const setCache = (state) =>
+    this.zsplitter.updateCache(zsplitter, setWidth, state)
+
+  setWidth()
+  this.zsplitter.applyInitialVisibility(zsplitter, widths, $resizer, $target, idxRef)
+  this.zsplitter.attachTogglers($resizer, widths, idxRef, setWidth, setCache, $target)
+  this.zsplitter.attachDragHandlers($resizer, direction, $target, $alt)
+
+  const obj = this.getZSplitter($resizer.id)
+  obj.toggle = createZSplitterToggle($resizer, $target, setWidth, setCache)
+  this.setZSplitter($resizer.id, obj)
+}
+
+_zui.prototype.zsplitter = {
+
+  loadConfig($resizer) {
+    let config = zzb.dom.getAttributes($resizer, /^zsplitter-/, 10)
+    config.id = $resizer.getAttribute('id')
+
+    const usingCache = zzb.types.isStringNotEmpty(config.id)
+    if (!usingCache) return config
+
+    const zuiC = zzb.dom.cache.get('zuiC', { mode: 'persist' }) || { zsplitter: {} }
+    if (!zuiC.zsplitter[config.id]) {
+      zuiC.zsplitter[config.id] = config
+      zzb.dom.cache.set('zuiC', zuiC, { mode: 'persist' })
+    } else {
+      config = zuiC.zsplitter[config.id]
+    }
+    return config
+  },
+
+  normalizeConfig(config) {
+    if (config.show !== 'open' && config.show !== 'close') {
+      config.show = null
+    }
+    if (zzb.types.isStringNotEmpty(config.rsize)) {
+      config.rsize = Number(config.rsize)
+    }
+    if (!zzb.types.isNumber(config.rsize) || config.rsize < 0) {
+      config.rsize = zzb.zui.getDefaultRWidth()
+    }
+  },
+
+  normalizeWidths(widths) {
+    return widths.map(w =>
+      (!w || typeof w !== 'string') ? w : (/^\d+$/.test(w) ? `${w}px` : w)
+    )
+  },
+
+  setStaticWidth(widths, idx, $target, $alt, $resizer) {
+    if (widths.length === 0) return
+    const raw = widths[idx]
+    const isPercent = raw.endsWith('%')
+    const parentWidth = $resizer.parentNode.getBoundingClientRect().width
+    $resizer.getBoundingClientRect()
+    const resizerWidth = $resizer.offsetWidth || 6
+
+    if (!isPercent) {
+      $target.style.width = raw
+    } else {
+      try {
+        const pct = parseFloat(raw)
+        const maxAvailable = parentWidth - resizerWidth
+        $target.style.width = `${(pct / 100) * maxAvailable}px`
+      } catch (e) {
+        console.warn('Failed to set width', e)
+        $target.style.width = '200px'
       }
+    }
+  },
+
+  updateCache(config, setWidth, state) {
+    if (zzb.types.isStringNotEmpty(config.id)) {
+      config.show = state
+      const zuiC = zzb.dom.cache.get('zuiC', { mode: 'persist' }) || { zsplitter: {} }
+      zuiC.zsplitter[config.id] = config
+      zzb.dom.cache.set('zuiC', zuiC, { mode: 'persist' })
+    }
+  },
+
+  applyInitialVisibility(config, widths, $resizer, $target, idxRef) {
+    const doReveal = widths.length > 0
+    const doOpenClose = config.show === 'open' || config.show === 'close'
+
+    if (doOpenClose) {
+      if (config.show === 'close') {
+        $target.style.width = 0
+        idxRef.current = -1
+      }
+      $resizer.classList.toggle('d-none', !doReveal)
+      $target.classList.toggle('d-none', !doReveal)
+    }
+  },
+
+  attachTogglers($resizer, widths, idxRef, setWidth, setCache, $target) {
+    $resizer.querySelectorAll('[zsplitter-toggable]').forEach(($btn) => {
+      $btn.addEventListener('click', (ev) => {
+        ev.preventDefault()
+        idxRef.current++
+        if (idxRef.current < widths.length) {
+          setCache('open')
+          setWidth()
+        } else if (idxRef.current === widths.length) {
+          setCache('close')
+          idxRef.current = -1
+          $target.style.width = '0'
+        }
+        zzb.zui.triggerZSplitterResize()
+      }, false)
+    })
+  },
+
+  attachDragHandlers($resizer, direction, $target, $alt) {
+    let x = 0, y = 0, initialWidth = 0
+
+    const onMouseDown = (e) => {
+      if (e.target.closest('[zsplitter-toggable]')) return
+      x = e.clientX
+      y = e.clientY
+      initialWidth = $target.getBoundingClientRect().width
+
+      document.addEventListener('mousemove', onMouseMove)
+      document.addEventListener('mouseup', onMouseUp)
+    }
+
+    const onMouseMove = (e) => {
+      const dx = e.clientX - x
+      const dmod = direction === 'left' ? 1 : -1
+      const containerWidth = $resizer.parentNode.getBoundingClientRect().width
+      const newWidth = ((initialWidth + dx * dmod) * 100) / containerWidth
+      $target.style.width = `${newWidth}%`
+
+      $resizer.style.cursor = 'col-resize'
+      document.body.style.cursor = 'col-resize'
+      $target.style.userSelect = 'none'
+      $target.style.pointerEvents = 'none'
+      $alt.style.userSelect = 'none'
+      $alt.style.pointerEvents = 'none'
 
       zzb.zui.triggerZSplitterResize()
-
-    }, false);
-  })
-
-  // Logic to auto-show (or not)
-  // 1. Must have valid width (eg arrToggableWidths.length > 0)
-  // 2. Use value from zsplitter-show="true" ("false").
-  //    a. if not found, examine class on $resizer for 'd-none'
-  //    b. if not found, examine class on $targetSide for 'd-none'
-  let doReveal = arrToggableWidths.length > 0
-  let doOpenOrClose = zsplitter.show === 'open' || zsplitter.show === 'close'
-  if (doOpenOrClose) {
-    if (zsplitter.show === 'close') {
-      $targetSide.style.width = 0
-      idxWidthStatic = -1
     }
-    if (doReveal) {
-      $resizer.classList.remove('d-none')
-      $targetSide.classList.remove('d-none')
-    } else {
-      $resizer.classList.add('d-none')
-      $targetSide.classList.add('d-none')
+
+    const onMouseUp = () => {
+      document.removeEventListener('mousemove', onMouseMove)
+      document.removeEventListener('mouseup', onMouseUp)
+
+      $resizer.style.removeProperty('cursor')
+      document.body.style.removeProperty('cursor')
+      $target.style.removeProperty('user-select')
+      $target.style.removeProperty('pointer-events')
+      $alt.style.removeProperty('user-select')
+      $alt.style.removeProperty('pointer-events')
+
+      zzb.zui.triggerZSplitterResize()
     }
+
+    $resizer.addEventListener('mousedown', onMouseDown)
   }
-
-  let obj = zzb.zui.getZSplitter($resizer.id)
-  obj.toggle = function(state) {
-    if (state === 'open') {
-      idxWidthStatic = 0
-      $resizer.classList.remove('d-none')
-      $targetSide.classList.remove('d-none')
-      setCacheZSplitter(state)
-      setStaticWidth()
-    } else if (state === 'close') {
-      $targetSide.style.width = 0
-      idxWidthStatic = -1
-      $resizer.classList.remove('d-none')
-      $targetSide.classList.remove('d-none')
-      setCacheZSplitter(state)
-    } else if (state === 'dismiss') {
-      idxWidthStatic = -1
-      $resizer.classList.add('d-none')
-      $targetSide.classList.add('d-none')
-    }
-    zzb.zui.triggerZSplitterResize()
-  }
-
-  zzb.zui.setZSplitter($resizer.id, obj)
-
-  // The current position of mouse
-  let x = 0;
-  let y = 0;
-  let targetWidth = 0;
-
-  // Handle the mousedown event
-  // that's triggered when user drags the resizer
-  const mouseDownHandler = function (e) {
-    // Get the current mouse position
-    x = e.clientX;
-    y = e.clientY;
-    targetWidth = $targetSide.getBoundingClientRect().width;
-
-    // Attach the listeners to `document`
-    document.addEventListener('mousemove', mouseMoveHandler);
-    document.addEventListener('mouseup', mouseUpHandler);
-  };
-
-  const mouseMoveHandler = function (e) {
-    // How far the mouse has been moved
-    const dx = e.clientX - x;
-    const dy = e.clientY - y;
-    const dmod = (direction === 'left' ? 1 : -1)
-
-    const newTargetWidth = ((targetWidth + dx * dmod) * 100) / $resizer.parentNode.getBoundingClientRect().width;
-    $targetSide.style.width = `${newTargetWidth}%`;
-
-    $resizer.style.cursor = 'col-resize';
-    document.body.style.cursor = 'col-resize';
-
-    $targetSide.style.userSelect = 'none';
-    $targetSide.style.pointerEvents = 'none';
-
-    $altSide.style.userSelect = 'none';
-    $altSide.style.pointerEvents = 'none';
-
-    zzb.zui.triggerZSplitterResize()
-  };
-
-  const mouseUpHandler = function () {
-    $resizer.style.removeProperty('cursor');
-    document.body.style.removeProperty('cursor');
-
-    $targetSide.style.removeProperty('user-select');
-    $targetSide.style.removeProperty('pointer-events');
-
-    $altSide.style.removeProperty('user-select');
-    $altSide.style.removeProperty('pointer-events');
-
-    // Remove the handlers of `mousemove` and `mouseup`
-    document.removeEventListener('mousemove', mouseMoveHandler);
-    document.removeEventListener('mouseup', mouseUpHandler);
-
-    zzb.zui.triggerZSplitterResize()
-  };
-
-  // Attach the handler
-  $resizer.addEventListener('mousedown', mouseDownHandler);
 }
 
 _zui.prototype.getZSplitter = function(id) {
@@ -323,6 +335,13 @@ _zui.prototype.setZSplitter = function(id, obj) {
   }
 }
 
+_zui.prototype.destroyZSplitter = function(id) {
+  const splitter = this.zsplitters[id];
+  if (splitter) {
+    delete this.zsplitters[id];
+  }
+}
+
 _zui.prototype.toggleZSplitterById = function(id, state) {
   let $elem = document.getElementById(id)
   if ($elem) {
@@ -336,10 +355,10 @@ _zui.prototype.onLoadInit = function() {
     Array.from($elem.attributes).forEach(attr => {
       switch (attr.nodeName) {
         case 'zsplitter-left':
-          initZSplitter($elem, 'left', attr.nodeValue)
+          zzb.zui.initZSplitter($elem, 'left', attr.nodeValue)
           return true
         case 'zsplitter-right':
-          initZSplitter($elem, 'right', attr.nodeValue)
+          zzb.zui.initZSplitter($elem, 'right', attr.nodeValue)
           return true
         default:
           break
@@ -358,12 +377,6 @@ _zui.prototype.onLoadInit = function() {
   });
   document.querySelectorAll('.zuit-year').forEach(function($elem) {
     $elem.innerHTML = new Date().getFullYear()
-  });
-  document.querySelectorAll('.zpagenohistory').forEach(function($elem) {
-    history.pushState(null, null, location.href);
-    history.back();
-    history.forward();
-    window.onpopstate = function () { history.go(1); };
   });
 }
 
@@ -405,7 +418,7 @@ _zui.prototype.setElemIniter = function(target) {
     let isFound = false
     for (let ii = 0; ii < this.elemIniters.length; ii++) {
       if (this.elemIniters[ii].name === initer.name) {
-        this.elemIniters[ii] = intiter
+        this.elemIniters[ii] = initer
         isFound = true
         break
       }
@@ -583,7 +596,7 @@ _zui.prototype.onElemInit = function($elem) {
             if (dtAttribs.autoEvInput === true) {
               $elem.addEventListener('input', function(evt) {
                 const vInput = $elem.value
-                if (zzb.types.isNonEmptyString(vInput)) {
+                if (zzb.types.isStringNotEmpty(vInput)) {
                   // is vInput valid?
                   let vTemp = luxon.DateTime.fromFormat(vInput, myLocale.date.dateFormat)
                   if (vTemp.isValid) {
@@ -640,10 +653,193 @@ _zui.prototype.onZLoadSection = function($elem, isCustom) {
   })
 }
 
-document.addEventListener('DOMContentLoaded', function () {
-  zzb.zui.onLoadInit()
-  zzb.zui.onElemInit()
-  zzb.zui.onZLoadSection(null)
-}, false);
+_zui.prototype.__registerBuiltins = function () {
+  if (this.isRegisteredBuiltins) {
+    return
+  }
+
+  this.isRegisteredBuiltins = true
+
+  this.setElemIniter({
+    name: 'zuiTableFilter',
+    fn: function ($root) {
+      const filterInput = $root.querySelector('.zui-tablecard-filter') || document.querySelector('.zui-tablecard-filter')
+      const table = $root.querySelector('.zui-tablecard-table')
+      const cardContainer = $root.querySelector('.zui-tablecard-cards')
+
+      if (!table && !cardContainer) return
+
+      const tableRows = table ? table.querySelectorAll('tbody tr') : []
+      const cardRows = cardContainer ? cardContainer.querySelectorAll('.zui-tablecard-card') : []
+
+      // Hook up filter if input exists
+      if (filterInput) {
+        function filterRecs(query) {
+          const q = query.toLowerCase()
+          if (tableRows) {
+            tableRows.forEach(row => {
+              row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none'
+            })
+          }
+          if (cardRows) {
+            cardRows.forEach(card => {
+              card.style.display = card.textContent.toLowerCase().includes(q) ? '' : 'none'
+            })
+          }
+        }
+
+        filterInput.addEventListener('input', function () {
+          filterRecs(this.value)
+        })
+
+        if (table || cardContainer) {
+          const currentValue = filterInput.value.trim()
+          if (currentValue.length > 0) {
+            filterRecs(currentValue)
+          }
+        }
+      }
+
+      if (table) {
+        const headers = table.querySelectorAll('thead th')
+
+        // Determine unique key for sort state tracking
+        const tableKey = table.getAttribute('id') || table.dataset.sortKey || '__default_table__'
+
+        // Ensure sort state exists in memory cache
+        if (!zzb.dom.cache.get(tableKey, { mode: 'mem' })) {
+          zzb.dom.cache.set(tableKey, { index: null, direction: 1 }, { mode: 'mem' });
+        }
+        const sortState = zzb.dom.cache.get(tableKey, { mode: 'mem' });
+
+        headers.forEach((header, index) => {
+          header.addEventListener('click', () => {
+            const sortType = header.getAttribute('zui-sort-type') || 'text'
+            const tbody = table.querySelector('tbody')
+            if (!tbody) return
+            const rows = Array.from(tbody.querySelectorAll('tr'))
+            if (!rows || rows.length === 0) return
+
+            // Toggle or set new sort direction
+            if (sortState.index === index) {
+              sortState.direction *= -1
+            } else {
+              sortState.index = index
+              sortState.direction = -1 // change to 1 if first click should not sort
+            }
+
+            const direction = sortState.direction
+
+            // Clear old sort classes
+            headers.forEach(h => h.classList.remove('sort-asc', 'sort-desc'))
+            // Add sort indicator class
+            header.classList.add(direction === 1 ? 'sort-asc' : 'sort-desc')
+
+            // Then sort using updated direction
+            const sortedRows = rows.sort((a, b) => {
+              const aCell = a.children[index]
+              const bCell = b.children[index]
+              return compareTableCells(aCell, bCell, sortType) * direction
+            })
+
+            // Update cache
+            zzb.dom.cache.set(tableKey, sortState, { mode: 'mem' });
+
+            // Re-append in sorted order
+            sortedRows.forEach(row => tbody.appendChild(row))
+          })
+        })
+
+        // Reapply previous sort if any
+        if (sortState.index !== null) {
+          const sortHeader = headers[sortState.index]
+          if (sortHeader) {
+            const sortType = sortHeader.getAttribute('zui-sort-type') || 'text'
+            const tbody = table.querySelector('tbody')
+            if (!tbody) return
+            const rows = Array.from(tbody.querySelectorAll('tr'))
+            if (!rows || rows.length === 0) return
+
+            // Apply sort class again
+            headers.forEach(h => h.classList.remove('sort-asc', 'sort-desc'))
+            sortHeader.classList.add(sortState.direction === 1 ? 'sort-asc' : 'sort-desc')
+
+            const sortedRows = rows.sort((a, b) => {
+              const aCell = a.children[sortState.index]
+              const bCell = b.children[sortState.index]
+              return compareTableCells(aCell, bCell, sortType) * sortState.direction
+            })
+
+            sortedRows.forEach(row => tbody.appendChild(row))
+          }
+        }
+      }
+    }
+  })
+}
+
+/**
+ * Compares two table cell elements based on a type or custom sort definition.
+ * Delegates value comparison to `zzb.types.compareValues`.
+ *
+ * @param {HTMLElement} aCell - First cell element.
+ * @param {HTMLElement} bCell - Second cell element.
+ * @param {string} type - Type of comparison (e.g., 'int', 'float', 'custom:field:subtype').
+ * @returns {number} - Comparison result (-1, 0, 1).
+ */
+function compareTableCells(aCell, bCell, type) {
+  let aVal, bVal, sortType;
+
+  if (type.startsWith('custom:')) {
+    const [, field, subtype = 'text'] = type.split(':');
+    sortType = subtype;
+    aVal = getCustomSortValue(aCell, field);
+    bVal = getCustomSortValue(bCell, field);
+  } else {
+    sortType = type;
+    aVal = aCell?.textContent?.trim() || '';
+    bVal = bCell?.textContent?.trim() || '';
+  }
+
+  return zzb.types.compareValues(aVal, bVal, sortType);
+}
+
+/**
+ * Extracts a subvalue from a table cell based on a custom field.
+ *
+ * @param {HTMLElement} cellElem - The table cell element.
+ * @param {string} sortId - The sort ID to find within the cell.
+ * @returns {string} - The extracted value, or empty string.
+ */
+function getCustomSortValue (cellElem, sortId) {
+  if (!cellElem || typeof cellElem.querySelector !== 'function') return '';
+  const target = cellElem.querySelector(`[zui-sort-id="${sortId}"]`);
+  return target ? target.textContent.trim() : '';
+}
+
+/**
+ * Core initializer for ZUI (Zazzy UI) once the environment is ready.
+ *
+ * This method is invoked by the global DOM bootstrap logic, and is responsible
+ * for initializing internal ZUI systems. It assumes that all required DOM elements
+ * are fully loaded and available.
+ *
+ * Specifically:
+ * - Registers built-in initializers via `__registerBuiltins()`
+ * - Executes `onLoadInit()` to configure layout and preload settings
+ * - Executes `onElemInit()` to apply UI logic to the current DOM
+ * - Triggers `onZLoadSection()` to run dynamic actions like zintervals or zloadsection
+ *
+ * This should **not** attach any global event listeners directly. Use this in coordination
+ * with the global `DOMContentLoaded` hook which handles deferring setup logic.
+ */
+_zui.prototype.onZUIReady = function () {
+  if (typeof this.__registerBuiltins === 'function') {
+    this.__registerBuiltins();
+  }
+  this.onLoadInit();
+  this.onElemInit();
+  this.onZLoadSection();
+};
 
 exports.zui = _zui

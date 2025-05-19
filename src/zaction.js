@@ -2,117 +2,6 @@
 // _zaction
 // ---------------------------------------------------
 
-/*
-Usage:
-    1. Add 'zaction' to an element class to add event listeners.
-       * This happens on load prior to HTML display or when new content added after.
-       * Add 'no-autoload-zactions' to the body class to disable initializing zaction prior to HTML display.
-    2. Add 'zload-action' to load content prior to HTML display
-
-On the element itself:
-    * `zclosest`: Navigate up the DOM to the designated element, merging in zui attributes on it. Existing zui attributes are not replaced.
-    * `zcall`: Specify the DOM event. Defaults to `click` but available are what your handler specifies, such as click, mousedown, mouseup, change.
-
-    * `zurl`: The url to send data to the server. If the path contains a reserved name (see variable `reservePH` for a list), these are replaced with their respective actions.
-              Reserved placeholder list includes [':event', ':mod', ":zid", ':zidParent']. These are optional to include in zurl.
-              Valid zurls are:
-              * https://example.com/path/to/page
-              * https://example.com/:event/:zid/:mod
-              * https://example.com/path/to/page/:zidParent
-              * https://example.com/path/to/pdfs/:zid/:blobName
-
-    * `za-event`: The event to fire inside the local event handler.
-                  If data is sent to the server, it is part of zaction.event.
-                  Note sometimes events run that don't send data to the server (eg drag-drop).
-                  Built-in events:
-                  * zurl-dialog
-                  * zurl-confirm // show a confirmation dialog prior to running an action
-                  * zurl-replace
-                  * zurl-search // allows interval for page refresh and data-caching
-                  * zurl-action
-                  * zurl-field-update // updates fields using json key-values
-                  * zurl-blob-download
-                  * zurl-nav-tab
-                  * zurl-nav-self
-    * `za-mod`: If used, it is sent to the server as zaction.mod (eg 'delete', 'create', 'edit', 'paginate').
-    * `za-method`: The type of call to initiate with the server. Available: `getJSON`, `postJSON`, `postFORM`. Default is `postJSON`.
-
-    * `za-zid`: The id of an element. Optional. If used, it is sent to the server as zaction.zid.
-    * `za-zid-parent`: The parent-id of an element. Optional. If used, it is sent to the server as zaction.zidParent.
-    * `za-zseq`: The sequence number, if used as a second zid identifier. This id is a passive passenger in that zaction does
-                 not use it. You may create or rename other zids to suit your needs. For example, we could have called this slot "zid2".
-
-    * `za-page-on`: When pagination is active, it is sent to the server as zaction.pageOn.
-    * `za-page-limit`: When pagination is active, it is the number of records to show on a page.
-    * `za-ignore-zurl`:  If 'true', the url is ignored but other properties are initialized.
-    * `za-do-zval`:  When placed on an element (eg button for submit), results will be sent through the zval processor.
-
-    * `za-loop-type`: If used, it is sent to the server as zaction.loopType.
-    * `za-loop-inject-skip-inject`: If set to 'true' and a loopType has not been identified, forces skipping injecting html even when an inject is identified.
-
-    * `za-data`: The data selector in the format of "label.type : id | class". The first period (".") is the label separator and the colon (":") separates the type selector.
-                 * Label is optional but required when selecting multiple elements that require html injection from server ajax results.
-                 * The selector has the reserved words 'none | selector | closest | self'.
-                   * 'none': skips all selectors completely for the element and any ancestors.
-                   * 'self': returns the current element.
-                   * 'closest': selects the closest element.
-                   * 'selector': selects the element, usually based on id ('#id") or class ('.class).
-                 If the selected element is of type Form, a new FormData object is auto-created.
-                 If the zurl, zid and zidParent are not already detected, the data element is inspected for these attributes after the zclosest hierarchy has been completed.
-                 Examples.
-                     za-data="none" --> IGNORE zdata for entire life of zaction.
-                     za-data="self" | "self:"
-                     za-data="label.selector:criteria"
-                     za-data="label.closest:criteria"
-                     za-data="label.selector@inner:criteria" // innerHTML. 'inner' is the default.
-                     za-data="label.closest@outer:criteria" // outerHTML
-
-    * `za-inject`: The element targeted for injection by the results of an action in a format similar to za-data.
-    * `za-post-save`: The elements targeted to invoke after a normal zaction, if no errors.
-                      It is similar to `zdlg-post-save` but the latter is attached to a dialog footer button whereas `za-post-save` is not.
-
-    * `zinput`: The element having this class will have its data-state checked for any changes and, if any, then `ztoggler` gets fired.
-    * `zinput-event`: Default is `input`. For example, specify `change` for a change event.
-    * `zinput-field`: An `input`, `select` or `textarea` that should get an input handler. For textarea, set `zinput-event` to `change`.
-    * `ztoggler`: An attribute on an element having class `zinput`.
-                  It points to the id of the element that should be toggled should any changes happen to child elements having class `zinput-field`.
-                  These are elements that have the `input` event fired.
-    * `ztoggler-display`: `disabled` or `none`. Default is `none`. If none, the target ztoggler element will not show unless there is a data-state change.
-    * `zref-zinput-ptr`: The `zinput` loader will auto-place this on the `ztoggler` element as a reference back to the `zinput` parent.
-                          It is required for post-zaction functionality.
-
-    * `za-dlg`: The selector to the element having dlg attributes in a format similar to za-data.
-      * zdlg-post-save="selector" // See `za-post-save`. The version for zdlg is attached to a dialog button.
-      * zdlg-title="Dialog Title" // Force this title all the title, even if the server sends a title to use.
-      * zdlg-alt-title="Alternative Title" // Use this title when the server does not send a title.
-      * zdlg-body="Do you want to save?" // Evaluation order is zaction.getOptions().zdlg.body (from element), results.html (from server), results.js.body (or optionally from server if results.html is empty)
-      * zdlg-noHeaderCloseButton="false | true" // if 'true', the close button on the header will be hidden.
-      * zdlg-type="default | none | primary | secondary | success | danger | warning| info| light | dark | link"
-        * This sets the theme for the entire dialog but not the buttons, which are set by 'zdlg-theme' or 'zdlg-buttons'.
-      * zdlg-alt-type="default | none | primary | secondary | success | danger | warning| info| light | dark | link" // Use the alternate type when the server does not send a theme.
-      * zdlg-theme="Cancel|Save|default" // A quick way to create buttons and set the type. Use zdlg-buttons for further customization.
-      * zdlg-alt-theme="Cancel|Save|default" // Use the alternate theme when the server does not send a theme.
-      * zdlg-buttons='LABEL|THEME|ZTRIGGER;LABEL|THEME|ZTRIGGER'
-        * The ';' separates buttons.
-      * zdlg-class-backdrop="class2 class3" // Add classes to the backdrop of a .modal-dialog. The backdrop class is already "fullscreen".
-      * zdlg-alt-class-backdrop="class2 class3" // Add classes to the backdrop of a .modal-dialog. The backdrop class is already "fullscreen".
-      * zdlg-class="modal-fullscreen class2 class3" // Add classes to a .modal-dialog.
-      * zdlg-alt-class="modal-fullscreen class2 class3" // Add classes to a .modal-dialog.
-      * zdlg-class-width-mod="sm | lg | xl" // Adds optional size to dialog width, even if the server sends data to use.
-      * zdlg-alt-class-width-mod="sm | lg | xl" // Use this when server does not send data.
-      * zdlg-class-fullscreen-mod="sm | md | lg | xl | xxl" // Adds optional fullscreen down-sizing width, even if the server sends data to use.
-      * zdlg-alt-class-fullscreen-mod="sm | md | lg | xl | xxl" // Use this when server does not send data.
-      * zdlg-is-scrollable="true | false" // Adds scrollbars to dialog, even if the server sends data to use.
-      * zdlg-alt-is-scrollable="true | false" // Use this when server does not send data.
-      * zdlg-is-fullscreen="true | false" // Adds fullscreen to dialog, even if the server sends data to use. Optionally use in conjunction with `zdlg-class-fullscreen-mod .
-      * zdlg-alt-is-fullscreen="true | false" // Use this when server does not send data.
-      * zdlg-is-no-footer="true | false" // Hides the footer completely, even if the server sends data to use.
-      * zdlg-alt-is-no-footer="true | false" // Use this when server does not send data.
-
-    REMOVED: DOM Manipulation (this was tucked inside handleZUrlAction)
-    * `za-post-inject-action`:  Optional action to run after injection. Current supported is 'delete' inside handleZUrlAction.
- */
-
 class ZActionHandler {
   constructor(options) {
     this.options = zzb.types.merge({id:null,handler:null,namespace:null}, options)
@@ -156,11 +45,9 @@ _zaction.prototype.getHandler = function(id) {
   if (!id) {
     return
   }
-  this.handlers.forEach(function(handler) {
-    if (handler.getId() === id) {
-      return handler
-    }
-  })
+  for (const handler of this.handlers) {
+    if (handler.getId() === id) return handler;
+  }
   return null
 }
 
@@ -177,504 +64,410 @@ _zaction.prototype.setHandler = function(handler) {
   this.handlers.push(handler)
 }
 
-function findSelectorTargets($elem, bundle) {
-  if (!$elem) {
-    return null
-  }
-  if (!zzb.types.isStringNotEmpty(bundle)) {
-    return null
-  }
-  let arr = []
-  let ssTargets = bundle.split(',')
-  for (let mm = 0; mm < ssTargets.length; mm++) {
+// function findSelectorTargets($elem, bundle) {
+//   if (!$elem) {
+//     return null
+//   }
+//   if (!zzb.types.isStringNotEmpty(bundle)) {
+//     return null
+//   }
+//   let arr = []
+//   let ssTargets = bundle.split(',')
+//   for (let mm = 0; mm < ssTargets.length; mm++) {
+//
+//     let bundle = ssTargets[mm]
+//
+//     switch (bundle) {
+//       case 'self':
+//         arr.push({label: 'self', $elem: $elem})
+//         break
+//       case 'self:':
+//         arr.push({label: 'self', $elem: $elem})
+//         break
+//       case 'none':
+//         return 'none'
+//       case 'none:':
+//         return 'none'
+//       default:
+//         // parse
+//         // label.selector:#id
+//         // label.selector@placement:#id
+//         let split = [ bundle.substring(0, bundle.indexOf(':')), bundle.substring(bundle.indexOf(':') + 1) ]
+//         if (split.length === 2) {
+//           if (!zzb.types.isStringNotEmpty(split[1])) {
+//             return null
+//           }
+//
+//           let label = null
+//           if (split[0].indexOf('.') > 1) {
+//             // label.selector#placement
+//             label = split[0].slice(0, split[0].indexOf('.'))
+//             split[0] = split[0].slice(split[0].indexOf('.') + 1)
+//           }
+//
+//           let placement = 'inner'
+//           let mySelector = split[0]
+//           if (split[0].indexOf('@') > 1) {
+//             // label.selector#placement
+//             mySelector = split[0].slice(0, split[0].indexOf('@'))
+//             placement = split[0].slice(split[0].indexOf('@') + 1)
+//           }
+//
+//           let $target = null
+//           if (mySelector === 'selector' || mySelector === 's') {
+//             $target = document.querySelector(split[1])
+//           } else if (mySelector === 'closest' || mySelector === 'c') {
+//             $target = $elem.closest(split[1])
+//           } else if (mySelector === 'child' || mySelector === 'h') {
+//             $target = $elem.querySelector(split[1])
+//           }
+//
+//           if (!(placement === 'inner' || placement === 'outer')) {
+//             console.log('unknown placement param inside inject; defaulting to "inner"', split)
+//             placement = 'inner'
+//           }
+//
+//           if ($target) {
+//             arr.push({label: label, $elem: $target, placement: placement})
+//           }
+//         }
+//     }
+//   }
+//
+//   return arr
+// }
 
-    let bundle = ssTargets[mm]
-
-    switch (bundle) {
-      case 'self':
-        arr.push({label: 'self', $elem: $elem})
-        break
-      case 'self:':
-        arr.push({label: 'self', $elem: $elem})
-        break
-      case 'none':
-        return 'none'
-      case 'none:':
-        return 'none'
-      default:
-        // parse
-        // label.selector:#id
-        // label.selector@placement:#id
-        let split = [ bundle.substring(0, bundle.indexOf(':')), bundle.substring(bundle.indexOf(':') + 1) ]
-        if (split.length === 2) {
-          if (!zzb.types.isStringNotEmpty(split[1])) {
-            return null
-          }
-
-          let label = null
-          if (split[0].indexOf('.') > 1) {
-            // label.selector#placement
-            label = split[0].slice(0, split[0].indexOf('.'))
-            split[0] = split[0].slice(split[0].indexOf('.') + 1)
-          }
-
-          let placement = 'inner'
-          let mySelector = split[0]
-          if (split[0].indexOf('@') > 1) {
-            // label.selector#placement
-            mySelector = split[0].slice(0, split[0].indexOf('@'))
-            placement = split[0].slice(split[0].indexOf('@') + 1)
-          }
-
-          let $target = null
-          if (mySelector === 'selector' || mySelector === 's') {
-            $target = document.querySelector(split[1])
-          } else if (mySelector === 'closest' || mySelector === 'c') {
-            $target = $elem.closest(split[1])
-          } else if (mySelector === 'child' || mySelector === 'h') {
-            $target = $elem.querySelector(split[1])
-          }
-
-          if (!(placement === 'inner' || placement === 'outer')) {
-            console.log('unknown placement param inside inject; defaulting to "inner"', split)
-            placement = 'inner'
-          }
-
-          if ($target) {
-            arr.push({label: label, $elem: $target, placement: placement})
-          }
-        }
-    }
-  }
-
-  return arr
-}
-
-_zaction.prototype.newZClosest = function($elem, obj, isFirstZAction, zaExtraHandler) {
+_zaction.prototype.buildZClosest = function($elem, obj, isFirstZAction, zaExtraHandler) {
   return buildZClosest($elem, obj, isFirstZAction, zaExtraHandler)
 }
 
-function buildZClosest($elem, obj, isFirstZAction, zaExtraHandler) {
-  let isNew = false
-  if (!obj) {
-    isNew = true
-    obj = {zaction:{},zdata:{},zdlg:{tryDialog: false},zurl:null,$data:null,arrInjects:null,zref:{},zinterval:{}}
-  }
-  if (!$elem) {
-    return null
-  }
+class ZBuilder {
+  constructor($elem) {
+    this.$elem = $elem;
+    this.zaction = {};
+    this.zdata = {};
+    this.zdlg = { tryDialog: false };
+    this.zurl = null;
+    this.$data = null;
+    this.arrInjects = null;
+    this.zref = {};
+    this.zinterval = {
+      id: $elem.getAttribute('zi-id'),
+      noClick: $elem.getAttribute('zi-noclick') === 'true'
+    };
+    this.forceIgnoreZUrl = false;
+    this.forceIgnoreZData = false;
+    this.forceIgnoreZInject = false;
+    this.isForm = false;
+    this.formData = null;
 
-  if (isNew) {
-    obj.zinterval.id = $elem.getAttribute('zi-id')
-    if (zzb.types.isStringNotEmpty(obj.zinterval.id)) {
-      obj.zinterval.noClick = $elem.getAttribute('zi-noclick') === 'true'
-      $elem.setAttribute('zi-noclick', 'false');
-    }
-  }
-
-  // Apply 'obj.zaction' over the top of the newest found attributes, since 'obj.zaction' overrides these.
-  obj.zaction = zzb.types.merge(zzb.dom.getAttributes($elem, /^za-/, 3), obj.zaction)
-
-  // zdata elements are the full hierarchy, from element to zclosest ancestors.
-  obj.zdata = zzb.types.merge(zzb.dom.getAttributes($elem, /^zd-/, 3), obj.zdata)
-
-  if (!obj.forceIgnoreZUrl) {
-    if (isNew || isFirstZAction) {
-      obj.forceIgnoreZUrl = obj.zaction.ignoreZurl === 'true'
-    }
-    if (!obj.forceIgnoreZUrl && !obj.zurl) {
-      obj.zurl = findZUrlByAttribute($elem, true)
-    }
+    $elem.setAttribute('zi-noclick', 'false');
   }
 
-  if (!obj.forceIgnoreZData) {
-    if (!obj.$data) {
-      if (zzb.types.isStringNotEmpty(obj.zaction.data)) {
-        let arrData = findSelectorTargets($elem, obj.zaction.data)
-        if (arrData && arrData[0].$elem) {
-          obj.$data = arrData[0].$elem
-          obj.forceIgnoreZData = (obj.$data === 'none')
-          if (obj.forceIgnoreZData) {
-            obj.$data = null
-            obj.formData = null
-          } else {
-            if (obj.$data.nodeName.toLowerCase() === 'form') {
-              obj.isForm = true
-              obj.formData = new FormData(obj.$data)
-            }
-            // Wait until the full zclosest hierarchy is completed and if
-            // the following aren't found, then try with the data
-            // = zurl, zid, zidParent
-          }
-        }
+  bld_mergeAttributes() {
+    this.zaction = zzb.types.merge(zzb.dom.getAttributes(this.$elem, /^za-/, 3), this.zaction);
+    this.zdata = zzb.types.merge(zzb.dom.getAttributes(this.$elem, /^zd-/, 3), this.zdata);
+  }
+
+  bld_addViewPort() {
+    if (typeof window !== 'undefined') {
+      this.zaction.viewPort = {
+        window: {
+          w: Math.round(window.innerWidth) || 0,
+          h: Math.round(window.innerHeight) || 0
+        },
+        content: { w: 0, h: 0 }
+      };
+
+      const mainContainer = document.querySelector('.zwc-main-content');
+      if (mainContainer) {
+        const rect = mainContainer.getBoundingClientRect();
+        this.zaction.viewPort.content = {
+          w: Math.round(rect.width),
+          h: Math.round(rect.height)
+        };
       }
     }
   }
 
-  // The element itself can have dlg attributes and may also reference another element via 'za-dlg'.
-  if (isNew || isFirstZAction) {
-    obj.zref = zzb.types.merge(zzb.dom.getAttributes($elem, /^zref-/, 5), obj.zref)
-    obj.zdlg = zzb.types.merge(zzb.dom.getAttributes($elem, /^zdlg-/, 5), obj.zdlg)
-    // Look for any referenced dlg attributes indicated by the `za-dlg` attribute.
-    if (zzb.types.isStringNotEmpty(obj.zaction.dlg)) {
-      let arrDlg = findSelectorTargets($elem, obj.zaction.dlg)
+  bld_resolveZUrl(isFirstCall, isFirstZAction) {
+    if (this.forceIgnoreZUrl) return;
+
+    if (isFirstCall || isFirstZAction) {
+      this.forceIgnoreZUrl = this.zaction.ignoreZurl === 'true';
+    }
+
+    if (!this.forceIgnoreZUrl && !this.zurl) {
+      this.zurl = zzb.dom.findZUrl(this.$elem, true);
+    }
+  }
+
+  bld_resolveZData() {
+    if (this.forceIgnoreZData || this.$data) return;
+
+    if (zzb.types.isStringNotEmpty(this.zaction.data)) {
+      const arrData = zzb.dom.findSelectorTargets(this.$elem, this.zaction.data);
+      if (arrData && arrData[0].$elem) {
+        this.$data = arrData[0].$elem;
+        this.forceIgnoreZData = this.$data === 'none';
+
+        if (!this.forceIgnoreZData) {
+          if (this.$data.nodeName.toLowerCase() === 'form') {
+            this.isForm = true;
+            this.formData = new FormData(this.$data);
+          }
+        } else {
+          this.$data = null;
+          this.formData = null;
+        }
+      } else {
+        console.warn('No matching selector found for zaction.data:', this.zaction.data);
+      }
+    }
+  }
+
+  bld_resolveZDialog() {
+    this.zref = zzb.types.merge(zzb.dom.getAttributes(this.$elem, /^zref-/, 5), this.zref);
+    this.zdlg = zzb.types.merge(zzb.dom.getAttributes(this.$elem, /^zdlg-/, 5), this.zdlg);
+
+    if (zzb.types.isStringNotEmpty(this.zaction.dlg)) {
+      const arrDlg = zzb.dom.findSelectorTargets(this.$elem, this.zaction.dlg);
       if (arrDlg && arrDlg[0].$elem) {
-        obj.zdlg = zzb.types.merge(zzb.dom.getAttributes(arrDlg[0].$elem, /^zdlg-/, 5), obj.zdlg)
-        // Dlgs are special cases since they disrupt the normal "zclosest" flow from child to parent.
-        // With a dlg in play, it needs a change for the element to use its values, if present and if not
-        // having been already defined on $elem.
-        obj.zaction = zzb.types.merge(zzb.dom.getAttributes(arrDlg[0].$elem, /^za-/, 3), obj.zaction)
-        // Also grab the zurl, if available, since it corresponds directly to the dialog. There is the potential
-        // the $elem has on "override" in effect.
-        if (!obj.zurl) {
-          obj.zurl = findZUrlByAttribute(arrDlg[0].$elem, true)
+        const $dlgElem = arrDlg[0].$elem;
+        this.zdlg = zzb.types.merge(zzb.dom.getAttributes($dlgElem, /^zdlg-/, 5), this.zdlg);
+        this.zaction = zzb.types.merge(zzb.dom.getAttributes($dlgElem, /^za-/, 3), this.zaction);
+
+        if (!this.zurl) {
+          this.zurl = zzb.dom.findZUrl($dlgElem, true);
         }
       }
     }
   }
 
-  if (!obj.forceIgnoreZInject) {
-    if (!obj.arrInjects) {
-      if (zzb.types.isStringNotEmpty(obj.zaction.inject)) {
-        obj.arrInjects = findSelectorTargets($elem, obj.zaction.inject)
-        if (obj.arrInjects) {
-          obj.forceIgnoreZInject = (obj.arrInjects === 'none')
-          if (obj.forceIgnoreZInject) {
-            obj.arrInjects = null
-          }
-        }
+  bld_resolveInjects() {
+    if (this.forceIgnoreZInject || this.arrInjects) return;
+
+    if (zzb.types.isStringNotEmpty(this.zaction.inject)) {
+      const arrInjects = zzb.dom.findSelectorTargets(this.$elem, this.zaction.inject);
+      if (arrInjects !== 'none') {
+        this.arrInjects = arrInjects;
+      } else {
+        this.forceIgnoreZInject = true;
+        this.arrInjects = null;
       }
     }
   }
+}
 
-  let notOnZaction = (isNew && !$elem.classList.contains('zaction'))
-  if (isNew && zaExtraHandler === 'za-post-action') {
-    notOnZaction = false
-  }
+function buildZClosest($elem, obj = null, isFirstZAction = false, zaExtraHandler = null) {
+  if (!$elem) return null;
+
+  const isFirstCall = !obj;
+  const builder = isFirstCall ? new ZBuilder($elem) : obj;
+
+  builder.$elem = $elem;
+
+  builder.bld_mergeAttributes();
+  if (isFirstCall) builder.bld_addViewPort();
+  builder.bld_resolveZUrl(isFirstCall, isFirstZAction);
+  builder.bld_resolveZData();
+  if (isFirstCall || isFirstZAction) builder.bld_resolveZDialog();
+  builder.bld_resolveInjects();
+
+  const notOnZaction = isFirstCall && !$elem.classList.contains('zaction') &&
+    zaExtraHandler !== 'za-post-action';
+
   if (notOnZaction) {
-    // root $elem must begin with a zaction
-    obj = buildZClosest($elem.closest('.zaction'), obj, notOnZaction, zaExtraHandler)
-  } else {
-    // a: zclosest=div.navigate  --> div.navigate: zclosest=form --> form-info
-    let closest = zzb.dom.getAttributeElse($elem, 'zclosest', null)
-    if (closest) {
-      let $target = $elem.closest(closest)
-      if ($target) {
-        obj = buildZClosest($target, obj)
-      }
-    }
+    const $parentZ = $elem.closest('.zaction');
+    return buildZClosest($parentZ, builder, notOnZaction, zaExtraHandler);
   }
 
-  return obj
+  const closest = zzb.dom.getAttributeElse($elem, 'zclosest', null);
+  if (closest) {
+    const $target = $elem.closest(closest);
+    if ($target) return buildZClosest($target, builder);
+  }
+
+  return builder;
 }
 
-_zaction.prototype.newZAction = function(ev) {
-  if (!ev || !ev.target) {
-    return {isValid: false}
+class ZActionEvent {
+  constructor(ev) {
+    this.ev = ev;
+    this.zcall = ev?.target?.getAttribute('zcall') || null;
+    this._options = null;
+    this._runAJAX = null;
+    this.reservePH = [':event', ':mod', ':zid', ':zidParent', ':blobName'];
   }
 
-  let myZA = {
-    isValid: true,
-    ev: ev,
-    zcall: ev.target.getAttribute('zcall'), // click, mousedown, mouseup, change
-    _options: null,
-    _runAJAX: null, // function
-    isMouseDown: function() {
-      return this.zcall === 'mousedown'
-    },
-    forceStopPropDef: function(doForce) {
-      if (doForce || (ev.target.getAttribute('force-stop-prop-def') === "true")) {
-        this.ev.preventDefault()
-        this.ev.stopPropagation()
-        return true
-      }
-      return false
-    },
-    getZEvent: function() {
-      if (!this._options) {
-        this.getOptions()
-      }
-      return this._options.zaction.event
-    },
-    hasZEvent: function() {
-      return zzb.types.isStringNotEmpty(this.getZEvent())
-    },
-    isZUrl: function() {
-      if (!this._options) {
-        this.getOptions()
-      }
-      return zzb.types.isStringNotEmpty(this._options.zurl)
-    },
-    canRunZVal: function() {
-      this.getOptions()
-      return (this._options && this._options.$data && this._options.zaction.doZval === "true")
-      // return (this._options && this._options.isForm && this._options.$data && this._options.zaction.val === "true")
-    },
-    runAJAX: function(options, callback) {
-      // Ensure this._options has been created
-      this.getOptions()
+  isMouseDown() {
+    return this.zcall === 'mousedown';
+  }
 
-      if (!options || !this._runAJAX) {
-        callback && callback(null, new Error('_runAJAX not defined'))
-      } else {
-        this._runAJAX(options, callback)
-      }
-    },
-    runInjects: function(drr) {
-      if (this.getOptions().arrInjects && drr && drr.rob && drr.rob.hasRecords() && drr.rob.first().dInjects) {
-        runInjects(this.getOptions().arrInjects, drr.rob.first().dInjects)
-      }
-    },
-    buildAJAXOptions: function() {
-      // Ensure this._options has been created
-      this.getOptions()
-      // Create the options bundle for the ajax call
-      let ajaxOptions = {
-        url: this._options.zurl
-      }
-
-      const myInterval = zzb.time.getInterval(this._options.zinterval.id)
-      if (myInterval && !this._options.zinterval.noClick) {
-        //console.log('setCache from noClick')
-        myInterval.setCache(null)
-      }
-      const hasCache = (myInterval && myInterval.hasCache())
-      let doSetCache = false
-
-      if (this._options.zaction.method === 'postJSON') {
-        ajaxOptions.body = {}
-        if (!this._options.forceIgnoreZData) {
-          if (this._options.isForm) {
-            if (hasCache) {
-              ajaxOptions.body = myInterval.getCache()
-              //console.log('using cached search')
-            } else {
-              ajaxOptions.body = zzb.types.merge(serialize(this._options.formData, this._options.$data), ajaxOptions.body)
-              ajaxOptions.body = zzb.types.merge(this._options.zdata, ajaxOptions.body)
-              ajaxOptions.body = objToTree(ajaxOptions.body)
-              // Forms can internally have data that may override that in zaction: zid, zidParent, pageLimit, pageOn.
-              // We "could" check if formData.pageLimit has a value and then replace that of zaction.pageLimit
-              // but if we do this, then where do the "exceptions" end? Instead, let the server handle new pageLimit requests
-              // to create new zaction.pageLimits.
-              // ajaxOptions.body.data.zaction.pageLimit = ajaxOptions.body.dat
-
-              // Save the interval cache
-              doSetCache = true
-              //console.log('regular search')
-            }
-          }
-        }
-        ajaxOptions.body.zaction = this._options.zaction
-      } else if (this._options.zaction.method === 'postFORM') {
-        if (hasCache) {
-          ajaxOptions.body = myInterval.getCache()
-        } else {
-          ajaxOptions.body = this._options.formData
-          doSetCache = true
-        }
-      }
-
-      if (doSetCache && myInterval) {
-        myInterval.setCache(ajaxOptions.body)
-      }
-
-      if (zzb.types.isStringNotEmpty(this._options.zaction.expectType)) {
-        ajaxOptions.expectType = this._options.zaction.expectType
-      }
-
-      return ajaxOptions
-    },
-    getOptions: function() {
-      if (this._options) {
-        return this._options
-      }
-
-      this._options = buildZClosest(this.ev.target, null, null, this.ev.zaExtraHandler)
-
-      if (!this._options.forceIgnoreZData) {
-        if (this._options.$data) {
-          if (!this._options.zaction.zid) {
-            this._options.zaction.zid = zzb.dom.getAttributeElse(this._options.$data, 'za-zid', null)
-          }
-          if (!this._options.zaction.zidParent) {
-            this._options.zaction.zidParent = zzb.dom.getAttributeElse(this._options.$data, 'za-zid-parent', null)
-          }
-          if (!this._options.zurl) {
-            this._options.zurl = findZUrlByAttribute(this._options.$data, true)
-          }
-        }
-      }
-
-      // Wait until full hierarchy is completed
-      if (!zzb.types.isStringNotEmpty(this._options.zaction.loopType)) {
-        this._options.loopType = null
-      } else {
-        if (!this._options.forceIgnoreZInject) {
-          if (this._options.arrInjects) {
-            if (this._options.zaction.loopInjectSkipInject === "true") {
-              console.log(new Error('skipping za-loop-type "' + this._options.zaction.loopType + '": no arrInjects identified'))
-              this._options.zaction.loopType = null
-            } else {
-              this._options.hasLoopType = true
-            }
-          }
-        }
-      }
-
-      if (!zzb.types.isStringNotEmpty(this._options.zaction.method)) {
-        this._options.zaction.method = 'postJSON'
-      }
-
-      // assign method
-      switch (this._options.zaction.method) {
-        case 'getJSON':
-          this._runAJAX = zzb.ajax.getJSON
-          break
-        case 'postFORM':
-          this._runAJAX = zzb.ajax.postFORM
-          break
-        default:
-          this._runAJAX = zzb.ajax.postJSON
-          break
-      }
-
-      // transition from string to boolean
-      if (this._options.zdlg) {
-        this._options.zdlg.tryDialog = Object.keys(this._options.zdlg).length > 0
-      }
-
-      if (!this._options.forceIgnoreZUrl) {
-        let zurl = this._options.zurl
-        if (!zzb.types.isStringNotEmpty(zurl)) {
-          // Log it but don't throw an error. There is a chance the calling program is using the zurl system
-          // for other purposes, such as to retrieve arrInjects, $formdata, zid or zidParent values.
-          console.log('cannot determine zurl')
-          this._options.zurl = null
-        } else {
-          for (let ii = 0; ii < reservePH.length; ii++) {
-            if (zurl.indexOf(reservePH[ii]) > -1) {
-              let keyNoColon = reservePH[ii].replace(':', '')
-              if (zzb.types.isStringNotEmpty(this._options.zaction[keyNoColon])) {
-                zurl = zurl.replace(reservePH[ii], this._options.zaction[keyNoColon])
-              } else {
-                throw new Error("reserve placeholder '" + reservePH[ii] + "' not found in zurl '" + zurl + "'")
-              }
-            }
-          }
-          this._options.zurl = zurl
-        }
-      }
-
-      this._options.zaction.pageOn = zzb.strings.parseIntOrZero(this._options.zaction.pageOn)
-      this._options.zaction.pageLimit = zzb.strings.parseIntOrZero(this._options.zaction.pageLimit)
-
-      return this._options
+  forceStopPropDef(force) {
+    const shouldStop = force || this.ev?.target?.getAttribute('force-stop-prop-def') === 'true';
+    if (shouldStop) {
+      this.ev.preventDefault?.();
+      this.ev.stopPropagation?.();
     }
+    return shouldStop;
   }
 
-  if (!myZA.hasZEvent()) {
-    return {isValid: false}
+  getZEvent() {
+    return this.getOptions()?.zaction?.event ?? null;
   }
 
-  return myZA
-}
-
-let reservePH = [':event', ':mod', ":zid", ':zidParent', ':blobName']
-
-function findZUrlByAttribute($elem, returnNull) {
-  if (!$elem) {
-    return (returnNull ? null : '')
+  hasZEvent() {
+    const event = this.getZEvent();
+    return zzb.types.isStringNotEmpty(event);
   }
-  let zurl = $elem.getAttribute('zurl')
-  if (!zzb.types.isStringNotEmpty(zurl)) {
-    zurl = $elem.getAttribute('href')
-    if (!zzb.types.isStringNotEmpty(zurl)) {
-      zurl = $elem.getAttribute('action')
-      if (!zzb.types.isStringNotEmpty(zurl) && $elem.nodeName && $elem.nodeName.toLowerCase() !== 'img') {
-        zurl = $elem.getAttribute('src')
-      }
-    }
-  }
-  if (!zurl || zurl === '#') {
-    return (returnNull ? null : '')
-  }
-  return zurl
-}
 
-// https://gomakethings.com/how-to-serialize-form-data-with-vanilla-js/
-// https://gomakethings.com/how-to-serialize-form-data-into-a-search-parameter-string-with-vanilla-js/
-// https://stackoverflow.com/questions/41431322/how-to-convert-formdata-html5-object-to-json
-function serialize (data, $elem) {
-  let obj = {};
-  for (let [key, value] of data) {
-    if (obj[key] !== undefined) {
-      if (!Array.isArray(obj[key])) {
-        obj[key] = [obj[key]];
-      }
-      obj[key].push(value);
+  isValid() {
+    return !!this.ev?.target && this.hasZEvent();
+  }
+
+  isZUrl() {
+    return zzb.types.isStringNotEmpty(this.getOptions()?.zurl);
+  }
+
+  runAJAX(options, callback) {
+    this.getOptions();
+    if (!options || !this._runAJAX) {
+      callback?.(null, new Error('_runAJAX not defined'));
     } else {
-      obj[key] = value;
+      this._runAJAX(options, callback);
     }
   }
-  if ($elem) {
-    const keys = Object.keys(obj)
-    for (let ii = 0; ii < keys.length; ii++) {
-      let $field = $elem.querySelector('[name="' + keys[ii] + '"]')
-      if ($field) {
-        let zfType = $field.getAttribute('zf-type')
 
-        // The cached value, if set, overrides the actual value.
-        let zfCVal = zzb.dom.getAttributeElse($field, 'zf-cval', null)
-        if (zfCVal) {
-          if (zfType === 'date-iso' && (obj[keys[ii]] && obj[keys[ii]].trim() === '')) {
-            // A different datepicker object picker may have better results.
-            obj[keys[ii]] = null
-          } else {
-            obj[keys[ii]] = zfCVal
-          }
-        }
+  runInjects(response) {
+    const injects = this.getOptions().arrInjects;
+    const dInjects = response?.rob?.first?.()?.dInjects;
+    if (injects && dInjects) {
+      runInjects(injects, dInjects);
+    }
+  }
 
-        if (zzb.types.isStringNotEmpty(zfType)) {
-          let forceArray = zfType.startsWith('[]')
-          let type = zfType.replaceAll('[]', '')
-          let elseif = (type === 'int' || type === 'float') ? 0 : ''
-          if (type === 'string' && !forceArray) {
-            continue
-          } else if (type === 'bool') {
-            elseif = false
-          } else if (type === 'date-iso') {
-            elseif = null
+  getOptions() {
+    if (this._options) return this._options;
+
+    const target = this.ev?.target;
+    if (!target) return (this._options = null);
+
+    const built = zzb.zaction.buildZClosest(target, null, null, this.ev.zaExtraHandler);
+
+    if (!built) {
+      this._options = null;
+      return null;
+    }
+
+    this._options = built;
+    const opts = this._options;
+
+    if (!opts.forceIgnoreZData && opts.$data) {
+      opts.zaction.zid ??= zzb.dom.getAttributeElse(opts.$data, 'za-zid', null);
+      opts.zaction.zidParent ??= zzb.dom.getAttributeElse(opts.$data, 'za-zid-parent', null);
+      opts.zurl ??= zzb.dom.findZUrl(opts.$data, true);
+    }
+
+    if (!opts.forceIgnoreZUrl && zzb.types.isStringNotEmpty(opts.zurl)) {
+      for (const ph of this.reservePH) {
+        if (opts.zurl.includes(ph)) {
+          const key = ph.slice(1);
+          const val = opts.zaction[key];
+          if (!zzb.types.isStringNotEmpty(val)) {
+            throw new Error(`Missing required placeholder '${ph}' in zurl`);
           }
-          obj[keys[ii]] = zzb.strings.parseTypeElse(obj[keys[ii]], type, elseif, forceArray)
+          opts.zurl = opts.zurl.replace(ph, val);
         }
       }
     }
-  }
-  return obj;
-}
 
-function objToTree(obj) {
+    opts.zaction.pageOn = zzb.strings.parseIntOrZero(opts.zaction.pageOn);
+    opts.zaction.pageLimit = zzb.strings.parseIntOrZero(opts.zaction.pageLimit);
+    opts.zaction.method ||= 'postJSON';
 
-  function setNode(branch, parts, level, value) {
-    if (level === parts.length - 1) {
-      branch[parts[level]] = value
-    } else {
-      if (!branch[parts[level]]) {
-        branch[parts[level]] = {}
-      }
-      branch[parts[level]] = setNode(branch[parts[level]], parts, level + 1, value)
+    switch (opts.zaction.method) {
+      case 'getJSON':
+        this._runAJAX = zzb.ajax.getJSON;
+        break;
+      case 'postFORM':
+        this._runAJAX = zzb.ajax.postFORM;
+        break;
+      default:
+        this._runAJAX = zzb.ajax.postJSON;
     }
-    return branch
+
+    opts.zdlg.tryDialog = zzb.types.isObject(opts.zdlg) && Object.keys(opts.zdlg).length > 0;
+
+    if (
+      zzb.types.isStringNotEmpty(opts.zaction.loopType) &&
+      !opts.forceIgnoreZInject &&
+      opts.arrInjects
+    ) {
+      if (opts.zaction.loopInjectSkipInject === 'true') {
+        opts.zaction.loopType = null;
+      } else {
+        opts.hasLoopType = true;
+      }
+    }
+
+    return opts;
   }
 
-  const keys = Object.keys(obj)
-  let tree = {}
-  for (let ii = 0; ii < keys.length; ii++) {
-    tree = setNode(tree, keys[ii].split('.'), 0, obj[keys[ii]])
-  }
+  buildAJAXOptions() {
+    this.getOptions();
+    const opts = this._options;
+    const ajaxOptions = { url: opts.zurl };
+    const myInterval = zzb.time.getInterval(opts.zinterval.id);
+    const hasCache = myInterval && myInterval.hasCache();
+    let doSetCache = false;
 
-  return tree
+    if (myInterval && !opts.zinterval.noClick) {
+      myInterval.setCache(null);
+    }
+
+    switch (opts.zaction.method) {
+      case 'postJSON':
+        if (!opts.forceIgnoreZData) {
+          if (opts.isForm) {
+            ajaxOptions.body = hasCache
+              ? myInterval.getCache()
+              : zzb.dom.formDataToJson(opts.$data);
+
+            // Optionally merge zdata if needed, otherwise you can skip this merge
+            if (opts.zdata) {
+              ajaxOptions.body = zzb.types.merge(ajaxOptions.body, opts.zdata);
+            }
+          }
+        }
+        ajaxOptions.body = ajaxOptions.body || {};
+        ajaxOptions.body.zaction = opts.zaction;
+        break;
+
+      case 'postFORM':
+        ajaxOptions.body = hasCache ? myInterval.getCache() : opts.formData;
+        doSetCache = !hasCache;
+        break;
+    }
+
+    if (doSetCache && myInterval) {
+      myInterval.setCache(ajaxOptions.body);
+    }
+
+    if (zzb.types.isStringNotEmpty(opts.zaction.expectType)) {
+      ajaxOptions.expectType = opts.zaction.expectType;
+    }
+
+    return ajaxOptions;
+  }
 }
+
+_zaction.prototype.ZActionEvent = ZActionEvent;
+
+_zaction.prototype.newZAction = function (ev) {
+  const zact = new ZActionEvent(ev);
+  return zact;
+};
 
 // Three means to run handlers
 // 1. Use built-in handlers. Defaults are in _zaction.prototype.actionHandler, including hooks to the `zurl` system
@@ -717,9 +510,8 @@ _zaction.prototype.addEventListeners = function(selector, unregisteredHandler, $
 }
 
 _zaction.prototype.actionHandler = function(ev, unregisteredHandler, callback) {
-
   let zaction = zzb.zaction.newZAction(ev)
-  if (zaction.isValid !== true) {
+  if (!zaction.isValid()) {
     throw new Error('failed to create new zaction from event')
   }
 
@@ -996,45 +788,55 @@ function handleDialog(zaction, callback, results) {
         })
       }
 
-      // Init:
-      // 1. UI elements needing javascript inside modal-body
-      // 2. Any action handlers
-      // 3. Triggers
-      //    * When the event is 'zurl-confirm', the server is not contact until AFTER confirmation.
-      //      'zurl-confirm' is resolved under 'button.action' otherwise $elem is searched for triggers
-      //       inside '.modal-body', which is what the logic below does.
-      if ($elem) {
+      // Load and init elements inside modal body
+      zzb.zaction.loadZInputs($elem)
+      if (zzb.zui) {
+        zzb.zui.onElemInit($elem)
+      }
+      zzb.zaction.addEventListeners('.zaction', results.js.actionHandler, $elem)
 
-        zzb.zaction.loadZInputs($elem)
-
-        if (zzb.zui) {
-          zzb.zui.onElemInit($elem)
-        }
-
-        zzb.zaction.addEventListeners('.zaction', results.js.actionHandler, $elem)
-
-        let $ztElems = $elem.querySelectorAll('[ztrigger]')
-        if ($ztElems) {
-          $ztElems.forEach(function($ztElem) {
-            if (!allowedTriggers.includes($ztElem.getAttribute(('ztrigger')))) {
-              console.log('no match of ztrigger handler "', $ztElem.getAttribute('ztrigger') + '"' )
-            } else {
-              // Ensure this element has a loop-type assigned from the original action.
-              if (zaction.getOptions().hasLoopType) {
-                if (!zzb.types.isStringNotEmpty($ztElem.getAttribute('za-loop-type'))) {
-                  $ztElem.setAttribute('za-loop-type', zaction.getOptions().zaction.loopType)
-                  $ztElem.setAttribute('za-loop-inject-skip-inject', "false") // true
-                }
+      // Gather all triggers inside modal-body
+      let $ztElems = $elem.querySelectorAll('[ztrigger]')
+      let validBodyTriggers = []
+      if ($ztElems) {
+        $ztElems.forEach(function($ztElem) {
+          let trigger = $ztElem.getAttribute('ztrigger')
+          if (!allowedTriggers.includes(trigger)) {
+            console.log('no match of ztrigger handler "', trigger + '"' )
+          } else {
+            // Assign loop-type info if needed
+            if (zaction.getOptions().hasLoopType) {
+              if (!zzb.types.isStringNotEmpty($ztElem.getAttribute('za-loop-type'))) {
+                $ztElem.setAttribute('za-loop-type', zaction.getOptions().zaction.loopType)
+                $ztElem.setAttribute('za-loop-inject-skip-inject', "false")
               }
-
-              $ztElem.addEventListener('ztrigger-dialog-button', function(ev){
-                zzb.zaction.actionHandler(ev, ev.detail.altHandler, function(drr, err) {
-                  handleActionResults(drr, err, ev.detail.dialog)
-                })
-              })
             }
-          })
-        }
+            $ztElem.addEventListener('ztrigger-dialog-button', function(ev){
+              zzb.zaction.actionHandler(ev, ev.detail.altHandler, function(drr, err) {
+                handleActionResults(drr, err, ev.detail.dialog)
+              })
+            })
+          }
+          validBodyTriggers.push(trigger)
+        })
+      }
+
+      // Filter DOM buttons in modal-footer: keep only those with valid triggers or defaultSafeTrigger
+      const defaultSafeTrigger = 'cancel'
+      if ($buttons && $buttons.length > 0) {
+        $buttons.forEach($btn => {
+          const trig = $btn.getAttribute('ztrigger')?.toLowerCase()
+          if (!trig) {
+            console.warn('Button in footer is missing ztrigger, removing')
+            $btn.remove()
+            return
+          }
+          const isAllowed = (trig === defaultSafeTrigger) || validBodyTriggers.includes(trig)
+          if (!isAllowed) {
+            console.warn(`Removing modal-footer button with ztrigger="${trig}" – no matching .zaction`)
+            $btn.remove()
+          }
+        })
       }
 
       zzb.dom.setAttribute($elem, '_zdinit', 'true')
@@ -1477,7 +1279,7 @@ _zaction.prototype.runZLoadActions = function($parent) {
     $parent = document
   }
   let $elems = $parent.querySelectorAll('.zload-action')
-  if ($elems) {
+  if ($elems && $elems.length > 0){
     $elems.forEach(function($elem) {
 
       $elem.addEventListener('zload-action', function(ev){
@@ -1532,6 +1334,18 @@ _zaction.prototype.loadZInputs = function($parent) {
   if (!$parent) {
     $parent = document
   }
+
+  if ($parent.tagName && $parent.classList.contains('zinput')) {
+    zzb.zaction.detectFieldChanges($parent)
+  } else {
+    const $elems = $parent.querySelectorAll('.zinput')
+    if ($elems && $elems.length > 0) {
+      $elems.forEach(zzb.zaction.detectFieldChanges)
+    }
+  }
+}
+
+_zaction.prototype.detectFieldChanges = function($elem) {
   const fnToggle = function ($toggler, useDisabled, noChange) {
     if (noChange) {
       useDisabled ? $toggler.disabled = true : $toggler.classList.add('d-none')
@@ -1539,105 +1353,109 @@ _zaction.prototype.loadZInputs = function($parent) {
       useDisabled ? $toggler.disabled = false : $toggler.classList.remove('d-none')
     }
   }
+
   const fnUpdateToggler = function(id, $toggler, useDisabled) {
     let noChange = true
-    for (const [ key, value ] of Object.entries(cacheZInputs[id].changes)) {
+    for (const [key, value] of Object.entries(cacheZInputs[id].changes)) {
       if (value === false) {
         noChange = false
       }
     }
     fnToggle($toggler, useDisabled, noChange)
   }
+
   const fnFindFieldType = function($field) {
     let fldType = $field.getAttribute('type')
     return fldType ? fldType.toLowerCase() : $field.tagName.toLowerCase()
   }
-  const fnDetectChanges = function($elem) {
-    let id = $elem.getAttribute('id')
-    if (!zzb.types.isStringNotEmpty(id)) {
-      id = zzb.uuid.newV4().replace(/-/g, '')
-      $elem.setAttribute('id', id)
-    }
-    let $toggler = document.getElementById($elem.getAttribute('ztoggler'))
-    if (zzb.types.isObject($toggler)) {
-      $toggler.setAttribute('zref-zinput-ptr', id)
-      let useDisabled = $toggler.getAttribute('ztoggler-display') === 'disabled'
-      fnToggle($toggler, useDisabled, true)
-      cacheZInputs[id] = {originals:{},changes:{}}
-      let $fields = $elem.querySelectorAll('.zinput-field')
-      if ($fields) {
-        $elem.querySelectorAll('.zinput-field').forEach(function($field) {
-          const fldName = $field.getAttribute('name')
-          if (zzb.types.isStringNotEmpty(fldName)) {
-            const fldType = fnFindFieldType($field)
-            if (fldType === 'checkbox' || fldType === 'radio') {
-              cacheZInputs[id].originals[fldName] = $field.checked + ''
-            } else {
-              cacheZInputs[id].originals[fldName] = $field.value
-            }
-            let chEvent = $field.getAttribute('zinput-event')
-            if (zzb.types.isStringEmpty(chEvent)) {
-              chEvent = 'input'
-            }
-            const zInputEvent = $field.getAttribute('zinput-event')
-            if (zInputEvent === 'change') {
-              $field.addEventListener('change', function (e) {
-                if (fldType === 'checkbox' || fldType === 'radio') {
-                  cacheZInputs[id].changes[fldName] = cacheZInputs[id].originals[fldName] === this.checked + ''
-                } else if (fldType === 'textarea') {
-                  cacheZInputs[id].changes[fldName] = cacheZInputs[id].originals[fldName] === this.value
-                } else {
-                  cacheZInputs[id].changes[e.target.name] = cacheZInputs[id].originals[e.target.name] === e.target.value
-                }
-                fnUpdateToggler(id, $toggler, useDisabled)
-              })
-            } else {
-              $field.addEventListener('input', function(e) {
-                cacheZInputs[id].changes[e.target.name] = cacheZInputs[id].originals[e.target.name] === e.target.value
-                fnUpdateToggler(id, $toggler, useDisabled)
-              })
-            }
-          }
-        })
-      }
-    }
+
+  let id = $elem.getAttribute('id')
+  if (!zzb.types.isStringNotEmpty(id)) {
+    id = zzb.uuid.newV4().replace(/-/g, '')
+    $elem.setAttribute('id', id)
   }
-  if ($parent.tagName && $parent['classList'] && $parent.classList.contains('zinput')) {
-    fnDetectChanges($parent)
-  } else {
-    let $elems = $parent.querySelectorAll('.zinput')
-    if ($elems) {
-      $elems.forEach(function($elem) {
-        fnDetectChanges($elem)
-      })
-    }
+
+  let $toggler = document.getElementById($elem.getAttribute('ztoggler'))
+  if (zzb.types.isObject($toggler)) {
+    $toggler.setAttribute('zref-zinput-ptr', id)
+    const useDisabled = $toggler.getAttribute('ztoggler-display') === 'disabled'
+    fnToggle($toggler, useDisabled, true)
+
+    cacheZInputs[id] = { originals: {}, changes: {} }
+
+    const $fields = $elem.querySelectorAll('.zinput-field')
+    $fields.forEach(function($field) {
+      const fldName = $field.getAttribute('name')
+      if (!zzb.types.isStringNotEmpty(fldName)) return
+
+      const fldType = fnFindFieldType($field)
+      cacheZInputs[id].originals[fldName] = (fldType === 'checkbox' || fldType === 'radio')
+        ? $field.checked + ''
+        : $field.value
+
+      const zInputEvent = $field.getAttribute('zinput-event') || 'input'
+      const handler = function (e) {
+        const isEqual = (fldType === 'checkbox' || fldType === 'radio')
+          ? cacheZInputs[id].originals[fldName] === this.checked + ''
+          : cacheZInputs[id].originals[fldName] === this.value
+
+        cacheZInputs[id].changes[fldName] = isEqual
+        fnUpdateToggler(id, $toggler, useDisabled)
+      }
+
+      $field.addEventListener(zInputEvent, handler)
+    })
   }
 }
 
+
+/**
+ * DOMContentLoaded bootstrap for initializing Zazzy ZAction and ZUI.
+ *
+ * This listener is triggered once the DOM is fully parsed and ready.
+ * It defines a `bootstrap()` function that sets up `.zaction` handlers
+ * and invokes `zzb.zui.onZUIReady()` for core UI logic.
+ *
+ * To customize the startup flow (e.g. register custom handlers or delay
+ * initialization), define a global `window.zzbReady(bootstrap)` function
+ * on your page *before* this library is loaded. That function will receive
+ * the `bootstrap` callback and can perform pre-initialization work before
+ * finally invoking `bootstrap()` manually.
+ *
+ * Example use:
+ * ```html
+ * <script>
+ *   window.zzbReady = function (bootstrap) {
+ *     zzb.zaction.registerHandler({ id: 'vedDispatch', handler: handleCustom });
+ *     zzb.zui.onZLoadSection(null, true); // optional custom load logic
+ *     bootstrap(); // complete the standard setup
+ *   };
+ * </script>
+ * <script src="/dist/zzb.ui.js"></script>
+ * ```
+ */
 document.addEventListener('DOMContentLoaded', function () {
-
-  let $body = document.querySelector('body')
-  if ($body) {
-    if ($body.getAttribute('no-autoload-zactions') === 'true') {
-      return
+  const bootstrap = () => {
+    if (zzb.zaction && zzb.zaction.addEventListeners) {
+      zzb.zaction.addEventListeners('.zaction');
+      zzb.zaction.runZLoadActions();
     }
-    // $body.getAttribute('zactions-wait-check' === 'true') {
-    //         // The issue is preventing multiple events to be attached to a single element.
-    //         // Current solution:
-    //         // 1. The attribute "za1x" (=zaction 1x only) checks if zaction has been applied to an element.
-    //         //    Future: optionally inside addEventListeners, can add flag to not add the za1x check.
-    //         // Other solutions:
-    //         // 2. Add a timer on an interval to run addEventListeners only when other libs have finished loading,
-    //         //    indicated by a conditional attribute on the body (eg proceed) or stopWait function on zaction.
-    //         //    BUT #2 may not ever be needed anyways. Other libs can register handlers when their js loads which is then
-    //         //    available immediately and prior to DOMContentLoaded. (script tags are processed before DOMContentLoaded)
-    //         return
-    // }
-    zzb.zaction.addEventListeners('.zaction')
+
+    if (zzb.zui && typeof zzb.zui.onZUIReady === 'function') {
+      zzb.zui.onZUIReady();
+    }
+  };
+
+  if (typeof window.zzbReady === 'function') {
+    try {
+      window.zzbReady(bootstrap);
+    } catch (e) {
+      console.warn('zzbReady() threw error; falling back to default bootstrap.', e);
+      bootstrap();
+    }
+  } else {
+    bootstrap();
   }
-
-  zzb.zaction.runZLoadActions()
-
-}, false);
+}, false); // Always use `false` for bubble-phase listening
 
 exports.zaction = _zaction

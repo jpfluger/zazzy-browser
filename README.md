@@ -1,77 +1,103 @@
-# zazzy-browser (zzb)
+# zazzy-browser (`zzb`)
 
-A collection of general-purpose browser utilities used as higher-level building-blocks to assist in client-server communications. They favor [Bootstrap5](https://getbootstrap.com/).
+**Zazzy Browser** (`zzb`) is a collection of modular, high-level browser utilities designed to simplify client-server interactions and user interface behaviors. It is built using **vanilla JavaScript**—with no dependencies on libraries like [jQuery](https://jquery.com/) or [Lodash](https://lodash.com/).
 
-`zzb` is `vanilla js` - all prior dependencies have been removed (eg [jquery](https://jquery.com/) and [lodash](https://lodash.com/)).
-Dialogs have been retained and follow [Bootstrap5](https://getbootstrap.com/docs/5.1/components/modal/) html and css.  
+The utilities are designed to complement [Bootstrap 5](https://getbootstrap.com/) and support modern, declarative HTML development through attribute-driven interaction patterns.
 
-> Note: versions < 2.0.0 has been placed in branch `version1`. The older versions depend on jquery, lodash and bootstrap.
+> For legacy support, versions prior to `2.0.0` are maintained in the `version1` branch. Those versions rely on jQuery, Lodash, and older Bootstrap versions.
 
-## What is inside
+---
 
-`zzb` gets automatically loaded into the browser global cache and is referenced via `zzb`.
+## Features
 
-* zzb.types: data type operations
-* zzb.uuid: uuid functions
-* zzb.strings: string functions
-* zzb.rob: uniform return object (rob) functions
-* zzb.ajax: ajax helpers with promises
-* zzb.dialogs: compatible with bootstrap5
-* zzb.perms: permissions
-* zzb.dom: helpful dom functions
+The `zzb` global object is automatically available in the browser and includes the following modules:
 
-`zzb.ui` includes
+### Core Modules
 
-* zzb.time: includes interval for page refresh and data-caching
-* zzb.zaction: links html attributes to the event system
-* zzb.zui: extra ui elements. 
+* [zzb.types](src/types_README.md) – Utilities for type-checking, value parsing, comparison, and normalization.
+* `zzb.uuid` – UUID generation utilities.
+* `zzb.strings` – String manipulation helpers.
+* `zzb.dom` – Safe DOM accessors and attribute utilities.
+* `zzb.dialogs` – Dialog and modal rendering, fully compatible with Bootstrap 5.
+* `zzb.perms` – Permission and access control helpers.
+* `zzb.rob` – "Return Object Block" (ROB) utilities for uniform API responses.
+* `zzb.ajax` – Lightweight AJAX wrappers using Promises.
 
-## CSS
+### UI Modules (loaded via `zzb.ui`)
 
-Inside `zzb.zui` is an optional splitter panel. It keys off the class `zsplitter` which is implemented as a bootstrap flex column. 
-Some sample css follows.
+* `zzb.time` – Interval-based refresh controls, smart data caching, and auto-updating widgets.
+* [zzb.zaction](src/zaction_README.md) – Declarative event binding and DOM-server interaction via `za-*` attributes.
+* [zzb.zui](src/zui_README.md) – Utilities for enhanced UI rendering, input tracking, and layout helpers.
+
+---
+
+## CSS Integration
+
+The [`zzb.zui`](zui_README.md) module includes optional splitter functionality for resizable side panels, triggered by elements with the `.zsplitter` class. This CSS is intended to work alongside Bootstrap’s flex layout system:
 
 ```css
 .zsplitter {
-    flex: none;
-    width: 17px;
-    /*cursor: col-resize;*/
+  flex: none;
+  width: 17px;
 }
 .zsplitter a {
-    color:#ADFF2F;
+  color: #ADFF2F;
 }
 .zsplitter a:hover {
-    color: #84c01b;
+  color: #84c01b;
 }
 .zsplitter-resize {
-    cursor: col-resize;
+  cursor: col-resize;
 }
 ```
 
-## Usage
+---
 
-Include in your html page:
+## Installation
+
+Include the library in your HTML via:
 
 ```html
-<script src="dist/zzb.js"></script>
+<script src="/dist/zzb.js"></script>
 ```
 
-## Build
+To include UI modules such as `zzb.zaction` or `zzb.zui`, use:
 
-Run the `npm` script to generate javascript distribution files, including the minified version.
+```html
+<script src="/dist/zzb.ui.js"></script>
+```
+
+---
+
+## Custom Setup
+
+To customize the initialization (e.g., to register custom handlers or defer setup), use the `window.zzbReady` hook. See the full example in [`zaction_README.md`](src/zaction_README.md#custom-initialization-example-html-override).
+
+---
+
+## Development
+
+### Build
+
+To generate the distribution files (including the minified bundle):
 
 ```bash
-$ npm run dist
+npm run dist
 ```
 
-## Testing
+### Testing
 
-For dialog testing, open `test/index-test.html` in a browser. You should see a dialog pop-up.
+To run UI-related tests (e.g., dialogs), open `test/index-test.html` in a browser.
 
-Mocha tests can be run via `npm`.
+To execute unit tests with Mocha:
 
 ```bash
-$ npm test
+npm test
 ```
 
-## [MIT Licensed](LICENSE)
+---
+
+## License
+
+[MIT Licensed](LICENSE)
+© Your Company / Project Name

@@ -135,11 +135,11 @@ _perms.prototype.getPermObject = function (permkey, available, merge) {
   return po
 }
 
-const reCRUDX = new RegExp('^[CRUDX]*$')
+const reCRUDXL = new RegExp('^[CRUDXL]*$')
 
 _perms.prototype.getPermAttributes = function (permkey) {
   // CRUDX
-  let attr = { canRead: false, canCreate: false, canUpdate: false, canDelete: false, canExecute: false }
+  let attr = { canRead: false, canCreate: false, canUpdate: false, canDelete: false, canExecute: false, canList: false }
 
   if (!permkey || !zzb.types.isStringNotEmpty(permkey)) {
     return attr
@@ -155,7 +155,7 @@ _perms.prototype.getPermAttributes = function (permkey) {
     return attr
   }
 
-  if (!reCRUDX.test(permkey)) {
+  if (!reCRUDXL.test(permkey)) {
     return attr
   }
 
@@ -164,6 +164,7 @@ _perms.prototype.getPermAttributes = function (permkey) {
   attr.canUpdate = permkey.indexOf('U') >= 0
   attr.canDelete = permkey.indexOf('D') >= 0
   attr.canExecute = permkey.indexOf('X') >= 0
+  attr.canList = permkey.indexOf('L') >= 0
 
   return attr
 }

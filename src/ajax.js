@@ -43,7 +43,7 @@ _ajax.prototype.request = function(options, callback) {
     })
     .then(function (data) {
 
-      const objReturn = {request: options, data: data}
+      const objReturn = { request: options, data: data }
 
       // allow an escape
       if (objReturn.request.RAWRETURN === true) {
@@ -70,7 +70,7 @@ _ajax.prototype.request = function(options, callback) {
             } else if (zzb.types.isStringNotEmpty(data.message)) {
               zzb.dialogs.showMessage({
                 type: zzb.types.isStringNotEmpty(data.messageType) ? data.messageType : null,
-                classDialog: 'zzb-dialog-flash-message zzb-dialog-flash-redirect' + zzb.strings.mergeElseEmpty(' zzb-dialog-flash-status-{0}', data.messageType),
+                classDialog: 'zzb-dialog-flash-message zzb-dialog-flash-redirect' + zzb.strings.formatElseEmpty(' zzb-dialog-flash-status-{0}', data.messageType),
                 dataBackdrop: 'static',
                 title: zzb.types.isStringNotEmpty(data.messageTitle) ? data.messageTitle : '',
                 body: data.message,
@@ -134,7 +134,7 @@ _ajax.prototype.request = function(options, callback) {
             noFinalResolve = true
             zzb.dialogs.showMessage({
               type: zzb.types.isStringNotEmpty(data.messageType) ? data.messageType : null,
-              classDialog: 'zzb-dialog-flash-message' + zzb.strings.mergeElseEmpty(' zzb-dialog-flash-status-{0}', data.messageType, rob.hasErrors() ? 'error' : 'okay'),
+              classDialog: 'zzb-dialog-flash-message' + zzb.strings.formatElseEmpty(' zzb-dialog-flash-status-{0}', data.messageType, rob.hasErrors() ? 'error' : 'okay'),
               dataBackdrop: 'static',
               title: zzb.types.isStringNotEmpty(data.messageTitle) ? data.messageTitle : '',
               body: data.message,

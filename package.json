@@ -1,6 +1,6 @@
 {
   "name": "zazzy-browser",
-  "version": "2.8.3",
+  "version": "2.9.0",
   "description": "A collection of general-purpose browser utilities used as higher-level building-blocks to assist in client-server communications.",
   "engines": {
     "node": ">= 14.0.0"
@@ -33,6 +33,7 @@
     "chai": "^4.3.4",
     "cors": "^2.8.5",
     "express": "^4.17.1",
+    "jsdom": "^26.0.0",
     "mocha": "10.1.0",
     "node-fetch": "^2.0.0",
     "really-need": "^1.9.2",

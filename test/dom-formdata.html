@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>DotPath Form Parser Example</title>
+    <script src="json-form-parse-web.js"></script> <!-- Make sure this file is included -->
+</head>
+<body>
+<h2>Form Input Examples</h2>
+
+<form id="exampleForm">
+    <!-- Scalar types -->
+    <label>ColA (default string):
+        <input name="ColA" value="Hello" />
+    </label><br>
+
+    <label>ColB (int):
+        <input name="ColB" value="42" zf-type="int" />
+    </label><br>
+
+    <label>ColC (float):
+        <input name="ColC" value="3.14" zf-type="float" />
+    </label><br>
+
+    <label>ColD (bool):
+        <input name="ColD" value="true" zf-type="bool" />
+    </label><br>
+
+    <!-- Arrays -->
+    <label>ColE[] (array of strings):
+        <input name="ColE[]" value="one" zf-type="[]string" />
+        <input name="ColE[]" value="two" zf-type="[]string" />
+    </label><br>
+
+    <label>ColF[] (array without zf-type):
+        <input name="ColF[]" value="a" />
+        <input name="ColF[]" value="b" />
+    </label><br>
+
+    <!-- Nested fields -->
+    <label>ColG.Nest1:
+        <input name="ColG.Nest1" value="nested" />
+    </label><br>
+
+    <label>ColG.Nest2 (int):
+        <input name="ColG.Nest2" value="99" zf-type="int" />
+    </label><br>
+
+    <label>ColG.Nest3.Nest3b[] (array):
+        <input name="ColG.Nest3.Nest3b[]" value="x" />
+        <input name="ColG.Nest3.Nest3b[]" value="y" />
+    </label><br>
+
+    <label>ColG.Nest3.Nest3c[1] (int at index 1):
+        <input name="ColG.Nest3.Nest3c[1]" value="200" zf-type="int" />
+    </label><br>
+
+    <!-- Deep nesting + types -->
+    <label>ColG.Nest3.Nest3d[].Nest4a.Nest5a:
+        <input name="ColG.Nest3.Nest3d[].Nest4a.Nest5a" value="deep" />
+    </label><br>
+
+    <label>ColG.Nest3.Nest3d[].Nest4a.Nest5b (float):
+        <input name="ColG.Nest3.Nest3d[].Nest4a.Nest5b" value="9.81" zf-type="float" />
+    </label><br>
+
+    <!-- Nullable value -->
+    <label>ColH (nullable):
+        <input name="ColH1" zf-type="string|null" />
+        <input name="ColH2" value="" zf-type="string|null" />
+        <input name="ColH3" value="something" zf-type="string|null" />
+        <input name="ColH4" />
+    </label><br>
+
+    <!-- With special zf-cval override -->
+    <label>ColI with zf-cval:
+        <input name="ColI" value="ignored" zf-cval="forced" />
+    </label><br>
+
+    <!-- INT EXAMPLES -->
+    <label>ColJ1 (int|null, empty = null):
+        <input name="ColJ1" value="" zf-type="int|null" />
+    </label><br>
+
+    <label>ColJ2 (int|null, valid integer):
+        <input name="ColJ2" value="42" zf-type="int|null" />
+    </label><br>
+
+    <label>ColJ3 (int|null, bad input = fallback 0):
+        <input name="ColJ3" value="not-a-number" zf-type="int|null" />
+    </label><br>
+
+    <!-- FLOAT EXAMPLES -->
+    <label>ColJ4 (float|null, empty = null):
+        <input name="ColJ4" value="" zf-type="float|null" />
+    </label><br>
+
+    <label>ColJ5 (float|null, valid float):
+        <input name="ColJ5" value="3.14" zf-type="float|null" />
+    </label><br>
+
+    <label>ColJ6 (float|null, bad input = fallback 0):
+        <input name="ColJ6" value="oops" zf-type="float|null" />
+    </label><br>
+
+    <!-- BOOL EXAMPLES -->
+    <label>ColJ7 (bool|null, empty = null):
+        <input name="ColJ7" value="" zf-type="bool|null" />
+    </label><br>
+
+    <label>ColJ8 (bool|null, true string):
+        <input name="ColJ8" value="true" zf-type="bool|null" />
+    </label><br>
+
+    <label>ColJ9 (bool|null, false string):
+        <input name="ColJ9" value="false" zf-type="bool|null" />
+    </label><br>
+
+    <label>ColJ10 (bool|null, unrecognized = false):
+        <input name="ColJ10" value="yes" zf-type="bool|null" />
+    </label><br>
+
+    <button type="submit">Submit</button>
+</form>
+
+<pre id="output"></pre>
+
+<script>
+  document.getElementById("exampleForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    const json = DotPathFormParser.formDataToJson(this);
+    document.getElementById("output").textContent = JSON.stringify(json, null, 2);
+  });
+</script>
+</body>
+</html>

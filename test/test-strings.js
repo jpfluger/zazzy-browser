@@ -69,6 +69,201 @@ describe('Validate zzb.string methods', function () {
     })
   })
 
+  describe('zzb.strings.joinArr', function () {
+    it('should join array of strings with default delimiter', function (done) {
+      var err = null
+      var result = zzb.strings.joinArr(['a', 'b', 'c'])
+      if (result !== 'a, b, c') {
+        err = new Error('Expected "a, b, c", got "' + result + '"')
+      }
+      done(err)
+    })
+
+    it('should join array of objects using field name', function (done) {
+      var err = null
+      var result = zzb.strings.joinArr([{ name: 'a' }, { name: 'b' }], 'name')
+      if (result !== 'a, b') {
+        err = new Error('Expected "a, b", got "' + result + '"')
+      }
+      done(err)
+    })
+
+    it('should join array of objects using nested field path', function (done) {
+      var err = null
+      var result = zzb.strings.joinArr([{ user: { name: 'a' } }, { user: { name: 'b' } }], 'user.name')
+      if (result !== 'a, b') {
+        err = new Error('Expected "a, b", got "' + result + '"')
+      }
+      done(err)
+    })
+
+    it('should join array with custom delimiter', function (done) {
+      var err = null
+      var result = zzb.strings.joinArr(['x', 'y'], null, ' / ')
+      if (result !== 'x / y') {
+        err = new Error('Expected "x / y", got "' + result + '"')
+      }
+      done(err)
+    })
+
+    it('should return empty string for empty array', function (done) {
+      var err = null
+      var result = zzb.strings.joinArr([])
+      if (result !== '') {
+        err = new Error('Expected empty string, got "' + result + '"')
+      }
+      done(err)
+    })
+
+    it('should return empty string for non-array input', function (done) {
+      var err = null
+      var result = zzb.strings.joinArr(null)
+      if (result !== '') {
+        err = new Error('Expected empty string for null input, got "' + result + '"')
+      }
+      done(err)
+    })
+
+    it('should safely return empty string for undefined nested values', function (done) {
+      var err = null
+      var result = zzb.strings.joinArr([{ user: { name: 'x' } }, { user: {} }], 'user.name')
+      if (result !== 'x, ') {
+        err = new Error('Expected "x, ", got "' + result + '"')
+      }
+      done(err)
+    })
+  })
+
+  describe('zzb.strings.appendIfMoreThan', function () {
+    it('should append chars when length exceeds threshold', function (done) {
+      var err = null
+      var result = zzb.strings.appendIfMoreThan('abcdef', '...', 3)
+      if (result !== 'abc...') {
+        err = new Error('Expected "abc...", got "' + result + '"')
+      }
+      done(err)
+    })
+
+    it('should not append chars when length equals threshold', function (done) {
+      var err = null
+      var result = zzb.strings.appendIfMoreThan('abc', '...', 3)
+      if (result !== 'abc') {
+        err = new Error('Expected "abc", got "' + result + '"')
+      }
+      done(err)
+    })
+
+    it('should not append chars when length is less than threshold', function (done) {
+      var err = null
+      var result = zzb.strings.appendIfMoreThan('ab', '...', 3)
+      if (result !== 'ab') {
+        err = new Error('Expected "ab", got "' + result + '"')
+      }
+      done(err)
+    })
+
+    it('should handle empty string input', function (done) {
+      var err = null
+      var result = zzb.strings.appendIfMoreThan('', '...', 3)
+      if (result !== '') {
+        err = new Error('Expected empty string, got "' + result + '"')
+      }
+      done(err)
+    })
+
+    it('should handle null input gracefully', function (done) {
+      var err = null
+      var result = zzb.strings.appendIfMoreThan(null, '...', 3)
+      if (result !== null) {
+        err = new Error('Expected null, got "' + result + '"')
+      }
+      done(err)
+    })
+
+    it('should handle undefined input gracefully', function (done) {
+      var err = null
+      var result = zzb.strings.appendIfMoreThan(undefined, '...', 3)
+      if (result !== undefined) {
+        err = new Error('Expected undefined, got "' + result + '"')
+      }
+      done(err)
+    })
+  })
+
+  describe('zzb.strings.formatEmpty', function () {
+    it('should format with positional array values', function (done) {
+      var err = null
+      var result = zzb.strings.formatEmpty('Hi {0}, your code is {1}', ['Alice', '1234'])
+      if (result !== 'Hi Alice, your code is 1234') {
+        err = new Error('Expected "Hi Alice, your code is 1234", got "' + result + '"')
+      }
+      done(err)
+    })
+
+    it('should ignore non-existing positional index', function (done) {
+      var err = null
+      var result = zzb.strings.formatEmpty('Item {0}, {1}, {2}', ['One', 'Two'])
+      if (result !== 'Item One, Two, ') {
+        err = new Error('Expected "Item One, Two, ", got "' + result + '"')
+      }
+      done(err)
+    })
+
+    it('should format numerics and booleans correctly', function (done) {
+      var err = null
+      var result = zzb.strings.formatEmpty('You have {0} items and active = {1}', [3, true])
+      if (result !== 'You have 3 items and active = true') {
+        err = new Error('Expected "You have 3 items and active = true", got "' + result + '"')
+      }
+      done(err)
+    })
+
+    it('should handle undefined/null in array gracefully', function (done) {
+      var err = null
+      var result = zzb.strings.formatEmpty('Values: {0}, {1}, {2}', ['x', undefined, null])
+      if (result !== 'Values: x, , ') {
+        err = new Error('Expected "Values: x, , ", got "' + result + '"')
+      }
+      done(err)
+    })
+
+    it('should format with named object values', function (done) {
+      var err = null
+      var result = zzb.strings.formatEmpty('Hi {name}, you have {count} messages', { name: 'Bob', count: 5 })
+      if (result !== 'Hi Bob, you have 5 messages') {
+        err = new Error('Expected "Hi Bob, you have 5 messages", got "' + result + '"')
+      }
+      done(err)
+    })
+
+    it('should leave empty values when object keys are missing', function (done) {
+      var err = null
+      var result = zzb.strings.formatEmpty('Hi {name}, you have {count} messages', { name: 'Bob' })
+      if (result !== 'Hi Bob, you have  messages') {
+        err = new Error('Expected "Hi Bob, you have  messages", got "' + result + '"')
+      }
+      done(err)
+    })
+
+    it('should handle empty string template', function (done) {
+      var err = null
+      var result = zzb.strings.formatEmpty('', { name: 'Anything' })
+      if (result !== '') {
+        err = new Error('Expected empty string, got "' + result + '"')
+      }
+      done(err)
+    })
+
+    it('should handle undefined/null in object gracefully', function (done) {
+      var err = null
+      var result = zzb.strings.formatEmpty('Hello {name}, {greeting}', { name: null, greeting: undefined })
+      if (result !== 'Hello , ') {
+        err = new Error('Expected "Hello , ", got "' + result + '"')
+      }
+      done(err)
+    })
+  })
+
   describe('zzb.strings.sizeToHumanReadable', function () {
     it('should equal 1 K - base 1024', function (done) {
       var err = null

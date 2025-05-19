@@ -1,300 +1,7 @@
-//! zzb.ui.js v2.8.3 (https://github.com/jpfluger/zazzy-browser)
+//! zzb.ui.js v2.9.0 (https://github.com/jpfluger/zazzy-browser)
 //! MIT License; Copyright 2017-2023 Jaret Pfluger
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
-
-/***/ 964:
-/***/ ((__unused_webpack_module, exports) => {
-
-// ---------------------------------------------------
-// _ajax
-// ---------------------------------------------------
-
-function _ajax () {}
-
-_ajax.prototype.ajax = function (options) {
-  return this.request(options, options.callback)
-}
-
-_ajax.prototype.request = function(options, callback) {
-  if (!zzb.types.isFunction(callback)) {
-    callback = function(){} // no-op
-  }
-  options = zzb.types.merge({url: null, method:'GET', body: null, expectType:'text', headers:{},
-                RAWRETURN: false, SKIPREDIRECT: false, SKIPFLASH: false, SHOWCATCHMESSAGE: false, NOCATCHLOG: false, NOCATCHFLASH: false, CATCHFLASHMESSAGE: '' }, options)
-  if (!zzb.types.isStringNotEmpty(options.url)) {
-    return callback(null, new Error('No url defined to fetch request.'))
-  }
-  if (!zzb.types.isStringNotEmpty(options.method)) {
-    return callback(null, new Error('No url method defined to fetch request.'))
-  }
-  fetch(options.url, {
-    method: options.method,
-    body: options.body,
-    headers: options.headers
-  })
-    .then(function (response) {
-      if (!response.ok) {
-        throw new Error('Remote service returned unexpected status ' + response.status + '.')
-      } else {
-        switch (options.expectType) {
-          case 'json':
-            return response.json()
-          case 'text':
-            return response.text()
-          case 'blob':
-            return response.blob()
-          default:
-            throw new Error('Unknown content received from remote service.')
-        }
-      }
-    })
-    .then(function (data) {
-
-      const objReturn = {request: options, data: data}
-
-      // allow an escape
-      if (objReturn.request.RAWRETURN === true) {
-        return callback(objReturn, null)
-      }
-
-      let noFinalResolve = false
-      const rob = zzb.rob.newROB()
-
-      if (objReturn.request.expectType !== 'json') {
-        // html or some other data type was returned
-        rob.recs = [objReturn.data]
-      } else {
-        // handle redirect
-        if (objReturn.request.SKIPREDIRECT !== true) {
-          if (zzb.types.isStringNotEmpty(data.redirect)) {
-            if (zzb.types.isFunction(objReturn.request.onRedirect)) {
-              objReturn.request.onRedirect(data, function (skipRedirect) {
-                if (!skipRedirect) {
-                  window.location.href = data.redirect
-                }
-              })
-              return
-            } else if (zzb.types.isStringNotEmpty(data.message)) {
-              zzb.dialogs.showMessage({
-                type: zzb.types.isStringNotEmpty(data.messageType) ? data.messageType : null,
-                classDialog: 'zzb-dialog-flash-message zzb-dialog-flash-redirect' + zzb.strings.mergeElseEmpty(' zzb-dialog-flash-status-{0}', data.messageType),
-                dataBackdrop: 'static',
-                title: zzb.types.isStringNotEmpty(data.messageTitle) ? data.messageTitle : '',
-                body: data.message,
-                onHide: function (ev) {
-                  window.location.href = data.redirect
-                }
-              })
-            } else {
-              window.location.href = data.redirect
-            }
-            return
-          }
-        }
-
-        // Errors are ALWAYS an ARRAY and in an expected ROB Error format
-        // format:  [ {field: null, message: null, trace: null}]
-        // server-side can instruct this function to ignore sanitizing by inspecting ISROBERRORS
-        if (!data.ISROBERRORS) {
-          if (data.err) {
-            // an err should always be package as an array
-            // this is b/c form submissions could reply with multiple errors for different fields
-            data.errs = zzb.rob.sanitizeErrors(data.err)
-            data.err = null
-          } else if (data.error) {
-            data.errs = zzb.rob.sanitizeErrors(data.error)
-            data.err = null
-          } else if (data.errs) {
-            data.errs = zzb.rob.sanitizeErrors(data.errs)
-            data.err = null
-          }
-        }
-
-        // Records are ALWAYS an array
-        let tmpRecs = data.recs
-        if (!data.ISROBRECS) {
-          if (data.recs) {
-            tmpRecs = zzb.rob.sanitizeRecords(data.recs)
-          } else if (data.rec) {
-            tmpRecs = zzb.rob.sanitizeRecords(data.rec)
-            data.rec = null
-          } else if (!Array.isArray(data.errs) || data.errs.length === 0) {
-            // pass in self
-            tmpRecs = zzb.rob.sanitizeRecords(data)
-          }
-        }
-
-        // Obsolete? Depends on the paginate paradigm to be useful.
-        if (data.paginate) {
-          rob.paginate = data.paginate
-        }
-
-        rob.errs = data.errs
-        rob.recs = tmpRecs
-        tmpRecs = null
-        rob.columns = data.columns
-
-        rob.listErrs = zzb.rob.toList(rob.errs)
-
-        if (options.SKIPFLASH !== true) {
-          if (zzb.types.isStringNotEmpty(data.message)) {
-            noFinalResolve = true
-            zzb.dialogs.showMessage({
-              type: zzb.types.isStringNotEmpty(data.messageType) ? data.messageType : null,
-              classDialog: 'zzb-dialog-flash-message' + zzb.strings.mergeElseEmpty(' zzb-dialog-flash-status-{0}', data.messageType, rob.hasErrors() ? 'error' : 'okay'),
-              dataBackdrop: 'static',
-              title: zzb.types.isStringNotEmpty(data.messageTitle) ? data.messageTitle : '',
-              body: data.message,
-              onHide: function (ev) {
-                objReturn.rob = rob
-                callback(objReturn, null);
-              }
-            })
-          }
-        }
-
-        // finish processing
-        if (zzb.types.isFunction(objReturn.request.onFinish)) {
-          noFinalResolve = true
-          objReturn.request.onFinish(rob, function (noResolve) {
-            if (noResolve === true) {
-              return
-            }
-            objReturn.rob = rob
-            callback(objReturn, null);
-          })
-        }
-      }
-
-      if (noFinalResolve === true) {
-        return
-      }
-
-      objReturn.rob = rob
-
-      try {
-        callback(objReturn, null);
-      } catch (err) {
-        // Unexpected handler error. Without it, ugliness javascript err message could be displayed.
-        // The admin needs to ask the user to open the debug console to look at the log.
-        console.log(AjaxMessage.APPEND_FAILED_HANDLER_UNEXPECTED, 'error:', err)
-        throw new Error(AjaxMessage.APPEND_FAILED_HANDLER_UNEXPECTED)
-      }
-    })
-    .catch(function (err) {
-
-      let errMessage = ''
-      if (err && zzb.types.isStringNotEmpty(err.message)) {
-        if (options.NOCATCHLOG !== true) {
-          // Prevent double-logging.
-          if (AjaxMessage.APPEND_FAILED_HANDLER_UNEXPECTED !== err.message) {
-            console.log(err.message)
-          }
-        }
-        if (options.SHOWCATCHMESSAGE !== true) {
-          errMessage = err.message
-        }
-      }
-
-      // UI Dialog to display the error
-      if (options.NOCATCHFLASH !== true) {
-        let divErr = ''
-        if (zzb.types.isStringNotEmpty(errMessage)) {
-          divErr = zzb.strings.format(' <span class="zzb-dialog-error-catch">{0}</span>', errMessage)
-        }
-        if (zzb.types.isStringNotEmpty(options.CATCHFLASHMESSAGE)) {
-          zzb.ajax.showMessageFailedAction({ message: options.CATCHFLASHMESSAGE + divErr })
-        } else {
-          zzb.ajax.showMessageFailedAction({ message: AjaxMessage.MSG_FAILED_REQUEST_UNEXPECTED + divErr })
-        }
-      }
-
-      callback(null, new Error(errMessage))
-    })
-}
-
-_ajax.prototype.get = function(options, callback) {
-  options.method = 'GET'
-  zzb.ajax.request(options, callback)
-}
-
-_ajax.prototype.post = function (options, callback) {
-  options.method = 'POST'
-  zzb.ajax.request(options, callback)
-}
-
-_ajax.prototype.getBLOB = function (options, callback) {
-  options.method = 'GET'
-  options.expectType = 'blob'
-  zzb.ajax.request(options, callback)
-}
-
-_ajax.prototype.getTEXT = function (options, callback) {
-  options.method = 'GET'
-  options.expectType = 'text'
-  zzb.ajax.request(options, callback)
-}
-
-_ajax.prototype.getJSON = function (options, callback) {
-  options.method = 'GET'
-  options.expectType = 'json'
-  zzb.ajax.request(options, callback)
-}
-
-// Sometimes a request is made for a html snippet but json is returned. The function will error if the dataType is
-// specified but in the wrong format. To have jquery "guess", then override expectType in this way: {expectType: 'text'}
-_ajax.prototype.postJSON = function (options, callback) {
-  options.method = 'POST'
-  if (!zzb.types.isStringNotEmpty(options.expectType)) {
-    options.expectType = 'json'
-  }
-  options.headers = {
-    'Content-Type': 'application/json'
-  }
-  if (!zzb.types.isStringNotEmpty(options.body)) {
-    options.body = JSON.stringify(options.body)
-  } else {
-    options.body = '{}'
-  }
-  zzb.ajax.request(options, callback)
-}
-
-_ajax.prototype.postFORM = function (options, callback) {
-  options.method = 'POST'
-  options.expectType = 'json'
-  zzb.ajax.request(options, callback)
-}
-
-const AjaxMessage = function (options) {}
-
-// Default message is AjaxMessage.MSG_FAILED_ACTION_UNEXPECTED
-// If options.SHOWCATCHMESSAGE is true, then the following is appended to it: + '<div class="zzb-dialog-error-catch">Error: ' + caught err.message + '</div>'
-// These can be overwritten with your own defaults.
-AjaxMessage.MSG_FAILED_REQUEST_UNEXPECTED = 'Communications with remote service failed unexpectedly.'
-AjaxMessage.APPEND_FAILED_HANDLER_UNEXPECTED = 'Report this to the remote service administrator.'
-
-_ajax.prototype.showMessageFailedAction = function (options) {
-  options = zzb.types.merge({ err: null, number: null, message: AjaxMessage.MSG_FAILED_ACTION_UNEXPECTED }, options)
-  if (zzb.types.isNumber(options.number)) {
-    options.number = ' (' + options.number + ')'
-  } else {
-    options.number = ''
-  }
-  if (options.err) {
-    console.log(options.err)
-  }
-  zzb.dialogs.showMessage({
-    classDialog: 'zzb-dialog-flash-message zzb-flash-invalid', // zzb-flash-valid
-    dataBackdrop: 'static',
-    body: options.message + options.number
-  })
-}
-
-exports.R = _ajax
-
-
-/***/ }),
 
 /***/ 149:
 /***/ ((__unused_webpack_module, exports) => {
@@ -856,1624 +563,12 @@ exports.i = _dialogs
 
 /***/ }),
 
-/***/ 636:
-/***/ ((__unused_webpack_module, exports) => {
-
-// ---------------------------------------------------
-// dom
-// ---------------------------------------------------
-
-function _dom () {}
-
-_dom.prototype.hasUIHover = function () {
-  return (!window.matchMedia("(hover: none)").matches)
-}
-
-_dom.prototype.hasElement = function ($elem) {
-  return ($elem)
-}
-
-_dom.prototype.setAttribute = function ($elem, key, value) {
-  // $modal.querySelector('.modal-header button[data-bs-dismiss]').setAttribute('aria-label', button.label)
-  if ($elem) {
-    if (zzb.types.isObject($elem)) {
-      $elem.setAttribute(key, value)
-    } else if (zzb.types.isArray($elem)) {
-      $elem.forEach(function($e) {
-        $e.setAttribute(key, value)
-      })
-    }
-  }
-}
-
-_dom.prototype.getAttributeElse = function ($elem, name, elseValue) {
-  if (elseValue === undefined || elseValue === null) {
-    elseValue = null
-  }
-  if (!$elem) {
-    return elseValue
-  }
-  let value = $elem.getAttribute(name)
-  if (zzb.types.isStringNotEmpty(value)) {
-    return value
-  }
-  return elseValue
-}
-
-_dom.prototype.getAttributes = function ($elem, regex, camelCaseStrip) {
-  if (!$elem || !regex) {
-    return {}
-  }
-  if (!zzb.types.isNumber(camelCaseStrip)) {
-    camelCaseStrip = -1
-  }
-  let data = {};
-  [].forEach.call($elem.attributes, function(attr) {
-    if (regex.test(attr.name)) {
-      if (camelCaseStrip <= 0) {
-        data[attr.name] = attr.value
-      } else {
-        // Creates camel case of the attrib, stripping off the "data-", which is the first 5 characters.
-        // "data-method" transforms to "method"
-        // "data-prop-sub" transforms to "propSub"
-        let camelCaseName = attr.name.substr(camelCaseStrip).replace(/-(.)/g, function ($0, $1) {
-          return $1.toUpperCase()
-        })
-        data[camelCaseName] = attr.value
-      }
-    }
-  })
-  return data
-}
-
-exports.t = _dom
-
-
-/***/ }),
-
-/***/ 531:
-/***/ ((__unused_webpack_module, exports) => {
-
-// ---------------------------------------------------
-// perms (Permission Keys)
-// ---------------------------------------------------
-
-const _perms = function () {}
-
-_perms.prototype.getPO = function (pos, key) {
-  let po = pos[key]
-
-  if (po) {
-    return po
-  }
-
-  return this.getPermObject(key + ':')
-}
-
-_perms.prototype.getPermObjectFromPermkeys = function (permkeys) {
-  const pos = {}
-  const self = this
-
-  if (Array.isArray(permkeys)) {
-    permkeys.forEach(function (permkey) {
-      let po = self.getPermObject(permkey)
-      if (po.key) {
-        pos[po.key] = po
-      }
-    })
-  } else if (zzb.types.isObject(permkeys)) {
-    for (const key in permkeys) {
-      let perm = permkeys[key]
-      // _.forOwn(permkeys, function (perm, key) {
-      if (!perm) {
-        perm = ''
-      }
-      let po = null
-      if (perm.indexOf(':') < 0) {
-        po = self.getPermObject(key + ':' + perm)
-      } else {
-        po = self.getPermObject(perm)
-      }
-      if (po && po.key) {
-        pos[po.key] = po
-      }
-    }
-  }
-
-  return pos
-}
-
-_perms.prototype.mergePermkey = function (permkey, merge) {
-  if (!merge || !zzb.types.isStringNotEmpty(merge)) {
-    return permkey
-  }
-
-  if (!permkey || !zzb.types.isStringNotEmpty(permkey)) {
-    return merge
-  }
-
-  let split = null
-  let po = {}
-  let mo = {}
-
-  if (permkey.indexOf(':') <= 0) {
-    po.key = permkey.trim()
-    po.perm = ''
-  } else {
-    split = permkey.split(':')
-    po.key = split[0].trim()
-    po.perm = split[1].trim().toUpperCase()
-  }
-
-  if (merge.indexOf(':') <= 0) {
-    mo.key = merge.trim().toUpperCase()
-    mo.perm = ''
-  } else {
-    split = merge.split(':')
-    mo.key = split[0].trim()
-    mo.perm = split[1].trim().toUpperCase()
-  }
-
-  if (po.key !== mo.key || po.perm === mo.perm || mo.perm.length === 0) {
-    return permkey
-  } else if (po.key.length === 0) {
-    return merge
-  }
-
-  for (let mm = 0; mm < mo.perm.length; mm++) {
-    if (po.perm.indexOf(mo.perm[mm]) < 0) {
-      po.perm += mo.perm[mm]
-    }
-  }
-
-  return po.key + ':' + po.perm
-}
-
-_perms.prototype.getPermObject = function (permkey, available, merge) {
-  let po = { key: null, perm: null, attr: {}, toPermkey: function () { return this.key + ':' + this.perm } }
-
-  if (merge || zzb.types.isStringNotEmpty(merge)) {
-    permkey = this.mergePermkey(permkey, merge)
-  }
-
-  if (!permkey || !zzb.types.isStringNotEmpty(permkey)) {
-    po.attr = this.getPermAttributes()
-    return po
-  }
-
-  if (permkey.indexOf(':') <= 0) {
-    po.key = permkey
-    po.perm = ''
-    po.attr = this.getPermAttributes()
-    return po
-  }
-
-  let split = permkey.split(':')
-  po.key = split[0]
-  po.perm = split[1]
-
-  po.perm = po.perm.trim().toUpperCase()
-
-  if (po.perm.length > 0) {
-    // remove any permissions from the default that are not available
-    if (available && zzb.types.isStringNotEmpty(available)) {
-      available = available.trim().toUpperCase()
-      for (let mm = po.perm.length - 1; mm >= 0; mm--) {
-        if (available.indexOf(po.perm[mm]) < 0) {
-          po.perm = po.perm.replace(po.perm[mm], '')
-        }
-      }
-    }
-  }
-
-  po.attr = this.getPermAttributes(po.toPermkey(), available)
-
-  return po
-}
-
-const reCRUDX = new RegExp('^[CRUDX]*$')
-
-_perms.prototype.getPermAttributes = function (permkey) {
-  // CRUDX
-  let attr = { canRead: false, canCreate: false, canUpdate: false, canDelete: false, canExecute: false }
-
-  if (!permkey || !zzb.types.isStringNotEmpty(permkey)) {
-    return attr
-  }
-
-  if (permkey.indexOf(':') >= 0) {
-    permkey = permkey.split(':')[1]
-  }
-
-  permkey = permkey.trim().toUpperCase()
-
-  if (permkey.length === 0) {
-    return attr
-  }
-
-  if (!reCRUDX.test(permkey)) {
-    return attr
-  }
-
-  attr.canRead = permkey.indexOf('C') >= 0
-  attr.canCreate = permkey.indexOf('R') >= 0
-  attr.canUpdate = permkey.indexOf('U') >= 0
-  attr.canDelete = permkey.indexOf('D') >= 0
-  attr.canExecute = permkey.indexOf('X') >= 0
-
-  return attr
-}
-
-_perms.prototype.hasMatch = function (permkey, target) {
-  if (!permkey || !target) {
-    return false
-  }
-
-  let po = permkey
-  if (zzb.types.isStringNotEmpty(permkey)) {
-    po = this.getPermObject(permkey)
-  }
-
-  if (!zzb.types.isObject(po) || !po.key || !po.perm || po.perm.length === 0) {
-    return false
-  }
-
-  let tp = null
-  if (zzb.types.isStringNotEmpty(target)) {
-    tp = this.getPermObject(target)
-  } else if (Array.isArray(target)) {
-    const self = this
-    target.forEach(function (item) {
-      if (zzb.types.isStringNotEmpty(item)) {
-        item = self.getPermObject(item)
-      }
-      if (item.key === po.key) {
-        tp = item
-        return false
-      }
-    })
-  } else {
-    if (!zzb.types.isObject(target)) {
-      return false
-    }
-    if (target.key) {
-      tp = target
-    } else {
-      if (!target[po.key]) {
-        return false
-      } else {
-        if (zzb.types.isStringNotEmpty(target[po.key])) {
-          tp = this.getPermObject(po.key + ':' + target[po.key])
-        } else {
-          tp = target[po.key]
-        }
-      }
-    }
-  }
-
-  if (!tp || !tp.key || !tp.perm || !tp.perm.length === 0) {
-    return false
-  }
-
-  for (let ii = 0; ii < tp.perm.length; ii++) {
-    if (po.perm.indexOf(tp.perm[ii]) >= 0) {
-      return true
-    }
-  }
-
-  return false
-}
-
-exports.k = _perms
-
-
-/***/ }),
-
-/***/ 628:
-/***/ ((__unused_webpack_module, exports) => {
-
-// ---------------------------------------------------
-// rob (Return Object)
-// ---------------------------------------------------
-
-const _rob = function () {}
-
-_rob.prototype.newROB = function (options) {
-  return zzb.types.merge({
-    message: null,
-    messageType: null,
-    errs: null,
-    recs: [],
-    columns: [],
-    paginate: {
-      page: 0,
-      limit: 0,
-      count: 0
-    },
-    hasErrors: function () {
-      return (this.errs && Array.isArray(this.errs) && this.errs.length > 0)
-    },
-    hasColumns: function () {
-      return (this.columns && Array.isArray(this.columns) && this.columns.length > 0)
-    },
-    hasRecords: function () {
-      return (this.recs && Array.isArray(this.recs) && this.recs.length > 0)
-    },
-    isEmpty: function () {
-      return !this.hasRecords() || (this.hasRecords() && this.first() === null)
-    },
-    first: function () {
-      return (this.recs && Array.isArray(this.recs) && this.recs.length > 0 ? this.recs[0] : null)
-    },
-    find: function (key, value) {
-      let hit = null
-      this.recs.forEach(function (rec) {
-        if (rec && zzb.types.isObject(rec) && !Array.isArray(rec) && rec[key] === value) {
-          hit = rec
-          return false
-        }
-      })
-      return hit
-    },
-    length: function () {
-      return (this.recs && Array.isArray(this.recs) ? this.recs.length : 0)
-    }
-  }, options)
-}
-
-// reduce the error array to an object
-_rob.prototype.toObject = function (errs) {
-  if (!errs || !Array.isArray(errs)) {
-    return { _system: [errs] }
-  }
-  let eo = {}
-  errs.forEach(function (err) {
-    if (err) {
-      if (!err.field) {
-        err.field = '_system'
-      }
-      if (!eo[err.field]) {
-        eo[err.field] = []
-      }
-      eo[err.field].push(err)
-    }
-  })
-  return eo
-}
-
-// Originally we created ROBErrorType but...
-// (a) the stack is wrong when invoked by outside functions and (b) we wanted to control if the stack shows or not
-function mergeErrorDefaults (options) {
-  // '_system' is a reserved word
-  //   why not use null? b/c when converting from array to an object of errors by field, we need a valid string
-  // why we have isErr?
-  //   server-side supports logger { emerg: 0, alert: 1, crit: 2, error: 3, warning: 4, notice: 5, info: 6, debug: 7 }
-  //   of which numbers 0 to 3 are errors and > 4 are not
-  options = zzb.types.merge({ type: 'error', message: null, field: '_system', stack: null, isErr: true, title: null }, options)
-
-  if (options.isErr) {
-    if (options.type === 'warn') {
-      options.type = 'warning'
-    } else if (options.type === 'err') {
-      options.type = 'error'
-    } else if (options.type === 'crit') {
-      options.type = 'critical'
-    } else if (options.type === 'emerg') {
-      options.type = 'emergency'
-    }
-    // no "else" statement to default to a value (eg "error")
-    // this keeps the the available types loosely open
-    switch (options.type) {
-      case 'warning':
-      case 'notice':
-      case 'info':
-      case 'debug':
-        options.isErr = false
-        break
-      default:
-        options.isErr = true
-        break
-    }
-  }
-
-  return options
-}
-
-// Creates a single ROB error object from an object (eg existing error) or from a string
-// options1 could be a string or object, whereas options2 expects an object
-const createError = function (options1, options2) {
-  if (!options1) {
-    return mergeErrorDefaults()
-  }
-  if (zzb.types.isStringNotEmpty(options1)) {
-    return mergeErrorDefaults(zzb.types.merge({ message: options1 }, options2))
-  } else if (!Array.isArray(options1) && zzb.types.isObject(options1)) {
-    return mergeErrorDefaults(options1)
-  }
-
-  throw new Error('bad input in createError - unrecognized err datatype')
-}
-
-_rob.prototype.createError = createError
-
-// Sanitizes ROB error(s), which could be in the format of a string, array or object
-// Returns null or an array of errors
-_rob.prototype.sanitizeErrors = function (errs) {
-  let newErrs = null
-  if (!errs) {
-    return newErrs
-  }
-
-  if (!Array.isArray(errs)) {
-    newErrs = [createError(errs)]
-  } else if (errs.length > 0) {
-    newErrs = []
-    errs.forEach(function (err) {
-      newErrs.push(createError(err))
-    })
-  }
-
-  return newErrs
-}
-
-// always returns an array, even if null
-_rob.prototype.sanitizeRecords = function (recs) {
-  if (!recs) {
-    return []
-  }
-  if (!Array.isArray(recs)) {
-    return [recs]
-  }
-  return recs
-}
-
-_rob.prototype.toListErrs = function (errs) {
-  return zzb.rob.toList(errs)
-}
-
-_rob.prototype.toList = function (items) {
-  let arrFields = []
-  let arrSystem = []
-
-  let arrSystemMessages = []
-  let arrFieldMessages = []
-
-  if (items && Array.isArray(items) && items.length > 0) {
-    items.forEach(function (item) {
-      if (item.isErr === true) {
-        if (item.system === '_system') {
-          arrSystem.push(item)
-        } else if (zzb.types.isStringNotEmpty(item.field)) {
-          if (item.field === '_system') {
-            arrSystem.push(item)
-          } else {
-            arrFields.push(item)
-          }
-        } else {
-          arrSystem.push(item)
-        }
-      } else {
-        if (item.system === '_system') {
-          arrSystemMessages.push(item)
-        } else if (zzb.types.isStringNotEmpty(item.field)) {
-          if (item.field === '_system') {
-            arrSystemMessages.push(item)
-          } else {
-            arrFieldMessages.push(item)
-          }
-        } else {
-          arrSystemMessages.push(item)
-        }
-      }
-    })
-  }
-
-  return {
-    system: arrSystem,
-    fields: arrFields,
-
-    systemMessages: arrSystemMessages,
-    fieldMessages: arrFieldMessages,
-
-    hasErrors: function () {
-      return (this.hasSystemErrors() || this.hasFieldErrors())
-    },
-    hasSystemErrors: function () {
-      return (this.system && this.system.length > 0)
-    },
-    hasFieldErrors: function () {
-      return (this.fields && this.fields.length > 0)
-    },
-    combinedErrors: function () {
-      return this.system.concat(this.fields)
-    },
-    hasMessages: function () {
-      return (this.hasSystemMessages() || this.hasFieldMessages())
-    },
-    hasSystemMessages: function () {
-      return (this.systemMessages && this.systemMessages.length > 0)
-    },
-    hasFieldMessages: function () {
-      return (this.fieldMessages && this.fieldMessages.length > 0)
-    },
-    combinedMessages: function () {
-      return this.systemMessages.concat(this.fieldMessages)
-    },
-    getByFieldName: function (isMessages, name) {
-      if (name === '_system') {
-        return (isMessages) ? this.systemMessages : this.system
-      }
-      let arr = []
-      if (!name) {
-        return arr
-      }
-      let iterate = (isMessages) ? this.fieldMessages : this.fields
-      iterate.forEach(function(item) {
-        if (item.field === name) {
-          item.isMessage = isMessages
-          arr.push(item)
-        }
-      })
-      return arr
-    },
-    getErrsByName: function (name) {
-      return this.getByFieldName(false, name)
-    },
-    getMessagesByName: function (name) {
-      return this.getByFieldName(true, name)
-    },
-    getAnyByName: function (name) {
-      let arrE = this.getErrsByName(name)
-      let arrM = this.getMessagesByName(name)
-      return arrE.concat(arrM)
-    },
-  }
-}
-
-_rob.prototype.renderListErrs = function (options) {
-  return zzb.rob.renderList(options)
-}
-
-_rob.prototype.renderList = function (options) {
-  options = zzb.types.merge({ targets: [], format: 'text', defaultTitle: '', template: null, htmlWrapList: '<ul class="zzb-rob-{0}">{1}</ul>'}, options)
-  let arr = []
-  // backwards-compatible
-  if (options.errs && zzb.types.isArrayHasRecords(options.errs)) {
-    options.targets = options.errs
-  }
-  if (zzb.types.isArrayHasRecords(options.targets)) {
-    let isMulti = (options.targets.length > 1)
-    options.targets.forEach(function (target) {
-      let title = ''
-      if (zzb.types.isStringNotEmpty(options.defaultTitle)) {
-        title = options.defaultTitle
-      } else if (zzb.types.isStringNotEmpty(target.field)) {
-        title = target.field
-      }
-
-      if (options.template) {
-        arr.push(zzb.strings.format(options.template, title, target.message))
-      } else {
-        if (!target.type) {
-          target.type = (target.isMessage) ? 'message' : 'unknown'
-        }
-        if (isMulti) {
-
-        }
-        if (!isMulti && options.format === 'html') {
-          arr.push(zzb.strings.format('<div class="zzb-rob-list-item-{0}">{1}</div>', target.type, target.message))
-        } else if (options.format === 'html' || options.format === 'html-list') {
-          arr.push(zzb.strings.format('<li class="zzb-rob-list-item-{0}">{1}</li>', target.type, target.message))
-        } else if (options.format === 'html-list-label') {
-          arr.push(zzb.strings.format('<li class="zzb-rob-list-item-{0}"><span>{1}:</span> {2}</li>', target.type, title, target.message))
-        } else if (options.format === 'label') {
-          arr.push(zzb.strings.format('{0}: {1}', title, target.message))
-        } else if (options.format === 'text-punctuated') {
-          arr.push(zzb.strings.toFirstCapitalEndPeriod(target.message) + ' ')
-        } else { // text
-          arr.push(zzb.strings.format(target.message))
-        }
-      }
-    })
-    let doHtmlWrap = ((isMulti && options.format === 'html') || options.format === 'html-list' || options.format === 'html-list-label')
-    if (doHtmlWrap && options.htmlWrapList) {
-      return zzb.strings.format(options.htmlWrapList, options.format, arr.join(''))
-    }
-  }
-
-  return arr.join('')
-}
-
-exports.I = _rob
-
-
-/***/ }),
-
-/***/ 462:
-/***/ ((__unused_webpack_module, exports) => {
-
-// ---------------------------------------------------
-// strings
-// ---------------------------------------------------
-
-const _strings = function () {}
-
-function ValueError (message) {
-  let err = new Error(message)
-  err.name = 'ValueError'
-  return err
-}
-
-// https://github.com/davidchambers/string-format
-// create :: Object -> String,*... -> String
-// zzb.strings.format('{0}, you have {1} mushroom{2}', 'Piggy', 2, 's')
-// zzb.strings.format('{0}, you have {1} mushroom{2}', ['Piggy', 2, 's'])
-// zzb.strings.format('{name}, you have {number} mushroom{ending}', {name: 'Piggy', number: 2, ending: 's'})
-const formatString = function (transformers) {
-  return function (template) {
-    let args = Array.prototype.slice.call(arguments, 1)
-    let idx = 0
-    let state = 'UNDEFINED'
-
-    if (Array.isArray(args) && args.length > 0 && Array.isArray(args[0])) {
-      let tmpArr = args[0].map(function (s) {
-        return s
-      })
-      args = tmpArr
-    }
-
-    return template.replace(
-      /([{}])\1|[{](.*?)(?:!(.+?))?[}]/g,
-      function (match, literal, _key, xf) {
-        if (literal != null) {
-          return literal
-        }
-        let key = _key
-        if (key.length > 0) {
-          if (state === 'IMPLICIT') {
-            throw ValueError('cannot switch from ' +
-              'implicit to explicit numbering')
-          }
-          state = 'EXPLICIT'
-        } else {
-          if (state === 'EXPLICIT') {
-            throw ValueError('cannot switch from ' +
-              'explicit to implicit numbering')
-          }
-          state = 'IMPLICIT'
-          key = String(idx)
-          idx += 1
-        }
-
-        //  1.  Split the key into a lookup path.
-        //  2.  If the first path component is not an index, prepend '0'.
-        //  3.  Reduce the lookup path to a single result. If the lookup
-        //      succeeds the result is a singleton array containing the
-        //      value at the lookup path; otherwise the result is [].
-        //  4.  Unwrap the result by reducing with '' as the default value.
-        let path = key.split('.')
-        let value = (/^\d+$/.test(path[0]) ? path : ['0'].concat(path))
-          .reduce(function (maybe, key) {
-            return maybe.reduce(function (_, x) {
-              return x != null && key in Object(x) ? [typeof x[key] === 'function' ? x[key]() : x[key]] : []
-            }, [])
-          }, [args])
-          .reduce(function (_, x) { return x }, '')
-
-        if (xf == null) {
-          return value
-        } else if (Object.prototype.hasOwnProperty.call(transformers, xf)) {
-          return transformers[xf](value)
-        } else {
-          throw ValueError('no transformer named "' + xf + '"')
-        }
-      }
-    )
-  }
-}
-
-_strings.prototype.format = formatString({})
-
-/**
- * zzb.strings.formatEmpty
- *
- * Usage:
- *   zzb.strings.formatEmpty('{a} is dead, but {{b}} is alive! {a} {c}', {a: 'ASP', b: 'FLEXIBLE NODEJS'})
- *   zzb.strings.formatEmpty('{0} is dead, but {{1}} is alive! {0} {2}', 'ASP', 'FLEXIBLE NODEJS')
- * Produces:
- *   ASP is dead, but {FLEXIBLE NODEJS} is alive! ASP
- *
- * Formats a string using words within curly brace delimiters. Escape braces by doubling-up: "{{0}}" --> {some-param}
- * Matches with an invalid object or array key are replaced by an empty string
- * @param template
- * @param options
- * @returns {String} a merging of object with the supplied template
- **/
-_strings.prototype.formatEmpty = function (template) {
-  let args = Array.prototype.slice.call(arguments, 1)
-  if (Array.isArray(args)) {
-    return template.replace(/{(\d+)}/g, function (match, number) {
-      return typeof args[number] !== 'undefined'
-        ? args[number]
-        : '' // match
-    })
-  } else {
-    return template.replace(/{((?:(?=([^{}]+|{{[^}]*}}))\2)*)}/g, function (match, key) {
-      // console.log(match + '  ' + key)
-      return (args.length > 0 && args[0][key]) ? args[0][key] : '' // match
-    })
-  }
-}
-
-/**
- * zzb.strings.appendIfMoreThan
- *
- * Usage:
- *  zzb.strings.appendIfMoreThan('some string', '...', 3)
- * Produces
- *  som...
- *
- * Appends the supplied characters to the string if the character count of the string
- * is greater than the ifMoreCharCount parameter
- * @param str
- * @param charsToAppend
- * @param ifMoreCharCount
- * @returns {String}
- */
-_strings.prototype.appendIfMoreThan = function (str, charsToAppend, ifMoreCharCount) {
-  return ((str && (str.length > ifMoreCharCount)) ? str.substring(0, ifMoreCharCount) + charsToAppend : str)
-}
-
-/**
- * zzb.strings.joinArrToCommas
- *
- * Usage:
- *  zzb.strings.joinArrToCommas(['a','b','c'])
- * Produces
- *  a, b, c
- *
- * Usage:
- *  zzb.strings.joinArrToCommas([{name:'a',{name:'b'},{name:'c'}], 'name')
- * Produces
- *  a, b, c
- *
- * @param arr
- * @returns {String}
- */
-_strings.prototype.joinArrToCommas = function (arr, fieldName) {
-  if (!arr || !Array.isArray(arr) || arr.length === 0) {
-    return ''
-  }
-  return arr.map(arr, function (obj, idx) {
-    let comma = ''
-    if (idx < (arr.index - 1)) {
-      comma = ''
-    }
-    if (fieldName) {
-      return obj[fieldName] + comma
-    } else {
-      return obj + comma
-    }
-  }).join('')
-}
-
-/**
- * zzb.strings.toPlural
- *
- * Usage:
- *  zzb.strings.toPlural('dog', 1, options)
- *  zzb.strings.toPlural('dog', 2, options)
- * Produces
- *  dog
- *  dogs
- *
- * Appends an s or user-defined suffix (options.suffix) to a word if the number is not 1 or -1
- * @param str
- * @param charsToAppend
- * @param ifMoreCharCount
- * @returns {String}
- */
-_strings.prototype.toPlural = function (word, number, options) {
-  options = zzb.types.merge({ forcePlural: false, suffix: null }, options)
-
-  if ((number === 1 || number === -1) && !options.forcePlural) {
-    return word
-  }
-
-  if (options.suffix) {
-    return word + options.suffix
-  } else {
-    return word + 's'
-  }
-}
-
-_strings.prototype.capitalize = function (target) {
-  if (zzb.types.isStringNotEmpty(target)) {
-    return target.charAt(0).toUpperCase() + target.slice(1);
-  }
-  return ''
-}
-
-_strings.prototype.toFirstCapitalEndPeriod = function (target) {
-  if (zzb.types.isStringNotEmpty(target)) {
-    target = target.trim()
-    target = zzb.strings.capitalize(target)
-    if (!target.endsWith(target, '.')) {
-      target += '.'
-    }
-  }
-  return target
-}
-
-const sizeUnitsFormatNameSingle = ['K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y']
-const sizeUnitsFormatNameDouble = ['KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
-const sizeUnitsFormatNameFull = ['Kilobyte', 'Megabyte', 'Gigabyte', 'Terabyte', 'Petabyte', 'Exabyte', 'Zettabyte', 'Yottabyte']
-const sizeUnitsFormatNameEIC = ['KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB']
-
-// From https://stackoverflow.com/questions/10420352/converting-file-size-in-bytes-to-human-readable-string/10420404
-//      https://ux.stackexchange.com/questions/13815/files-size-units-kib-vs-kb-vs-kb
-// We standardized the above, somewhat, with https://github.com/cloudfoundry/bytefmt
-// Also only divisions are with 1024 and NOT 1000
-_strings.prototype.sizeToHumanReadable = function (bytes, unitsFormat, noSizeUnitSeparation, dp) {
-  if (!zzb.types.isStringNotEmpty(unitsFormat)) {
-    unitsFormat = 'single'
-  }
-  let unitSeperateSpace = ' '
-  if (noSizeUnitSeparation === true) {
-    unitSeperateSpace = ''
-  }
-  if (!dp) {
-    dp = 1
-  }
-
-  let thresh = 1024 // si ? 1000 : 1024
-
-  let units
-  let unitsBytes = 'B'
-  switch (unitsFormat.toLowerCase()) {
-    case 'full':
-      units = sizeUnitsFormatNameFull
-      unitsBytes = 'Bytes'
-      break
-    case 'double':
-      units = sizeUnitsFormatNameDouble
-      break
-    case 'eic':
-      units = sizeUnitsFormatNameEIC
-      break
-    default: // single
-      units = sizeUnitsFormatNameSingle
-      break
-  }
-
-  if (Math.abs(bytes) < thresh) {
-    return bytes + unitSeperateSpace + unitsBytes
-  }
-
-  // let units = si
-  //   ? ['kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
-  //   : ['KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB']
-  let u = -1
-  // let r = 10 ** dp
-  let r = Math.pow(dp, 10)
-
-  do {
-    bytes /= thresh
-    ++u
-  } while (Math.round(Math.abs(bytes) * r) / r >= thresh && u < units.length - 1)
-
-  let valFixed = bytes.toFixed(dp) + ''
-  valFixed = zzb.strings.trimSuffix(valFixed, ['.00', '.0'])
-
-  return valFixed + unitSeperateSpace + units[u]
-}
-
-_strings.prototype.trimPrefix = function(target, prefix) {
-  target = zzb.types.toString(target)
-  let arr = []
-  if (!zzb.types.isArray(prefix)) {
-    arr.push(zzb.types.toString(prefix))
-  } else {
-    arr = prefix
-  }
-  for (let ii = 0; ii < arr.length; ii++) {
-    if (target.startsWith(arr[ii])) {
-      return target.slice(arr[ii])
-    }
-  }
-  return target
-}
-
-_strings.prototype.trimSuffix = function(target, suffix) {
-  target = zzb.types.toString(target)
-  let arr = []
-  if (!zzb.types.isArray(suffix)) {
-    arr.push(zzb.types.toString(suffix))
-  } else {
-    arr = suffix
-  }
-  for (let ii = 0; ii < arr.length; ii++) {
-    if (target.endsWith(arr[ii])) {
-      return target.slice(0, arr[ii].length * -1)
-    }
-  }
-  return target
-}
-
-// https://stackoverflow.com/questions/8211744/convert-time-interval-given-in-seconds-into-more-human-readable-form
-_strings.prototype.millisecondsTimeToHumanReadable = function (milliseconds) {
-  let temp = milliseconds / 1000
-  const years = Math.floor(temp / 31536000)
-  const days = Math.floor((temp %= 31536000) / 86400)
-  const hours = Math.floor((temp %= 86400) / 3600)
-  const minutes = Math.floor((temp %= 3600) / 60)
-  const seconds = temp % 60
-
-  if (days || hours || seconds || minutes) {
-    return (years ? years + 'y ' : '') +
-      (days ? days + 'd ' : '') +
-      (hours ? hours + 'h ' : '') +
-      (minutes ? minutes + 'm ' : '') +
-      Number.parseFloat(seconds).toFixed(2) + 's'
-  }
-
-  return '< 1s'
-}
-
-_strings.prototype.toBool = function (target) {
-  if (!zzb.types.isStringNotEmpty(target)) {
-    return (target)
-  }
-  switch(target.toLowerCase().trim()){
-    case "true":
-    case "yes":
-    case "1":
-      return true;
-
-    case "false":
-    case "no":
-    case "0":
-    case "":
-    case null:
-    case undefined:
-      return false;
-
-    default:
-      return Boolean(target);
-  }
-}
-
-_strings.prototype.parseIntOrZero = function (target, forceArray) {
-  return zzb.strings.parseTypeElse(target, 'int', 0, forceArray ? true : false)
-}
-
-_strings.prototype.parseFloatOrZero = function (target, forceArray) {
-  return zzb.strings.parseTypeElse(target, 'float', 0, forceArray ? true : false)
-}
-
-_strings.prototype.parseBoolOrFalse = function (target, forceArray) {
-  return zzb.strings.parseTypeElse(target, 'bool', false, forceArray ? true : false)
-}
-
-_strings.prototype.parseTypeElse = function (target, type, elseif, forceArray) {
-  let makeArray = (forceArray || zzb.types.isArray(target))
-  if (target === undefined || target === null) {
-    if (makeArray) {
-      return []
-    }
-    return elseif
-  } else if (!zzb.types.isArray(target)) {
-    target = [target]
-  }
-  for (let ii = 0; ii < target.length; ii++) {
-    if (target[ii] == undefined || target[ii] === null) {
-      target[ii] = elseif
-    } else {
-    // if (zzb.types.isString(target[ii])) {
-    //   let isEmpty = !zzb.types.isStringNotEmpty(target[ii])
-      let convertNumber = false
-      switch (type) {
-        case 'int':
-          parsed = parseInt(target[ii])
-          convertNumber = true
-          break
-        case 'float':
-          // parsed = isEmpty ? elseif : parseFloat(target[ii])
-          parsed = parseFloat(target[ii])
-          convertNumber = true
-          break
-        case 'bool':
-          target[ii] = zzb.strings.toBool(target[ii])
-          break
-        case 'date':
-        case 'date-iso':
-          target[ii] = zzb.types.isStringNotEmpty(target[ii]) ? target[ii] : elseif
-          break
-        default:
-          if (!zzb.types.isString(target[ii])) {
-            if (!zzb.types.isArray(target[ii]) && !zzb.types.isObject(target[ii])) {
-              target[ii] += ''
-            }
-          }
-          break
-      }
-      if (convertNumber) {
-        target[ii] = isNaN(parsed) ? elseif : parsed
-      }
-    }
-  }
-  if (makeArray) {
-    return target
-  }
-  return target[0]
-}
-
-_strings.prototype.mergeElseEmpty = function (mergeItem, mergeVar1, mergeVar2) {
-  let mergeVar = mergeVar1
-  if (!zzb.types.isStringNotEmpty(mergeVar)) {
-    mergeVar = mergeVar2
-    if (!zzb.types.isStringNotEmpty(mergeVar)) {
-      return ''
-    }
-  }
-  return zzb.strings.format(mergeItem, mergeVar)
-}
-
-exports.P = _strings
-
-
-/***/ }),
-
-/***/ 247:
-/***/ ((__unused_webpack_module, exports) => {
-
-// ---------------------------------------------------
-// time
-// ---------------------------------------------------
-
-function _time () {}
-
-class ZazzyInterval {
-  constructor(options) {
-    this.options = ZazzyInterval.getZazzyDefaults(options)
-    if (this.options.autostart === true) {
-      this.options.new()
-    }
-  }
-  static getZazzyDefaults(options) {
-    const myInterval = {
-      interval: 60000,
-      autostart: false,
-      id: null,
-      targetClick: null,
-      datacache: false,
-      action: function() {console.log('ZazzyInterval no-op')}
-    }
-    options = (zzb.types.isObject(options) ? zzb.types.merge(myInterval, options) : myInterval)
-    options.autostart = options.autostart === true
-    if (!(zzb.types.isStringNotEmpty(options.id))) {
-      options.id = zzb.uuid.newV4()
-    }
-    if (!zzb.types.isFunction(options.action)) {
-      throw new Error('required action')
-    }
-    options._cache = null
-    options._itoken = null
-    if (!zzb.types.isFunction(options.new)) {
-      options.new = function() {
-        options._itoken = setInterval(options.refresh, this.interval)
-        options._isPaused = false
-      }
-    }
-    if (!zzb.types.isFunction(options.clear)) {
-      options.clear = function(doPause) {
-        if (options._itoken == null) {
-          return
-        }
-        clearInterval(options._itoken)
-        options._itoken = null
-        if (doPause === true) {
-          options._isPaused = true
-        }
-      }
-    }
-    if (!zzb.types.isFunction(options.unpause)) {
-      options.unpause = function() {
-        if (options._isPaused !== true) {
-          return
-        }
-        options._itoken = setInterval(options.refresh, this.interval)
-        options._isPaused = false
-      }
-    }
-    if (!zzb.types.isFunction(options.refresh)) {
-      options.refresh = function() {
-        if (options._itoken == null) {
-          return
-        }
-        options._isPaused = false
-        options.action && options.action()
-        // document.getElementById("butMainSearch").click()
-      }
-    }
-    return options
-  }
-  new() {
-    if (zzb.types.isFunction(this.options.new)) {
-      this.options.new()
-    }
-  }
-  clear(doPause) {
-    if (zzb.types.isFunction(this.options.clear)) {
-      this.options.clear(doPause === true)
-    }
-  }
-  unpause() {
-    if (zzb.types.isFunction(this.options.unpause)) {
-      this.options.unpause()
-    }
-  }
-  refresh() {
-    if (zzb.types.isFunction(this.options.refresh)) {
-      this.options.refresh()
-    }
-  }
-  setCache(obj) {
-    this.options._cache = this.options.datacache ? obj : null
-  }
-  getCache() {
-    return this.options.datacache ? this.options._cache : null
-  }
-  hasCache() {
-    return this.options.datacache && this.options._cache
-  }
-}
-
-_time.prototype.ZazzyInterval = ZazzyInterval
-
-_time.prototype.getInterval = function (id) {
-  if (!this.myIntervals || !zzb.types.isStringNotEmpty(id) || !this.myIntervals[id]) {
-    return null
-  }
-  return this.myIntervals[id]
-}
-
-_time.prototype.clearAll = function (doPause) {
-  if (!this.myIntervals || !zzb.types.isObject(this.myIntervals)) {
-    return
-  }
-  for (const key in this.myIntervals) {
-    this.myIntervals[key].clear(doPause)
-  }
-}
-
-_time.prototype.unpauseAll = function () {
-  if (!this.myIntervals || !zzb.types.isObject(this.myIntervals)) {
-    return
-  }
-  for (const key in this.myIntervals) {
-    this.myIntervals[key].unpause()
-  }
-}
-
-_time.prototype.newInterval = function (options) {
-  if (!this.myIntervals) {
-    this.myIntervals = {}
-  }
-  if (options && options.id && zzb.types.isStringNotEmpty(options.id)) {
-    if (this.myIntervals[options.id]) {
-      return this.myIntervals[options.id]
-    }
-  }
-  const myInterval = new ZazzyInterval(options)
-  if (myInterval && myInterval.options && zzb.types.isStringNotEmpty(myInterval.options.id)) {
-    this.myIntervals[myInterval.options.id] = myInterval
-    return myInterval
-  }
-  throw new Error('Failed to create ZazzyInterval')
-}
-
-_time.prototype.newUIInterval = function ($elem) {
-  if (!$elem) {
-    return
-  }
-  if ($elem.getAttribute('zi-inited') === 'true') {
-    return
-  }
-  if (!zzb.types.isStringNotEmpty($elem.getAttribute('id'))) {
-    $elem.setAttribute('id', zzb.uuid.newV4())
-  }
-  // zi-interval = The interval in milliseconds. Default is 60000 (1 minute).
-  // zi-id = The name of identifying this interval object. Default is a new uuid4 value.
-  // zi-autostart = [ "true" | "false" ] If true, then begin the timer immediately otherwise do not start.
-  zzb.time.newInterval({
-    interval: zzb.dom.getAttributeElse($elem, 'zi-interval', null),
-    id: zzb.dom.getAttributeElse($elem, 'zi-id', null),
-    autostart: $elem.getAttribute('zi-autostart') === 'true',
-    targetClick: $elem.getAttribute('id'),
-    datacache: $elem.getAttribute('zi-datacache') === 'true',
-    action: function() {
-
-      //console.log('myInterval.action', this.targetClick)
-
-      // Detect modal dialogs open. If open, then ignore b/c the new injects can junk-up the dom, creating wierd bugs.
-      // console.log('modals showing', document.querySelectorAll('.modal.show').length)
-      if (document.querySelectorAll('.modal.show').length > 0) {
-        return
-      }
-
-      document.getElementById(this.targetClick).setAttribute('zi-noclick', 'true');
-      document.getElementById(this.targetClick).click();
-    }
-  })
-  $elem.setAttribute('zi-inited', 'true')
-}
-
-exports.k = _time
-
-
-/***/ }),
-
-/***/ 305:
-/***/ ((__unused_webpack_module, exports) => {
-
-// ---------------------------------------------------
-// types
-// ---------------------------------------------------
-
-function _types () {}
-
-_types.prototype.merge = function(defaultOption, newOptions) {
-  return mergeArgs(defaultOption, newOptions)
-}
-
-const mergeArgs = function (...arguments) {
-  // create a new object
-  let target = {};
-
-  // deep merge the object into the target object
-  const merger = (obj) => {
-    for (let prop in obj) {
-      if (obj.hasOwnProperty(prop)) {
-        if (Object.prototype.toString.call(obj[prop]) === '[object Object]') {
-          // if the property is a nested object
-          target[prop] = mergeArgs(target[prop], obj[prop]);
-        } else {
-          // for regular property
-          target[prop] = obj[prop];
-        }
-      }
-    }
-  };
-
-  // iterate through all objects and
-  // deep merge them with target
-  for (let i = 0; i < arguments.length; i++) {
-    merger(arguments[i]);
-  }
-
-  return target;
-};
-
-_types.prototype.truncate = function(num, decimal) {
-  return num.toString().substring(0, num.toString().indexOf('.')) + (num.toString().substr(num.toString().indexOf('.'), decimal + 1));
-}
-
-// http://stackoverflow.com/questions/23252173/get-html-escaped-text-from-textarea-with-jquery
-_types.prototype.escapeHtml = function (unsafe) {
-  if (!unsafe) {
-    return ''
-  } else {
-    return unsafe
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#039;')
-  }
-}
-
-// baseToString is a lightweight version of the lodash function baseToString.
-// https://github.com/lodash/lodash/blob/0843bd46ef805dd03c0c8d804630804f3ba0ca3c/lodash.js#L4230
-_types.prototype.baseToString = function(value) {
-  // Exit early for strings to avoid a performance hit in some environments.
-  if (typeof value == 'string') {
-    return value;
-  }
-  if (zzb.types.isNumber(value)) {
-    let result = (trimSuffix + '');
-    return (result == '0' && (1 / value) == -INFINITY) ? '-0' : result;
-  }
-  return ''
-}
-
-_types.prototype.toString = function (s) {
-  return s == null ? '' : zzb.types.baseToString(s);
-}
-
-_types.prototype.isArray = function (o) {
-  return (o && (o !== undefined) && Object.prototype.toString.call(o) === '[object Array]')
-}
-
-_types.prototype.isArrayHasRecords = function (o) {
-  return zzb.types.isArray(o) && o.length > 0
-}
-
-_types.prototype.isObject = function (o) {
-  return (o && (typeof o === 'object'))
-}
-
-_types.prototype.isNumber = function (o) {
-  return !isNaN(o - 0) && o !== null && o !== '' && o !== false
-}
-
-// Deprecated
-// Will be remove in version 3.0.0
-_types.prototype.isNonEmptyString = function (s) {
-  return zzb.types.isStringNotEmpty(s)
-}
-
-_types.prototype.isStringNotEmpty = function (s) {
-  return (s && (typeof s === 'string') && s.trim().length > 0)
-}
-
-// Deprecated
-// Will be remove in version 3.0.0
-_types.prototype.isEmptyString = function (s) {
-  return zzb.types.isStringEmpty(s)
-}
-
-_types.prototype.isStringEmpty = function (s) {
-  return (s && (typeof s === 'string') && s.trim().length === 0)
-}
-
-_types.prototype.isString = function (s) {
-  return (s && (typeof s === 'string'))
-}
-
-_types.prototype.isFunction = function (fn) {
-  let getType = {}
-  return fn && getType.toString.call(fn) === '[object Function]'
-}
-
-_types.prototype.isBoolean = function (b) {
-  return (typeof b === 'boolean')
-}
-
-/**
- * compare
- *
- * Takes two parameters. If x equals y, the function returns 0. If x is greater than y, the function returns 1. If x is less than y, the function returns -1.
- * Useful in sorting algorithms
- * ref: http://stackoverflow.com/questions/16426774/underscore-sortby-based-on-multiple-attributes
- */
-_types.prototype.compare = function (x, y, isDesc) {
-  if (x === y) {
-    return 0
-  }
-  if (isDesc) {
-    return x > y ? -1 : 1
-  } else {
-    return x > y ? 1 : -1
-  }
-}
-
-exports.g = _types
-
-
-/***/ }),
-
-/***/ 169:
-/***/ ((__unused_webpack_module, exports) => {
-
-// ---------------------------------------------------
-// uuid
-// ---------------------------------------------------
-
-const _uuid = function () {}
-
-/**
- * zzb.uuid.newV4
- *
- * Usage:
- *    zzb.uuid.newV4()
- * Produces:
- *    '9716498c-45df-47d2-8099-3f678446d776'
- *
- * Generates an RFC 4122 version 4 uuid
- * This is not a time-based approach, unlike uuid v1 - so don't let the use of _.now() fool you!
- * Use of _.now() has to do with collision avoidance.
- * @see https://dirask.com/posts/JavaScript-UUID-function-in-Vanilla-JS-1X9kgD
- * @returns {String} the generated uuid
- */
-_uuid.prototype.newV4 = function () {
-  function generateNumber(limit) {
-    let value = limit * Math.random();
-    return value | 0;
-  }
-
-  function generateX() {
-    let value = generateNumber(16);
-    return value.toString(16);
-  }
-
-  function generateXes(count) {
-    let result = '';
-    for(let i = 0; i < count; ++i) {
-      result += generateX();
-    }
-    return result;
-  }
-
-  function generateVariant() {
-    let value = generateNumber(16);
-    let variant =  (value & 0x3) | 0x8;
-    return variant.toString(16);
-  }
-
-  return generateXes(8)
-    + '-' + generateXes(4)
-    + '-' + '4' + generateXes(3)
-    + '-' + generateVariant() + generateXes(3)
-    + '-' + generateXes(12)
-}
-
-/**
- * zzb.uuid.isV4
- *
- * Usage:
- *    zzb.uuid.isV4(zzb.uuid.newV4())
- * Produces:
- *    true|false
- *
- * Validates a version 4 uuid string
- * @param {String} uuid - the uuid under test
- * @returns {Boolean} true if the uuid under test is a valid uuid
- **/
-_uuid.prototype.isV4 = function (uuid) {
-  const re = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
-  return re.test(uuid)
-}
-
-/**
- * zzb.uuid.isValid
- *
- * Usage:
- *    zzb.uuid.isValid(zzb.uuid.newV4())
- * Produces:
- *    true|false
- *
- * Validates ANY version uuid string (eg v1 or v4)
- * @param {String} uuid - the uuid under test
- * @returns {Boolean} true if the uuid under test is a valid uuid
- **/
-_uuid.prototype.isValid = function (uuid) {
-  const re = /^([a-f\d]{8}(-[a-f\d]{4}){3}-[a-f\d]{12}?)$/i
-  return re.test(uuid)
-}
-
-exports.u = _uuid
-
-
-/***/ }),
-
 /***/ 168:
 /***/ ((__unused_webpack_module, exports) => {
 
 // ---------------------------------------------------
 // _zaction
 // ---------------------------------------------------
-
-/*
-Usage:
-    1. Add 'zaction' to an element class to add event listeners.
-       * This happens on load prior to HTML display or when new content added after.
-       * Add 'no-autoload-zactions' to the body class to disable initializing zaction prior to HTML display.
-    2. Add 'zload-action' to load content prior to HTML display
-
-On the element itself:
-    * `zclosest`: Navigate up the DOM to the designated element, merging in zui attributes on it. Existing zui attributes are not replaced.
-    * `zcall`: Specify the DOM event. Defaults to `click` but available are what your handler specifies, such as click, mousedown, mouseup, change.
-
-    * `zurl`: The url to send data to the server. If the path contains a reserved name (see variable `reservePH` for a list), these are replaced with their respective actions.
-              Reserved placeholder list includes [':event', ':mod', ":zid", ':zidParent']. These are optional to include in zurl.
-              Valid zurls are:
-              * https://example.com/path/to/page
-              * https://example.com/:event/:zid/:mod
-              * https://example.com/path/to/page/:zidParent
-              * https://example.com/path/to/pdfs/:zid/:blobName
-
-    * `za-event`: The event to fire inside the local event handler.
-                  If data is sent to the server, it is part of zaction.event.
-                  Note sometimes events run that don't send data to the server (eg drag-drop).
-                  Built-in events:
-                  * zurl-dialog
-                  * zurl-confirm // show a confirmation dialog prior to running an action
-                  * zurl-replace
-                  * zurl-search // allows interval for page refresh and data-caching
-                  * zurl-action
-                  * zurl-field-update // updates fields using json key-values
-                  * zurl-blob-download
-                  * zurl-nav-tab
-                  * zurl-nav-self
-    * `za-mod`: If used, it is sent to the server as zaction.mod (eg 'delete', 'create', 'edit', 'paginate').
-    * `za-method`: The type of call to initiate with the server. Available: `getJSON`, `postJSON`, `postFORM`. Default is `postJSON`.
-
-    * `za-zid`: The id of an element. Optional. If used, it is sent to the server as zaction.zid.
-    * `za-zid-parent`: The parent-id of an element. Optional. If used, it is sent to the server as zaction.zidParent.
-    * `za-zseq`: The sequence number, if used as a second zid identifier. This id is a passive passenger in that zaction does
-                 not use it. You may create or rename other zids to suit your needs. For example, we could have called this slot "zid2".
-
-    * `za-page-on`: When pagination is active, it is sent to the server as zaction.pageOn.
-    * `za-page-limit`: When pagination is active, it is the number of records to show on a page.
-    * `za-ignore-zurl`:  If 'true', the url is ignored but other properties are initialized.
-    * `za-do-zval`:  When placed on an element (eg button for submit), results will be sent through the zval processor.
-
-    * `za-loop-type`: If used, it is sent to the server as zaction.loopType.
-    * `za-loop-inject-skip-inject`: If set to 'true' and a loopType has not been identified, forces skipping injecting html even when an inject is identified.
-
-    * `za-data`: The data selector in the format of "label.type : id | class". The first period (".") is the label separator and the colon (":") separates the type selector.
-                 * Label is optional but required when selecting multiple elements that require html injection from server ajax results.
-                 * The selector has the reserved words 'none | selector | closest | self'.
-                   * 'none': skips all selectors completely for the element and any ancestors.
-                   * 'self': returns the current element.
-                   * 'closest': selects the closest element.
-                   * 'selector': selects the element, usually based on id ('#id") or class ('.class).
-                 If the selected element is of type Form, a new FormData object is auto-created.
-                 If the zurl, zid and zidParent are not already detected, the data element is inspected for these attributes after the zclosest hierarchy has been completed.
-                 Examples.
-                     za-data="none" --> IGNORE zdata for entire life of zaction.
-                     za-data="self" | "self:"
-                     za-data="label.selector:criteria"
-                     za-data="label.closest:criteria"
-                     za-data="label.selector@inner:criteria" // innerHTML. 'inner' is the default.
-                     za-data="label.closest@outer:criteria" // outerHTML
-
-    * `za-inject`: The element targeted for injection by the results of an action in a format similar to za-data.
-    * `za-post-save`: The elements targeted to invoke after a normal zaction, if no errors.
-                      It is similar to `zdlg-post-save` but the latter is attached to a dialog footer button whereas `za-post-save` is not.
-
-    * `zinput`: The element having this class will have its data-state checked for any changes and, if any, then `ztoggler` gets fired.
-    * `zinput-event`: Default is `input`. For example, specify `change` for a change event.
-    * `zinput-field`: An `input`, `select` or `textarea` that should get an input handler. For textarea, set `zinput-event` to `change`.
-    * `ztoggler`: An attribute on an element having class `zinput`.
-                  It points to the id of the element that should be toggled should any changes happen to child elements having class `zinput-field`.
-                  These are elements that have the `input` event fired.
-    * `ztoggler-display`: `disabled` or `none`. Default is `none`. If none, the target ztoggler element will not show unless there is a data-state change.
-    * `zref-zinput-ptr`: The `zinput` loader will auto-place this on the `ztoggler` element as a reference back to the `zinput` parent.
-                          It is required for post-zaction functionality.
-
-    * `za-dlg`: The selector to the element having dlg attributes in a format similar to za-data.
-      * zdlg-post-save="selector" // See `za-post-save`. The version for zdlg is attached to a dialog button.
-      * zdlg-title="Dialog Title" // Force this title all the title, even if the server sends a title to use.
-      * zdlg-alt-title="Alternative Title" // Use this title when the server does not send a title.
-      * zdlg-body="Do you want to save?" // Evaluation order is zaction.getOptions().zdlg.body (from element), results.html (from server), results.js.body (or optionally from server if results.html is empty)
-      * zdlg-noHeaderCloseButton="false | true" // if 'true', the close button on the header will be hidden.
-      * zdlg-type="default | none | primary | secondary | success | danger | warning| info| light | dark | link"
-        * This sets the theme for the entire dialog but not the buttons, which are set by 'zdlg-theme' or 'zdlg-buttons'.
-      * zdlg-alt-type="default | none | primary | secondary | success | danger | warning| info| light | dark | link" // Use the alternate type when the server does not send a theme.
-      * zdlg-theme="Cancel|Save|default" // A quick way to create buttons and set the type. Use zdlg-buttons for further customization.
-      * zdlg-alt-theme="Cancel|Save|default" // Use the alternate theme when the server does not send a theme.
-      * zdlg-buttons='LABEL|THEME|ZTRIGGER;LABEL|THEME|ZTRIGGER'
-        * The ';' separates buttons.
-      * zdlg-class-backdrop="class2 class3" // Add classes to the backdrop of a .modal-dialog. The backdrop class is already "fullscreen".
-      * zdlg-alt-class-backdrop="class2 class3" // Add classes to the backdrop of a .modal-dialog. The backdrop class is already "fullscreen".
-      * zdlg-class="modal-fullscreen class2 class3" // Add classes to a .modal-dialog.
-      * zdlg-alt-class="modal-fullscreen class2 class3" // Add classes to a .modal-dialog.
-      * zdlg-class-width-mod="sm | lg | xl" // Adds optional size to dialog width, even if the server sends data to use.
-      * zdlg-alt-class-width-mod="sm | lg | xl" // Use this when server does not send data.
-      * zdlg-class-fullscreen-mod="sm | md | lg | xl | xxl" // Adds optional fullscreen down-sizing width, even if the server sends data to use.
-      * zdlg-alt-class-fullscreen-mod="sm | md | lg | xl | xxl" // Use this when server does not send data.
-      * zdlg-is-scrollable="true | false" // Adds scrollbars to dialog, even if the server sends data to use.
-      * zdlg-alt-is-scrollable="true | false" // Use this when server does not send data.
-      * zdlg-is-fullscreen="true | false" // Adds fullscreen to dialog, even if the server sends data to use. Optionally use in conjunction with `zdlg-class-fullscreen-mod .
-      * zdlg-alt-is-fullscreen="true | false" // Use this when server does not send data.
-      * zdlg-is-no-footer="true | false" // Hides the footer completely, even if the server sends data to use.
-      * zdlg-alt-is-no-footer="true | false" // Use this when server does not send data.
-
-    REMOVED: DOM Manipulation (this was tucked inside handleZUrlAction)
-    * `za-post-inject-action`:  Optional action to run after injection. Current supported is 'delete' inside handleZUrlAction.
- */
 
 class ZActionHandler {
   constructor(options) {
@@ -2518,11 +613,9 @@ _zaction.prototype.getHandler = function(id) {
   if (!id) {
     return
   }
-  this.handlers.forEach(function(handler) {
-    if (handler.getId() === id) {
-      return handler
-    }
-  })
+  for (const handler of this.handlers) {
+    if (handler.getId() === id) return handler;
+  }
   return null
 }
 
@@ -2539,504 +632,410 @@ _zaction.prototype.setHandler = function(handler) {
   this.handlers.push(handler)
 }
 
-function findSelectorTargets($elem, bundle) {
-  if (!$elem) {
-    return null
-  }
-  if (!zzb.types.isStringNotEmpty(bundle)) {
-    return null
-  }
-  let arr = []
-  let ssTargets = bundle.split(',')
-  for (let mm = 0; mm < ssTargets.length; mm++) {
+// function findSelectorTargets($elem, bundle) {
+//   if (!$elem) {
+//     return null
+//   }
+//   if (!zzb.types.isStringNotEmpty(bundle)) {
+//     return null
+//   }
+//   let arr = []
+//   let ssTargets = bundle.split(',')
+//   for (let mm = 0; mm < ssTargets.length; mm++) {
+//
+//     let bundle = ssTargets[mm]
+//
+//     switch (bundle) {
+//       case 'self':
+//         arr.push({label: 'self', $elem: $elem})
+//         break
+//       case 'self:':
+//         arr.push({label: 'self', $elem: $elem})
+//         break
+//       case 'none':
+//         return 'none'
+//       case 'none:':
+//         return 'none'
+//       default:
+//         // parse
+//         // label.selector:#id
+//         // label.selector@placement:#id
+//         let split = [ bundle.substring(0, bundle.indexOf(':')), bundle.substring(bundle.indexOf(':') + 1) ]
+//         if (split.length === 2) {
+//           if (!zzb.types.isStringNotEmpty(split[1])) {
+//             return null
+//           }
+//
+//           let label = null
+//           if (split[0].indexOf('.') > 1) {
+//             // label.selector#placement
+//             label = split[0].slice(0, split[0].indexOf('.'))
+//             split[0] = split[0].slice(split[0].indexOf('.') + 1)
+//           }
+//
+//           let placement = 'inner'
+//           let mySelector = split[0]
+//           if (split[0].indexOf('@') > 1) {
+//             // label.selector#placement
+//             mySelector = split[0].slice(0, split[0].indexOf('@'))
+//             placement = split[0].slice(split[0].indexOf('@') + 1)
+//           }
+//
+//           let $target = null
+//           if (mySelector === 'selector' || mySelector === 's') {
+//             $target = document.querySelector(split[1])
+//           } else if (mySelector === 'closest' || mySelector === 'c') {
+//             $target = $elem.closest(split[1])
+//           } else if (mySelector === 'child' || mySelector === 'h') {
+//             $target = $elem.querySelector(split[1])
+//           }
+//
+//           if (!(placement === 'inner' || placement === 'outer')) {
+//             console.log('unknown placement param inside inject; defaulting to "inner"', split)
+//             placement = 'inner'
+//           }
+//
+//           if ($target) {
+//             arr.push({label: label, $elem: $target, placement: placement})
+//           }
+//         }
+//     }
+//   }
+//
+//   return arr
+// }
 
-    let bundle = ssTargets[mm]
-
-    switch (bundle) {
-      case 'self':
-        arr.push({label: 'self', $elem: $elem})
-        break
-      case 'self:':
-        arr.push({label: 'self', $elem: $elem})
-        break
-      case 'none':
-        return 'none'
-      case 'none:':
-        return 'none'
-      default:
-        // parse
-        // label.selector:#id
-        // label.selector@placement:#id
-        let split = [ bundle.substring(0, bundle.indexOf(':')), bundle.substring(bundle.indexOf(':') + 1) ]
-        if (split.length === 2) {
-          if (!zzb.types.isStringNotEmpty(split[1])) {
-            return null
-          }
-
-          let label = null
-          if (split[0].indexOf('.') > 1) {
-            // label.selector#placement
-            label = split[0].slice(0, split[0].indexOf('.'))
-            split[0] = split[0].slice(split[0].indexOf('.') + 1)
-          }
-
-          let placement = 'inner'
-          let mySelector = split[0]
-          if (split[0].indexOf('@') > 1) {
-            // label.selector#placement
-            mySelector = split[0].slice(0, split[0].indexOf('@'))
-            placement = split[0].slice(split[0].indexOf('@') + 1)
-          }
-
-          let $target = null
-          if (mySelector === 'selector' || mySelector === 's') {
-            $target = document.querySelector(split[1])
-          } else if (mySelector === 'closest' || mySelector === 'c') {
-            $target = $elem.closest(split[1])
-          } else if (mySelector === 'child' || mySelector === 'h') {
-            $target = $elem.querySelector(split[1])
-          }
-
-          if (!(placement === 'inner' || placement === 'outer')) {
-            console.log('unknown placement param inside inject; defaulting to "inner"', split)
-            placement = 'inner'
-          }
-
-          if ($target) {
-            arr.push({label: label, $elem: $target, placement: placement})
-          }
-        }
-    }
-  }
-
-  return arr
-}
-
-_zaction.prototype.newZClosest = function($elem, obj, isFirstZAction, zaExtraHandler) {
+_zaction.prototype.buildZClosest = function($elem, obj, isFirstZAction, zaExtraHandler) {
   return buildZClosest($elem, obj, isFirstZAction, zaExtraHandler)
 }
 
-function buildZClosest($elem, obj, isFirstZAction, zaExtraHandler) {
-  let isNew = false
-  if (!obj) {
-    isNew = true
-    obj = {zaction:{},zdata:{},zdlg:{tryDialog: false},zurl:null,$data:null,arrInjects:null,zref:{},zinterval:{}}
-  }
-  if (!$elem) {
-    return null
-  }
+class ZBuilder {
+  constructor($elem) {
+    this.$elem = $elem;
+    this.zaction = {};
+    this.zdata = {};
+    this.zdlg = { tryDialog: false };
+    this.zurl = null;
+    this.$data = null;
+    this.arrInjects = null;
+    this.zref = {};
+    this.zinterval = {
+      id: $elem.getAttribute('zi-id'),
+      noClick: $elem.getAttribute('zi-noclick') === 'true'
+    };
+    this.forceIgnoreZUrl = false;
+    this.forceIgnoreZData = false;
+    this.forceIgnoreZInject = false;
+    this.isForm = false;
+    this.formData = null;
 
-  if (isNew) {
-    obj.zinterval.id = $elem.getAttribute('zi-id')
-    if (zzb.types.isStringNotEmpty(obj.zinterval.id)) {
-      obj.zinterval.noClick = $elem.getAttribute('zi-noclick') === 'true'
-      $elem.setAttribute('zi-noclick', 'false');
-    }
-  }
-
-  // Apply 'obj.zaction' over the top of the newest found attributes, since 'obj.zaction' overrides these.
-  obj.zaction = zzb.types.merge(zzb.dom.getAttributes($elem, /^za-/, 3), obj.zaction)
-
-  // zdata elements are the full hierarchy, from element to zclosest ancestors.
-  obj.zdata = zzb.types.merge(zzb.dom.getAttributes($elem, /^zd-/, 3), obj.zdata)
-
-  if (!obj.forceIgnoreZUrl) {
-    if (isNew || isFirstZAction) {
-      obj.forceIgnoreZUrl = obj.zaction.ignoreZurl === 'true'
-    }
-    if (!obj.forceIgnoreZUrl && !obj.zurl) {
-      obj.zurl = findZUrlByAttribute($elem, true)
-    }
+    $elem.setAttribute('zi-noclick', 'false');
   }
 
-  if (!obj.forceIgnoreZData) {
-    if (!obj.$data) {
-      if (zzb.types.isStringNotEmpty(obj.zaction.data)) {
-        let arrData = findSelectorTargets($elem, obj.zaction.data)
-        if (arrData && arrData[0].$elem) {
-          obj.$data = arrData[0].$elem
-          obj.forceIgnoreZData = (obj.$data === 'none')
-          if (obj.forceIgnoreZData) {
-            obj.$data = null
-            obj.formData = null
-          } else {
-            if (obj.$data.nodeName.toLowerCase() === 'form') {
-              obj.isForm = true
-              obj.formData = new FormData(obj.$data)
-            }
-            // Wait until the full zclosest hierarchy is completed and if
-            // the following aren't found, then try with the data
-            // = zurl, zid, zidParent
-          }
-        }
+  bld_mergeAttributes() {
+    this.zaction = zzb.types.merge(zzb.dom.getAttributes(this.$elem, /^za-/, 3), this.zaction);
+    this.zdata = zzb.types.merge(zzb.dom.getAttributes(this.$elem, /^zd-/, 3), this.zdata);
+  }
+
+  bld_addViewPort() {
+    if (typeof window !== 'undefined') {
+      this.zaction.viewPort = {
+        window: {
+          w: Math.round(window.innerWidth) || 0,
+          h: Math.round(window.innerHeight) || 0
+        },
+        content: { w: 0, h: 0 }
+      };
+
+      const mainContainer = document.querySelector('.zwc-main-content');
+      if (mainContainer) {
+        const rect = mainContainer.getBoundingClientRect();
+        this.zaction.viewPort.content = {
+          w: Math.round(rect.width),
+          h: Math.round(rect.height)
+        };
       }
     }
   }
 
-  // The element itself can have dlg attributes and may also reference another element via 'za-dlg'.
-  if (isNew || isFirstZAction) {
-    obj.zref = zzb.types.merge(zzb.dom.getAttributes($elem, /^zref-/, 5), obj.zref)
-    obj.zdlg = zzb.types.merge(zzb.dom.getAttributes($elem, /^zdlg-/, 5), obj.zdlg)
-    // Look for any referenced dlg attributes indicated by the `za-dlg` attribute.
-    if (zzb.types.isStringNotEmpty(obj.zaction.dlg)) {
-      let arrDlg = findSelectorTargets($elem, obj.zaction.dlg)
+  bld_resolveZUrl(isFirstCall, isFirstZAction) {
+    if (this.forceIgnoreZUrl) return;
+
+    if (isFirstCall || isFirstZAction) {
+      this.forceIgnoreZUrl = this.zaction.ignoreZurl === 'true';
+    }
+
+    if (!this.forceIgnoreZUrl && !this.zurl) {
+      this.zurl = zzb.dom.findZUrl(this.$elem, true);
+    }
+  }
+
+  bld_resolveZData() {
+    if (this.forceIgnoreZData || this.$data) return;
+
+    if (zzb.types.isStringNotEmpty(this.zaction.data)) {
+      const arrData = zzb.dom.findSelectorTargets(this.$elem, this.zaction.data);
+      if (arrData && arrData[0].$elem) {
+        this.$data = arrData[0].$elem;
+        this.forceIgnoreZData = this.$data === 'none';
+
+        if (!this.forceIgnoreZData) {
+          if (this.$data.nodeName.toLowerCase() === 'form') {
+            this.isForm = true;
+            this.formData = new FormData(this.$data);
+          }
+        } else {
+          this.$data = null;
+          this.formData = null;
+        }
+      } else {
+        console.warn('No matching selector found for zaction.data:', this.zaction.data);
+      }
+    }
+  }
+
+  bld_resolveZDialog() {
+    this.zref = zzb.types.merge(zzb.dom.getAttributes(this.$elem, /^zref-/, 5), this.zref);
+    this.zdlg = zzb.types.merge(zzb.dom.getAttributes(this.$elem, /^zdlg-/, 5), this.zdlg);
+
+    if (zzb.types.isStringNotEmpty(this.zaction.dlg)) {
+      const arrDlg = zzb.dom.findSelectorTargets(this.$elem, this.zaction.dlg);
       if (arrDlg && arrDlg[0].$elem) {
-        obj.zdlg = zzb.types.merge(zzb.dom.getAttributes(arrDlg[0].$elem, /^zdlg-/, 5), obj.zdlg)
-        // Dlgs are special cases since they disrupt the normal "zclosest" flow from child to parent.
-        // With a dlg in play, it needs a change for the element to use its values, if present and if not
-        // having been already defined on $elem.
-        obj.zaction = zzb.types.merge(zzb.dom.getAttributes(arrDlg[0].$elem, /^za-/, 3), obj.zaction)
-        // Also grab the zurl, if available, since it corresponds directly to the dialog. There is the potential
-        // the $elem has on "override" in effect.
-        if (!obj.zurl) {
-          obj.zurl = findZUrlByAttribute(arrDlg[0].$elem, true)
+        const $dlgElem = arrDlg[0].$elem;
+        this.zdlg = zzb.types.merge(zzb.dom.getAttributes($dlgElem, /^zdlg-/, 5), this.zdlg);
+        this.zaction = zzb.types.merge(zzb.dom.getAttributes($dlgElem, /^za-/, 3), this.zaction);
+
+        if (!this.zurl) {
+          this.zurl = zzb.dom.findZUrl($dlgElem, true);
         }
       }
     }
   }
 
-  if (!obj.forceIgnoreZInject) {
-    if (!obj.arrInjects) {
-      if (zzb.types.isStringNotEmpty(obj.zaction.inject)) {
-        obj.arrInjects = findSelectorTargets($elem, obj.zaction.inject)
-        if (obj.arrInjects) {
-          obj.forceIgnoreZInject = (obj.arrInjects === 'none')
-          if (obj.forceIgnoreZInject) {
-            obj.arrInjects = null
-          }
-        }
+  bld_resolveInjects() {
+    if (this.forceIgnoreZInject || this.arrInjects) return;
+
+    if (zzb.types.isStringNotEmpty(this.zaction.inject)) {
+      const arrInjects = zzb.dom.findSelectorTargets(this.$elem, this.zaction.inject);
+      if (arrInjects !== 'none') {
+        this.arrInjects = arrInjects;
+      } else {
+        this.forceIgnoreZInject = true;
+        this.arrInjects = null;
       }
     }
   }
+}
 
-  let notOnZaction = (isNew && !$elem.classList.contains('zaction'))
-  if (isNew && zaExtraHandler === 'za-post-action') {
-    notOnZaction = false
-  }
+function buildZClosest($elem, obj = null, isFirstZAction = false, zaExtraHandler = null) {
+  if (!$elem) return null;
+
+  const isFirstCall = !obj;
+  const builder = isFirstCall ? new ZBuilder($elem) : obj;
+
+  builder.$elem = $elem;
+
+  builder.bld_mergeAttributes();
+  if (isFirstCall) builder.bld_addViewPort();
+  builder.bld_resolveZUrl(isFirstCall, isFirstZAction);
+  builder.bld_resolveZData();
+  if (isFirstCall || isFirstZAction) builder.bld_resolveZDialog();
+  builder.bld_resolveInjects();
+
+  const notOnZaction = isFirstCall && !$elem.classList.contains('zaction') &&
+    zaExtraHandler !== 'za-post-action';
+
   if (notOnZaction) {
-    // root $elem must begin with a zaction
-    obj = buildZClosest($elem.closest('.zaction'), obj, notOnZaction, zaExtraHandler)
-  } else {
-    // a: zclosest=div.navigate  --> div.navigate: zclosest=form --> form-info
-    let closest = zzb.dom.getAttributeElse($elem, 'zclosest', null)
-    if (closest) {
-      let $target = $elem.closest(closest)
-      if ($target) {
-        obj = buildZClosest($target, obj)
-      }
-    }
+    const $parentZ = $elem.closest('.zaction');
+    return buildZClosest($parentZ, builder, notOnZaction, zaExtraHandler);
   }
 
-  return obj
+  const closest = zzb.dom.getAttributeElse($elem, 'zclosest', null);
+  if (closest) {
+    const $target = $elem.closest(closest);
+    if ($target) return buildZClosest($target, builder);
+  }
+
+  return builder;
 }
 
-_zaction.prototype.newZAction = function(ev) {
-  if (!ev || !ev.target) {
-    return {isValid: false}
+class ZActionEvent {
+  constructor(ev) {
+    this.ev = ev;
+    this.zcall = ev?.target?.getAttribute('zcall') || null;
+    this._options = null;
+    this._runAJAX = null;
+    this.reservePH = [':event', ':mod', ':zid', ':zidParent', ':blobName'];
   }
 
-  let myZA = {
-    isValid: true,
-    ev: ev,
-    zcall: ev.target.getAttribute('zcall'), // click, mousedown, mouseup, change
-    _options: null,
-    _runAJAX: null, // function
-    isMouseDown: function() {
-      return this.zcall === 'mousedown'
-    },
-    forceStopPropDef: function(doForce) {
-      if (doForce || (ev.target.getAttribute('force-stop-prop-def') === "true")) {
-        this.ev.preventDefault()
-        this.ev.stopPropagation()
-        return true
-      }
-      return false
-    },
-    getZEvent: function() {
-      if (!this._options) {
-        this.getOptions()
-      }
-      return this._options.zaction.event
-    },
-    hasZEvent: function() {
-      return zzb.types.isStringNotEmpty(this.getZEvent())
-    },
-    isZUrl: function() {
-      if (!this._options) {
-        this.getOptions()
-      }
-      return zzb.types.isStringNotEmpty(this._options.zurl)
-    },
-    canRunZVal: function() {
-      this.getOptions()
-      return (this._options && this._options.$data && this._options.zaction.doZval === "true")
-      // return (this._options && this._options.isForm && this._options.$data && this._options.zaction.val === "true")
-    },
-    runAJAX: function(options, callback) {
-      // Ensure this._options has been created
-      this.getOptions()
+  isMouseDown() {
+    return this.zcall === 'mousedown';
+  }
 
-      if (!options || !this._runAJAX) {
-        callback && callback(null, new Error('_runAJAX not defined'))
-      } else {
-        this._runAJAX(options, callback)
-      }
-    },
-    runInjects: function(drr) {
-      if (this.getOptions().arrInjects && drr && drr.rob && drr.rob.hasRecords() && drr.rob.first().dInjects) {
-        runInjects(this.getOptions().arrInjects, drr.rob.first().dInjects)
-      }
-    },
-    buildAJAXOptions: function() {
-      // Ensure this._options has been created
-      this.getOptions()
-      // Create the options bundle for the ajax call
-      let ajaxOptions = {
-        url: this._options.zurl
-      }
-
-      const myInterval = zzb.time.getInterval(this._options.zinterval.id)
-      if (myInterval && !this._options.zinterval.noClick) {
-        //console.log('setCache from noClick')
-        myInterval.setCache(null)
-      }
-      const hasCache = (myInterval && myInterval.hasCache())
-      let doSetCache = false
-
-      if (this._options.zaction.method === 'postJSON') {
-        ajaxOptions.body = {}
-        if (!this._options.forceIgnoreZData) {
-          if (this._options.isForm) {
-            if (hasCache) {
-              ajaxOptions.body = myInterval.getCache()
-              //console.log('using cached search')
-            } else {
-              ajaxOptions.body = zzb.types.merge(serialize(this._options.formData, this._options.$data), ajaxOptions.body)
-              ajaxOptions.body = zzb.types.merge(this._options.zdata, ajaxOptions.body)
-              ajaxOptions.body = objToTree(ajaxOptions.body)
-              // Forms can internally have data that may override that in zaction: zid, zidParent, pageLimit, pageOn.
-              // We "could" check if formData.pageLimit has a value and then replace that of zaction.pageLimit
-              // but if we do this, then where do the "exceptions" end? Instead, let the server handle new pageLimit requests
-              // to create new zaction.pageLimits.
-              // ajaxOptions.body.data.zaction.pageLimit = ajaxOptions.body.dat
-
-              // Save the interval cache
-              doSetCache = true
-              //console.log('regular search')
-            }
-          }
-        }
-        ajaxOptions.body.zaction = this._options.zaction
-      } else if (this._options.zaction.method === 'postFORM') {
-        if (hasCache) {
-          ajaxOptions.body = myInterval.getCache()
-        } else {
-          ajaxOptions.body = this._options.formData
-          doSetCache = true
-        }
-      }
-
-      if (doSetCache && myInterval) {
-        myInterval.setCache(ajaxOptions.body)
-      }
-
-      if (zzb.types.isStringNotEmpty(this._options.zaction.expectType)) {
-        ajaxOptions.expectType = this._options.zaction.expectType
-      }
-
-      return ajaxOptions
-    },
-    getOptions: function() {
-      if (this._options) {
-        return this._options
-      }
-
-      this._options = buildZClosest(this.ev.target, null, null, this.ev.zaExtraHandler)
-
-      if (!this._options.forceIgnoreZData) {
-        if (this._options.$data) {
-          if (!this._options.zaction.zid) {
-            this._options.zaction.zid = zzb.dom.getAttributeElse(this._options.$data, 'za-zid', null)
-          }
-          if (!this._options.zaction.zidParent) {
-            this._options.zaction.zidParent = zzb.dom.getAttributeElse(this._options.$data, 'za-zid-parent', null)
-          }
-          if (!this._options.zurl) {
-            this._options.zurl = findZUrlByAttribute(this._options.$data, true)
-          }
-        }
-      }
-
-      // Wait until full hierarchy is completed
-      if (!zzb.types.isStringNotEmpty(this._options.zaction.loopType)) {
-        this._options.loopType = null
-      } else {
-        if (!this._options.forceIgnoreZInject) {
-          if (this._options.arrInjects) {
-            if (this._options.zaction.loopInjectSkipInject === "true") {
-              console.log(new Error('skipping za-loop-type "' + this._options.zaction.loopType + '": no arrInjects identified'))
-              this._options.zaction.loopType = null
-            } else {
-              this._options.hasLoopType = true
-            }
-          }
-        }
-      }
-
-      if (!zzb.types.isStringNotEmpty(this._options.zaction.method)) {
-        this._options.zaction.method = 'postJSON'
-      }
-
-      // assign method
-      switch (this._options.zaction.method) {
-        case 'getJSON':
-          this._runAJAX = zzb.ajax.getJSON
-          break
-        case 'postFORM':
-          this._runAJAX = zzb.ajax.postFORM
-          break
-        default:
-          this._runAJAX = zzb.ajax.postJSON
-          break
-      }
-
-      // transition from string to boolean
-      if (this._options.zdlg) {
-        this._options.zdlg.tryDialog = Object.keys(this._options.zdlg).length > 0
-      }
-
-      if (!this._options.forceIgnoreZUrl) {
-        let zurl = this._options.zurl
-        if (!zzb.types.isStringNotEmpty(zurl)) {
-          // Log it but don't throw an error. There is a chance the calling program is using the zurl system
-          // for other purposes, such as to retrieve arrInjects, $formdata, zid or zidParent values.
-          console.log('cannot determine zurl')
-          this._options.zurl = null
-        } else {
-          for (let ii = 0; ii < reservePH.length; ii++) {
-            if (zurl.indexOf(reservePH[ii]) > -1) {
-              let keyNoColon = reservePH[ii].replace(':', '')
-              if (zzb.types.isStringNotEmpty(this._options.zaction[keyNoColon])) {
-                zurl = zurl.replace(reservePH[ii], this._options.zaction[keyNoColon])
-              } else {
-                throw new Error("reserve placeholder '" + reservePH[ii] + "' not found in zurl '" + zurl + "'")
-              }
-            }
-          }
-          this._options.zurl = zurl
-        }
-      }
-
-      this._options.zaction.pageOn = zzb.strings.parseIntOrZero(this._options.zaction.pageOn)
-      this._options.zaction.pageLimit = zzb.strings.parseIntOrZero(this._options.zaction.pageLimit)
-
-      return this._options
+  forceStopPropDef(force) {
+    const shouldStop = force || this.ev?.target?.getAttribute('force-stop-prop-def') === 'true';
+    if (shouldStop) {
+      this.ev.preventDefault?.();
+      this.ev.stopPropagation?.();
     }
+    return shouldStop;
   }
 
-  if (!myZA.hasZEvent()) {
-    return {isValid: false}
+  getZEvent() {
+    return this.getOptions()?.zaction?.event ?? null;
   }
 
-  return myZA
-}
-
-let reservePH = [':event', ':mod', ":zid", ':zidParent', ':blobName']
-
-function findZUrlByAttribute($elem, returnNull) {
-  if (!$elem) {
-    return (returnNull ? null : '')
+  hasZEvent() {
+    const event = this.getZEvent();
+    return zzb.types.isStringNotEmpty(event);
   }
-  let zurl = $elem.getAttribute('zurl')
-  if (!zzb.types.isStringNotEmpty(zurl)) {
-    zurl = $elem.getAttribute('href')
-    if (!zzb.types.isStringNotEmpty(zurl)) {
-      zurl = $elem.getAttribute('action')
-      if (!zzb.types.isStringNotEmpty(zurl) && $elem.nodeName && $elem.nodeName.toLowerCase() !== 'img') {
-        zurl = $elem.getAttribute('src')
-      }
-    }
-  }
-  if (!zurl || zurl === '#') {
-    return (returnNull ? null : '')
-  }
-  return zurl
-}
 
-// https://gomakethings.com/how-to-serialize-form-data-with-vanilla-js/
-// https://gomakethings.com/how-to-serialize-form-data-into-a-search-parameter-string-with-vanilla-js/
-// https://stackoverflow.com/questions/41431322/how-to-convert-formdata-html5-object-to-json
-function serialize (data, $elem) {
-  let obj = {};
-  for (let [key, value] of data) {
-    if (obj[key] !== undefined) {
-      if (!Array.isArray(obj[key])) {
-        obj[key] = [obj[key]];
-      }
-      obj[key].push(value);
+  isValid() {
+    return !!this.ev?.target && this.hasZEvent();
+  }
+
+  isZUrl() {
+    return zzb.types.isStringNotEmpty(this.getOptions()?.zurl);
+  }
+
+  runAJAX(options, callback) {
+    this.getOptions();
+    if (!options || !this._runAJAX) {
+      callback?.(null, new Error('_runAJAX not defined'));
     } else {
-      obj[key] = value;
+      this._runAJAX(options, callback);
     }
   }
-  if ($elem) {
-    const keys = Object.keys(obj)
-    for (let ii = 0; ii < keys.length; ii++) {
-      let $field = $elem.querySelector('[name="' + keys[ii] + '"]')
-      if ($field) {
-        let zfType = $field.getAttribute('zf-type')
 
-        // The cached value, if set, overrides the actual value.
-        let zfCVal = zzb.dom.getAttributeElse($field, 'zf-cval', null)
-        if (zfCVal) {
-          if (zfType === 'date-iso' && (obj[keys[ii]] && obj[keys[ii]].trim() === '')) {
-            // A different datepicker object picker may have better results.
-            obj[keys[ii]] = null
-          } else {
-            obj[keys[ii]] = zfCVal
-          }
-        }
+  runInjects(response) {
+    const injects = this.getOptions().arrInjects;
+    const dInjects = response?.rob?.first?.()?.dInjects;
+    if (injects && dInjects) {
+      runInjects(injects, dInjects);
+    }
+  }
 
-        if (zzb.types.isStringNotEmpty(zfType)) {
-          let forceArray = zfType.startsWith('[]')
-          let type = zfType.replaceAll('[]', '')
-          let elseif = (type === 'int' || type === 'float') ? 0 : ''
-          if (type === 'string' && !forceArray) {
-            continue
-          } else if (type === 'bool') {
-            elseif = false
-          } else if (type === 'date-iso') {
-            elseif = null
+  getOptions() {
+    if (this._options) return this._options;
+
+    const target = this.ev?.target;
+    if (!target) return (this._options = null);
+
+    const built = zzb.zaction.buildZClosest(target, null, null, this.ev.zaExtraHandler);
+
+    if (!built) {
+      this._options = null;
+      return null;
+    }
+
+    this._options = built;
+    const opts = this._options;
+
+    if (!opts.forceIgnoreZData && opts.$data) {
+      opts.zaction.zid ??= zzb.dom.getAttributeElse(opts.$data, 'za-zid', null);
+      opts.zaction.zidParent ??= zzb.dom.getAttributeElse(opts.$data, 'za-zid-parent', null);
+      opts.zurl ??= zzb.dom.findZUrl(opts.$data, true);
+    }
+
+    if (!opts.forceIgnoreZUrl && zzb.types.isStringNotEmpty(opts.zurl)) {
+      for (const ph of this.reservePH) {
+        if (opts.zurl.includes(ph)) {
+          const key = ph.slice(1);
+          const val = opts.zaction[key];
+          if (!zzb.types.isStringNotEmpty(val)) {
+            throw new Error(`Missing required placeholder '${ph}' in zurl`);
           }
-          obj[keys[ii]] = zzb.strings.parseTypeElse(obj[keys[ii]], type, elseif, forceArray)
+          opts.zurl = opts.zurl.replace(ph, val);
         }
       }
     }
-  }
-  return obj;
-}
 
-function objToTree(obj) {
+    opts.zaction.pageOn = zzb.strings.parseIntOrZero(opts.zaction.pageOn);
+    opts.zaction.pageLimit = zzb.strings.parseIntOrZero(opts.zaction.pageLimit);
+    opts.zaction.method ||= 'postJSON';
 
-  function setNode(branch, parts, level, value) {
-    if (level === parts.length - 1) {
-      branch[parts[level]] = value
-    } else {
-      if (!branch[parts[level]]) {
-        branch[parts[level]] = {}
-      }
-      branch[parts[level]] = setNode(branch[parts[level]], parts, level + 1, value)
+    switch (opts.zaction.method) {
+      case 'getJSON':
+        this._runAJAX = zzb.ajax.getJSON;
+        break;
+      case 'postFORM':
+        this._runAJAX = zzb.ajax.postFORM;
+        break;
+      default:
+        this._runAJAX = zzb.ajax.postJSON;
     }
-    return branch
+
+    opts.zdlg.tryDialog = zzb.types.isObject(opts.zdlg) && Object.keys(opts.zdlg).length > 0;
+
+    if (
+      zzb.types.isStringNotEmpty(opts.zaction.loopType) &&
+      !opts.forceIgnoreZInject &&
+      opts.arrInjects
+    ) {
+      if (opts.zaction.loopInjectSkipInject === 'true') {
+        opts.zaction.loopType = null;
+      } else {
+        opts.hasLoopType = true;
+      }
+    }
+
+    return opts;
   }
 
-  const keys = Object.keys(obj)
-  let tree = {}
-  for (let ii = 0; ii < keys.length; ii++) {
-    tree = setNode(tree, keys[ii].split('.'), 0, obj[keys[ii]])
-  }
+  buildAJAXOptions() {
+    this.getOptions();
+    const opts = this._options;
+    const ajaxOptions = { url: opts.zurl };
+    const myInterval = zzb.time.getInterval(opts.zinterval.id);
+    const hasCache = myInterval && myInterval.hasCache();
+    let doSetCache = false;
 
-  return tree
+    if (myInterval && !opts.zinterval.noClick) {
+      myInterval.setCache(null);
+    }
+
+    switch (opts.zaction.method) {
+      case 'postJSON':
+        if (!opts.forceIgnoreZData) {
+          if (opts.isForm) {
+            ajaxOptions.body = hasCache
+              ? myInterval.getCache()
+              : zzb.dom.formDataToJson(opts.$data);
+
+            // Optionally merge zdata if needed, otherwise you can skip this merge
+            if (opts.zdata) {
+              ajaxOptions.body = zzb.types.merge(ajaxOptions.body, opts.zdata);
+            }
+          }
+        }
+        ajaxOptions.body = ajaxOptions.body || {};
+        ajaxOptions.body.zaction = opts.zaction;
+        break;
+
+      case 'postFORM':
+        ajaxOptions.body = hasCache ? myInterval.getCache() : opts.formData;
+        doSetCache = !hasCache;
+        break;
+    }
+
+    if (doSetCache && myInterval) {
+      myInterval.setCache(ajaxOptions.body);
+    }
+
+    if (zzb.types.isStringNotEmpty(opts.zaction.expectType)) {
+      ajaxOptions.expectType = opts.zaction.expectType;
+    }
+
+    return ajaxOptions;
+  }
 }
+
+_zaction.prototype.ZActionEvent = ZActionEvent;
+
+_zaction.prototype.newZAction = function (ev) {
+  const zact = new ZActionEvent(ev);
+  return zact;
+};
 
 // Three means to run handlers
 // 1. Use built-in handlers. Defaults are in _zaction.prototype.actionHandler, including hooks to the `zurl` system
@@ -3079,9 +1078,8 @@ _zaction.prototype.addEventListeners = function(selector, unregisteredHandler, $
 }
 
 _zaction.prototype.actionHandler = function(ev, unregisteredHandler, callback) {
-
   let zaction = zzb.zaction.newZAction(ev)
-  if (zaction.isValid !== true) {
+  if (!zaction.isValid()) {
     throw new Error('failed to create new zaction from event')
   }
 
@@ -3358,45 +1356,55 @@ function handleDialog(zaction, callback, results) {
         })
       }
 
-      // Init:
-      // 1. UI elements needing javascript inside modal-body
-      // 2. Any action handlers
-      // 3. Triggers
-      //    * When the event is 'zurl-confirm', the server is not contact until AFTER confirmation.
-      //      'zurl-confirm' is resolved under 'button.action' otherwise $elem is searched for triggers
-      //       inside '.modal-body', which is what the logic below does.
-      if ($elem) {
+      // Load and init elements inside modal body
+      zzb.zaction.loadZInputs($elem)
+      if (zzb.zui) {
+        zzb.zui.onElemInit($elem)
+      }
+      zzb.zaction.addEventListeners('.zaction', results.js.actionHandler, $elem)
 
-        zzb.zaction.loadZInputs($elem)
-
-        if (zzb.zui) {
-          zzb.zui.onElemInit($elem)
-        }
-
-        zzb.zaction.addEventListeners('.zaction', results.js.actionHandler, $elem)
-
-        let $ztElems = $elem.querySelectorAll('[ztrigger]')
-        if ($ztElems) {
-          $ztElems.forEach(function($ztElem) {
-            if (!allowedTriggers.includes($ztElem.getAttribute(('ztrigger')))) {
-              console.log('no match of ztrigger handler "', $ztElem.getAttribute('ztrigger') + '"' )
-            } else {
-              // Ensure this element has a loop-type assigned from the original action.
-              if (zaction.getOptions().hasLoopType) {
-                if (!zzb.types.isStringNotEmpty($ztElem.getAttribute('za-loop-type'))) {
-                  $ztElem.setAttribute('za-loop-type', zaction.getOptions().zaction.loopType)
-                  $ztElem.setAttribute('za-loop-inject-skip-inject', "false") // true
-                }
+      // Gather all triggers inside modal-body
+      let $ztElems = $elem.querySelectorAll('[ztrigger]')
+      let validBodyTriggers = []
+      if ($ztElems) {
+        $ztElems.forEach(function($ztElem) {
+          let trigger = $ztElem.getAttribute('ztrigger')
+          if (!allowedTriggers.includes(trigger)) {
+            console.log('no match of ztrigger handler "', trigger + '"' )
+          } else {
+            // Assign loop-type info if needed
+            if (zaction.getOptions().hasLoopType) {
+              if (!zzb.types.isStringNotEmpty($ztElem.getAttribute('za-loop-type'))) {
+                $ztElem.setAttribute('za-loop-type', zaction.getOptions().zaction.loopType)
+                $ztElem.setAttribute('za-loop-inject-skip-inject', "false")
               }
-
-              $ztElem.addEventListener('ztrigger-dialog-button', function(ev){
-                zzb.zaction.actionHandler(ev, ev.detail.altHandler, function(drr, err) {
-                  handleActionResults(drr, err, ev.detail.dialog)
-                })
-              })
             }
-          })
-        }
+            $ztElem.addEventListener('ztrigger-dialog-button', function(ev){
+              zzb.zaction.actionHandler(ev, ev.detail.altHandler, function(drr, err) {
+                handleActionResults(drr, err, ev.detail.dialog)
+              })
+            })
+          }
+          validBodyTriggers.push(trigger)
+        })
+      }
+
+      // Filter DOM buttons in modal-footer: keep only those with valid triggers or defaultSafeTrigger
+      const defaultSafeTrigger = 'cancel'
+      if ($buttons && $buttons.length > 0) {
+        $buttons.forEach($btn => {
+          const trig = $btn.getAttribute('ztrigger')?.toLowerCase()
+          if (!trig) {
+            console.warn('Button in footer is missing ztrigger, removing')
+            $btn.remove()
+            return
+          }
+          const isAllowed = (trig === defaultSafeTrigger) || validBodyTriggers.includes(trig)
+          if (!isAllowed) {
+            console.warn(`Removing modal-footer button with ztrigger="${trig}" – no matching .zaction`)
+            $btn.remove()
+          }
+        })
       }
 
       zzb.dom.setAttribute($elem, '_zdinit', 'true')
@@ -3839,7 +1847,7 @@ _zaction.prototype.runZLoadActions = function($parent) {
     $parent = document
   }
   let $elems = $parent.querySelectorAll('.zload-action')
-  if ($elems) {
+  if ($elems && $elems.length > 0){
     $elems.forEach(function($elem) {
 
       $elem.addEventListener('zload-action', function(ev){
@@ -3894,6 +1902,18 @@ _zaction.prototype.loadZInputs = function($parent) {
   if (!$parent) {
     $parent = document
   }
+
+  if ($parent.tagName && $parent.classList.contains('zinput')) {
+    zzb.zaction.detectFieldChanges($parent)
+  } else {
+    const $elems = $parent.querySelectorAll('.zinput')
+    if ($elems && $elems.length > 0) {
+      $elems.forEach(zzb.zaction.detectFieldChanges)
+    }
+  }
+}
+
+_zaction.prototype.detectFieldChanges = function($elem) {
   const fnToggle = function ($toggler, useDisabled, noChange) {
     if (noChange) {
       useDisabled ? $toggler.disabled = true : $toggler.classList.add('d-none')
@@ -3901,108 +1921,205 @@ _zaction.prototype.loadZInputs = function($parent) {
       useDisabled ? $toggler.disabled = false : $toggler.classList.remove('d-none')
     }
   }
+
   const fnUpdateToggler = function(id, $toggler, useDisabled) {
     let noChange = true
-    for (const [ key, value ] of Object.entries(cacheZInputs[id].changes)) {
+    for (const [key, value] of Object.entries(cacheZInputs[id].changes)) {
       if (value === false) {
         noChange = false
       }
     }
     fnToggle($toggler, useDisabled, noChange)
   }
+
   const fnFindFieldType = function($field) {
     let fldType = $field.getAttribute('type')
     return fldType ? fldType.toLowerCase() : $field.tagName.toLowerCase()
   }
-  const fnDetectChanges = function($elem) {
-    let id = $elem.getAttribute('id')
-    if (!zzb.types.isStringNotEmpty(id)) {
-      id = zzb.uuid.newV4().replace(/-/g, '')
-      $elem.setAttribute('id', id)
-    }
-    let $toggler = document.getElementById($elem.getAttribute('ztoggler'))
-    if (zzb.types.isObject($toggler)) {
-      $toggler.setAttribute('zref-zinput-ptr', id)
-      let useDisabled = $toggler.getAttribute('ztoggler-display') === 'disabled'
-      fnToggle($toggler, useDisabled, true)
-      cacheZInputs[id] = {originals:{},changes:{}}
-      let $fields = $elem.querySelectorAll('.zinput-field')
-      if ($fields) {
-        $elem.querySelectorAll('.zinput-field').forEach(function($field) {
-          const fldName = $field.getAttribute('name')
-          if (zzb.types.isStringNotEmpty(fldName)) {
-            const fldType = fnFindFieldType($field)
-            if (fldType === 'checkbox' || fldType === 'radio') {
-              cacheZInputs[id].originals[fldName] = $field.checked + ''
-            } else {
-              cacheZInputs[id].originals[fldName] = $field.value
-            }
-            let chEvent = $field.getAttribute('zinput-event')
-            if (zzb.types.isStringEmpty(chEvent)) {
-              chEvent = 'input'
-            }
-            const zInputEvent = $field.getAttribute('zinput-event')
-            if (zInputEvent === 'change') {
-              $field.addEventListener('change', function (e) {
-                if (fldType === 'checkbox' || fldType === 'radio') {
-                  cacheZInputs[id].changes[fldName] = cacheZInputs[id].originals[fldName] === this.checked + ''
-                } else if (fldType === 'textarea') {
-                  cacheZInputs[id].changes[fldName] = cacheZInputs[id].originals[fldName] === this.value
-                } else {
-                  cacheZInputs[id].changes[e.target.name] = cacheZInputs[id].originals[e.target.name] === e.target.value
-                }
-                fnUpdateToggler(id, $toggler, useDisabled)
-              })
-            } else {
-              $field.addEventListener('input', function(e) {
-                cacheZInputs[id].changes[e.target.name] = cacheZInputs[id].originals[e.target.name] === e.target.value
-                fnUpdateToggler(id, $toggler, useDisabled)
-              })
-            }
-          }
-        })
-      }
-    }
+
+  let id = $elem.getAttribute('id')
+  if (!zzb.types.isStringNotEmpty(id)) {
+    id = zzb.uuid.newV4().replace(/-/g, '')
+    $elem.setAttribute('id', id)
   }
-  if ($parent.tagName && $parent['classList'] && $parent.classList.contains('zinput')) {
-    fnDetectChanges($parent)
-  } else {
-    let $elems = $parent.querySelectorAll('.zinput')
-    if ($elems) {
-      $elems.forEach(function($elem) {
-        fnDetectChanges($elem)
-      })
-    }
+
+  let $toggler = document.getElementById($elem.getAttribute('ztoggler'))
+  if (zzb.types.isObject($toggler)) {
+    $toggler.setAttribute('zref-zinput-ptr', id)
+    const useDisabled = $toggler.getAttribute('ztoggler-display') === 'disabled'
+    fnToggle($toggler, useDisabled, true)
+
+    cacheZInputs[id] = { originals: {}, changes: {} }
+
+    const $fields = $elem.querySelectorAll('.zinput-field')
+    $fields.forEach(function($field) {
+      const fldName = $field.getAttribute('name')
+      if (!zzb.types.isStringNotEmpty(fldName)) return
+
+      const fldType = fnFindFieldType($field)
+      cacheZInputs[id].originals[fldName] = (fldType === 'checkbox' || fldType === 'radio')
+        ? $field.checked + ''
+        : $field.value
+
+      const zInputEvent = $field.getAttribute('zinput-event') || 'input'
+      const handler = function (e) {
+        const isEqual = (fldType === 'checkbox' || fldType === 'radio')
+          ? cacheZInputs[id].originals[fldName] === this.checked + ''
+          : cacheZInputs[id].originals[fldName] === this.value
+
+        cacheZInputs[id].changes[fldName] = isEqual
+        fnUpdateToggler(id, $toggler, useDisabled)
+      }
+
+      $field.addEventListener(zInputEvent, handler)
+    })
   }
 }
 
+
+/**
+ * DOMContentLoaded bootstrap for initializing Zazzy ZAction and ZUI.
+ *
+ * This listener is triggered once the DOM is fully parsed and ready.
+ * It defines a `bootstrap()` function that sets up `.zaction` handlers
+ * and invokes `zzb.zui.onZUIReady()` for core UI logic.
+ *
+ * To customize the startup flow (e.g. register custom handlers or delay
+ * initialization), define a global `window.zzbReady(bootstrap)` function
+ * on your page *before* this library is loaded. That function will receive
+ * the `bootstrap` callback and can perform pre-initialization work before
+ * finally invoking `bootstrap()` manually.
+ *
+ * Example use:
+ * ```html
+ * <script>
+ *   window.zzbReady = function (bootstrap) {
+ *     zzb.zaction.registerHandler({ id: 'vedDispatch', handler: handleCustom });
+ *     zzb.zui.onZLoadSection(null, true); // optional custom load logic
+ *     bootstrap(); // complete the standard setup
+ *   };
+ * </script>
+ * <script src="/dist/zzb.ui.js"></script>
+ * ```
+ */
 document.addEventListener('DOMContentLoaded', function () {
-
-  let $body = document.querySelector('body')
-  if ($body) {
-    if ($body.getAttribute('no-autoload-zactions') === 'true') {
-      return
+  const bootstrap = () => {
+    if (zzb.zaction && zzb.zaction.addEventListeners) {
+      zzb.zaction.addEventListeners('.zaction');
+      zzb.zaction.runZLoadActions();
     }
-    // $body.getAttribute('zactions-wait-check' === 'true') {
-    //         // The issue is preventing multiple events to be attached to a single element.
-    //         // Current solution:
-    //         // 1. The attribute "za1x" (=zaction 1x only) checks if zaction has been applied to an element.
-    //         //    Future: optionally inside addEventListeners, can add flag to not add the za1x check.
-    //         // Other solutions:
-    //         // 2. Add a timer on an interval to run addEventListeners only when other libs have finished loading,
-    //         //    indicated by a conditional attribute on the body (eg proceed) or stopWait function on zaction.
-    //         //    BUT #2 may not ever be needed anyways. Other libs can register handlers when their js loads which is then
-    //         //    available immediately and prior to DOMContentLoaded. (script tags are processed before DOMContentLoaded)
-    //         return
-    // }
-    zzb.zaction.addEventListeners('.zaction')
+
+    if (zzb.zui && typeof zzb.zui.onZUIReady === 'function') {
+      zzb.zui.onZUIReady();
+    }
+  };
+
+  if (typeof window.zzbReady === 'function') {
+    try {
+      window.zzbReady(bootstrap);
+    } catch (e) {
+      console.warn('zzbReady() threw error; falling back to default bootstrap.', e);
+      bootstrap();
+    }
+  } else {
+    bootstrap();
   }
-
-  zzb.zaction.runZLoadActions()
-
-}, false);
+}, false); // Always use `false` for bubble-phase listening
 
 exports.j = _zaction
+
+/***/ }),
+
+/***/ 169:
+/***/ ((__unused_webpack_module, exports) => {
+
+// ---------------------------------------------------
+// uuid
+// ---------------------------------------------------
+
+const _uuid = function () {}
+
+/**
+ * zzb.uuid.newV4
+ *
+ * Usage:
+ *    zzb.uuid.newV4()
+ * Produces:
+ *    '9716498c-45df-47d2-8099-3f678446d776'
+ *
+ * Generates an RFC 4122 version 4 uuid
+ * This is not a time-based approach, unlike uuid v1 - so don't let the use of _.now() fool you!
+ * Use of _.now() has to do with collision avoidance.
+ * @see https://dirask.com/posts/JavaScript-UUID-function-in-Vanilla-JS-1X9kgD
+ * @returns {String} the generated uuid
+ */
+_uuid.prototype.newV4 = function () {
+  function generateNumber(limit) {
+    let value = limit * Math.random();
+    return value | 0;
+  }
+
+  function generateX() {
+    let value = generateNumber(16);
+    return value.toString(16);
+  }
+
+  function generateXes(count) {
+    let result = '';
+    for(let i = 0; i < count; ++i) {
+      result += generateX();
+    }
+    return result;
+  }
+
+  function generateVariant() {
+    let value = generateNumber(16);
+    let variant =  (value & 0x3) | 0x8;
+    return variant.toString(16);
+  }
+
+  return generateXes(8)
+    + '-' + generateXes(4)
+    + '-' + '4' + generateXes(3)
+    + '-' + generateVariant() + generateXes(3)
+    + '-' + generateXes(12)
+}
+
+/**
+ * zzb.uuid.isV4
+ *
+ * Usage:
+ *    zzb.uuid.isV4(zzb.uuid.newV4())
+ * Produces:
+ *    true|false
+ *
+ * Validates a version 4 uuid string
+ * @param {String} uuid - the uuid under test
+ * @returns {Boolean} true if the uuid under test is a valid uuid
+ **/
+_uuid.prototype.isV4 = function (uuid) {
+  const re = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+  return re.test(uuid)
+}
+
+/**
+ * zzb.uuid.isValid
+ *
+ * Usage:
+ *    zzb.uuid.isValid(zzb.uuid.newV4())
+ * Produces:
+ *    true|false
+ *
+ * Validates ANY version uuid string (eg v1 or v4)
+ * @param {String} uuid - the uuid under test
+ * @returns {Boolean} true if the uuid under test is a valid uuid
+ **/
+_uuid.prototype.isValid = function (uuid) {
+  const re = /^([a-f\d]{8}(-[a-f\d]{4}){3}-[a-f\d]{12}?)$/i
+  return re.test(uuid)
+}
+
+exports.u = _uuid
 
 
 /***/ }),
@@ -4014,62 +2131,74 @@ exports.j = _zaction
 // _zui
 // ---------------------------------------------------
 
+/**
+ * ZUI (Zazzy UI) utility class
+ * Handles viewport detection, splitter/cache handling, and element initialization
+ */
 const _zui = function () {
-  this.zsplitters = {}
-  this.elemIniters = []
-  this.defaultRWidth = 576 // default responsive width
-  this.handlers = []
+  this.zsplitters = {}                  // Stores splitter states
+  this.elemIniters = []                 // Initialization callbacks for UI elements
+  this.defaultRWidth = 576              // Default responsive width fallback (e.g., for mobile detection)
+  this.handlers = []                    // General event or mutation handlers
+  this.breakpoints = {                  // Optional named breakpoints
+    xs: 576,
+    sm: 768,
+    md: 992,
+    lg: 1200,
+    xl: 1400
+  }
 }
 
-_zui.prototype.getDefaultRWdith = function () {
+/**
+ * Returns the default responsive width.
+ * @returns {number}
+ */
+_zui.prototype.getDefaultRWidth = function () {
   return this.defaultRWidth
 }
 
-// RESPONSIVE CHECK
-function getViewport () {
-  // https://stackoverflow.com/a/8876069
-  const width = Math.max(
-    document.documentElement.clientWidth, window.innerWidth || 0
-  )
-  return width
-  // if (width <= 576) return 576 // 'xs'
-  // if (width <= 768) return 768 // 'sm'
-  // if (width <= 992) return 992 // 'md'
-  // if (width <= 1200) return 1200 // 'lg'
-  // return 99999 // 'xl'
+/**
+ * Returns the current viewport width.
+ * @returns {number} - Max of window.innerWidth and document.clientWidth
+ */
+function getViewportWidth () {
+  return Math.max(document.documentElement.clientWidth, window.innerWidth || 0)
 }
 
+/**
+ * Checks if the viewport width is greater than a given breakpoint.
+ * Accepts numeric or string alias (e.g., 'md').
+ *
+ * @param {number|string} rsize - Target responsive width or breakpoint alias.
+ * @returns {boolean}
+ */
 _zui.prototype.isViewportGTRSize = function (rsize) {
+  const bp = this.breakpoints
+
+  if (typeof rsize === 'string' && bp[rsize]) {
+    rsize = bp[rsize]
+  }
+
   if (!zzb.types.isNumber(rsize) || rsize <= 0) {
     rsize = this.defaultRWidth
   }
-  return (getViewport() > rsize)
+
+  return getViewportWidth() > rsize
 }
 
-_zui.prototype.getZUICache = function () {
-  let c = {zsplitter:{}}
-  try {
-    let s = localStorage.getItem('zuiC')
-    if (zzb.types.isStringNotEmpty(s)) {
-      let o = JSON.parse(s)
-      if (zzb.types.isObject(o)) {
-        // console.log('c-saved', o.zsplitter)
-        return zzb.types.merge(c, o)
-      }
-    }
-  } catch (e) {
-    console.log(e)
-  }
-  // console.log('c-new', c)
-  return c
-}
+/**
+ * Gets current viewport label (e.g., 'xs', 'sm', 'md', etc.) based on breakpoints.
+ * @returns {string}
+ */
+_zui.prototype.getViewportLabel = function () {
+  const width = getViewportWidth()
+  const bp = this.breakpoints
 
-_zui.prototype.setZUICache = function (zuiC) {
-  localStorage.setItem('zuiC', JSON.stringify(zuiC))
-}
-
-_zui.prototype.removeZUICache = function () {
-  localStorage.removeItem('zuiC')
+  if (width <= bp.xs) return 'xs'
+  if (width <= bp.sm) return 'sm'
+  if (width <= bp.md) return 'md'
+  if (width <= bp.lg) return 'lg'
+  return 'xl'
 }
 
 _zui.prototype.registerZSplitterResize = function (options) {
@@ -4092,233 +2221,233 @@ _zui.prototype.triggerZSplitterResize = function () {
 function setZUICacheZSplitter(zsplitter) {
   if (zsplitter && zzb.types.isStringNotEmpty(zsplitter.id)) {
     try {
-      let zuiC = zzb.zui.getZUICache()
+      let zuiC = zzb.dom.cache.get('zuiC', { mode: 'persist' }) || { zsplitter: {} }
       zuiC.zsplitter[zsplitter.id] = zsplitter
-      zzb.zui.setZUICache(zuiC)
+      zzb.dom.cache.set('zuiC', zuiC, { mode: 'persist' })
     } catch (e) {
       console.log(e)
     }
   }
 }
 
-function initZSplitter($resizer, direction, arrToggableWidths) {
-  let zsplitter = zzb.dom.getAttributes($resizer, /^zsplitter-/, 10)
-  zsplitter.id = $resizer.getAttribute('id')
-
-  let usingCache = zzb.types.isStringNotEmpty(zsplitter.id)
-  let isCacheNew = true
-  if (usingCache) {
-    let zuiC = zzb.zui.getZUICache()
-    isCacheNew = (!zuiC.zsplitter[zsplitter.id])
-    if (isCacheNew) {
-      zuiC.zsplitter[zsplitter.id] = zsplitter
-      zzb.zui.setZUICache(zuiC)
-    } else {
-      zsplitter = zuiC.zsplitter[zsplitter.id]
-    }
+function createZSplitterToggle($resizer, $targetSide, setStaticWidth, setCacheZSplitter) {
+  // Defensive: return no-op if elements are missing
+  if (!$targetSide || !$resizer || typeof setStaticWidth !== 'function' || typeof setCacheZSplitter !== 'function') {
+    return function () {}
   }
 
-  if (zsplitter.show !== 'open' && zsplitter.show !== 'close') {
-    zsplitter.show = null
-  }
+  return function(state) {
+    let idxWidthStatic = 0
 
-  if (zzb.types.isStringNotEmpty(zsplitter.rsize)) {
-    zsplitter.rsize = Number(zsplitter.rsize)
-  }
-  if (!zzb.types.isNumber(zsplitter.rsize) || zsplitter.rsize < 0) {
-    zsplitter.rsize = zzb.zui.getDefaultRWdith()
-  }
-
-  const setCacheZSplitter = function(state) {
-    if (usingCache) {
-      zsplitter.show = state
-      setZUICacheZSplitter(zsplitter)
-      // console.log(state)
-    }
-  }
-
-  let doRSizeOpen = zzb.zui.isViewportGTRSize(zsplitter.rsize) // (getViewport() > zsplitter.rsize)
-  if (usingCache && isCacheNew && !doRSizeOpen) {
-    if (zsplitter.show === 'open') {
-      setCacheZSplitter('close')
-    }
-  } else if (!usingCache && !doRSizeOpen) {
-    zsplitter.show = 'close'
-  }
-  // console.log('responsive-check', zsplitter, 'doRSizeShow=' + doRSizeOpen)
-
-
-  if (!arrToggableWidths) {
-    arrToggableWidths = []
-  } else if (!Array.isArray(arrToggableWidths)) {
-    arrToggableWidths = arrToggableWidths.split(',')
-  }
-  function isCharNumber(c) {
-    return c >= '0' && c <= '9';
-  }
-  for (let ii = 0; ii < arrToggableWidths.length; ii++) {
-    if (isCharNumber(arrToggableWidths[ii].slice(-1))) {
-      if (arrToggableWidths[ii] !== '') {
-        arrToggableWidths[ii] += 'px'
-      }
-    }
-  }
-
-  // set the id, if not present
-  if (!usingCache) {
-    $resizer.id = 'zsplitter' + zzb.zui.getZSplitters().length + direction
-  }
-
-  // "left" or "right"
-  const $targetSide = (direction === 'left' ? $resizer.previousElementSibling : $resizer.nextElementSibling)
-  const $altSide = (direction === 'left' ? $resizer.nextElementSibling : $resizer.previousElementSibling)
-
-  let idxWidthStatic = 0
-  function setStaticWidth() {
-    if (arrToggableWidths.length > 0) {
-      if (!arrToggableWidths[idxWidthStatic].endsWith('%')) {
-        $targetSide.style.width = arrToggableWidths[idxWidthStatic]
-      } else {
-        let pwidth = 0
-        let total = 0
-        try {
-          let pwidth = parseFloat(arrToggableWidths[idxWidthStatic].slice(0, -1)) / 100
-          let total = $resizer.getBoundingClientRect().width + $targetSide.getBoundingClientRect().width + $altSide.getBoundingClientRect().width
-          // console.log($resizer.parentNode.getBoundingClientRect().width, $resizer.getBoundingClientRect().width, $targetSide.getBoundingClientRect().width, $altSide.getBoundingClientRect().width, total, total / 2, $resizer.parentNode.getBoundingClientRect().width - total)
-          $targetSide.style.width = (total * pwidth) + 'px'
-        } catch {
-          console.log('failed to set targetSide width', pwidth, total)
-          $targetSide.style.width = '200px'
-        }
-      }
-    }
-  }
-
-  setStaticWidth()
-
-  $resizer.querySelectorAll('[zsplitter-toggable]').forEach(function($elem) {
-    $elem.addEventListener('click', function (ev) {
-      ev.preventDefault();
-
-      idxWidthStatic++
-
-      if (idxWidthStatic < arrToggableWidths.length) {
-        setCacheZSplitter('open')
+    switch (state) {
+      case 'open':
+        idxWidthStatic = 0
+        $resizer.classList.remove('d-none')
+        $targetSide.classList.remove('d-none')
+        setCacheZSplitter(state)
         setStaticWidth()
-      } else if (idxWidthStatic === arrToggableWidths.length) {
-        setCacheZSplitter('close')
+        break
+      case 'close':
+        $targetSide.style.width = 0
         idxWidthStatic = -1
-        $targetSide.style.width = '0'
+        $resizer.classList.remove('d-none')
+        $targetSide.classList.remove('d-none')
+        setCacheZSplitter(state)
+        break
+      case 'dismiss':
+        idxWidthStatic = -1
+        $resizer.classList.add('d-none')
+        $targetSide.classList.add('d-none')
+        break
+    }
+
+    zzb.zui.triggerZSplitterResize()
+  }
+}
+
+function normalizeWidths(widths) {
+  return widths.map(w => {
+    return (!w || typeof w !== 'string') ? w : (/^\d+$/.test(w) ? `${w}px` : w)
+  })
+}
+
+_zui.prototype.initZSplitter = function ($resizer, direction, arrToggableWidths) {
+  const zsplitter = this.zsplitter.loadConfig($resizer)
+  this.zsplitter.normalizeConfig(zsplitter)
+
+  if (!arrToggableWidths) arrToggableWidths = []
+  else if (!Array.isArray(arrToggableWidths)) arrToggableWidths = arrToggableWidths.split(',')
+
+  const widths = this.zsplitter.normalizeWidths(arrToggableWidths)
+  const $target = direction === 'left' ? $resizer.previousElementSibling : $resizer.nextElementSibling
+  const $alt = direction === 'left' ? $resizer.nextElementSibling : $resizer.previousElementSibling
+  const idxRef = { current: 0 }
+
+  if (!zzb.types.isStringNotEmpty($resizer.id)) {
+    $resizer.id = `zsplitter${Object.keys(this.zsplitters).length}${direction}`
+  }
+
+  const setWidth = () =>
+    this.zsplitter.setStaticWidth(widths, idxRef.current, $target, $alt, $resizer)
+  const setCache = (state) =>
+    this.zsplitter.updateCache(zsplitter, setWidth, state)
+
+  setWidth()
+  this.zsplitter.applyInitialVisibility(zsplitter, widths, $resizer, $target, idxRef)
+  this.zsplitter.attachTogglers($resizer, widths, idxRef, setWidth, setCache, $target)
+  this.zsplitter.attachDragHandlers($resizer, direction, $target, $alt)
+
+  const obj = this.getZSplitter($resizer.id)
+  obj.toggle = createZSplitterToggle($resizer, $target, setWidth, setCache)
+  this.setZSplitter($resizer.id, obj)
+}
+
+_zui.prototype.zsplitter = {
+
+  loadConfig($resizer) {
+    let config = zzb.dom.getAttributes($resizer, /^zsplitter-/, 10)
+    config.id = $resizer.getAttribute('id')
+
+    const usingCache = zzb.types.isStringNotEmpty(config.id)
+    if (!usingCache) return config
+
+    const zuiC = zzb.dom.cache.get('zuiC', { mode: 'persist' }) || { zsplitter: {} }
+    if (!zuiC.zsplitter[config.id]) {
+      zuiC.zsplitter[config.id] = config
+      zzb.dom.cache.set('zuiC', zuiC, { mode: 'persist' })
+    } else {
+      config = zuiC.zsplitter[config.id]
+    }
+    return config
+  },
+
+  normalizeConfig(config) {
+    if (config.show !== 'open' && config.show !== 'close') {
+      config.show = null
+    }
+    if (zzb.types.isStringNotEmpty(config.rsize)) {
+      config.rsize = Number(config.rsize)
+    }
+    if (!zzb.types.isNumber(config.rsize) || config.rsize < 0) {
+      config.rsize = zzb.zui.getDefaultRWidth()
+    }
+  },
+
+  normalizeWidths(widths) {
+    return widths.map(w =>
+      (!w || typeof w !== 'string') ? w : (/^\d+$/.test(w) ? `${w}px` : w)
+    )
+  },
+
+  setStaticWidth(widths, idx, $target, $alt, $resizer) {
+    if (widths.length === 0) return
+    const raw = widths[idx]
+    const isPercent = raw.endsWith('%')
+    const parentWidth = $resizer.parentNode.getBoundingClientRect().width
+    $resizer.getBoundingClientRect()
+    const resizerWidth = $resizer.offsetWidth || 6
+
+    if (!isPercent) {
+      $target.style.width = raw
+    } else {
+      try {
+        const pct = parseFloat(raw)
+        const maxAvailable = parentWidth - resizerWidth
+        $target.style.width = `${(pct / 100) * maxAvailable}px`
+      } catch (e) {
+        console.warn('Failed to set width', e)
+        $target.style.width = '200px'
       }
+    }
+  },
+
+  updateCache(config, setWidth, state) {
+    if (zzb.types.isStringNotEmpty(config.id)) {
+      config.show = state
+      const zuiC = zzb.dom.cache.get('zuiC', { mode: 'persist' }) || { zsplitter: {} }
+      zuiC.zsplitter[config.id] = config
+      zzb.dom.cache.set('zuiC', zuiC, { mode: 'persist' })
+    }
+  },
+
+  applyInitialVisibility(config, widths, $resizer, $target, idxRef) {
+    const doReveal = widths.length > 0
+    const doOpenClose = config.show === 'open' || config.show === 'close'
+
+    if (doOpenClose) {
+      if (config.show === 'close') {
+        $target.style.width = 0
+        idxRef.current = -1
+      }
+      $resizer.classList.toggle('d-none', !doReveal)
+      $target.classList.toggle('d-none', !doReveal)
+    }
+  },
+
+  attachTogglers($resizer, widths, idxRef, setWidth, setCache, $target) {
+    $resizer.querySelectorAll('[zsplitter-toggable]').forEach(($btn) => {
+      $btn.addEventListener('click', (ev) => {
+        ev.preventDefault()
+        idxRef.current++
+        if (idxRef.current < widths.length) {
+          setCache('open')
+          setWidth()
+        } else if (idxRef.current === widths.length) {
+          setCache('close')
+          idxRef.current = -1
+          $target.style.width = '0'
+        }
+        zzb.zui.triggerZSplitterResize()
+      }, false)
+    })
+  },
+
+  attachDragHandlers($resizer, direction, $target, $alt) {
+    let x = 0, y = 0, initialWidth = 0
+
+    const onMouseDown = (e) => {
+      if (e.target.closest('[zsplitter-toggable]')) return
+      x = e.clientX
+      y = e.clientY
+      initialWidth = $target.getBoundingClientRect().width
+
+      document.addEventListener('mousemove', onMouseMove)
+      document.addEventListener('mouseup', onMouseUp)
+    }
+
+    const onMouseMove = (e) => {
+      const dx = e.clientX - x
+      const dmod = direction === 'left' ? 1 : -1
+      const containerWidth = $resizer.parentNode.getBoundingClientRect().width
+      const newWidth = ((initialWidth + dx * dmod) * 100) / containerWidth
+      $target.style.width = `${newWidth}%`
+
+      $resizer.style.cursor = 'col-resize'
+      document.body.style.cursor = 'col-resize'
+      $target.style.userSelect = 'none'
+      $target.style.pointerEvents = 'none'
+      $alt.style.userSelect = 'none'
+      $alt.style.pointerEvents = 'none'
 
       zzb.zui.triggerZSplitterResize()
-
-    }, false);
-  })
-
-  // Logic to auto-show (or not)
-  // 1. Must have valid width (eg arrToggableWidths.length > 0)
-  // 2. Use value from zsplitter-show="true" ("false").
-  //    a. if not found, examine class on $resizer for 'd-none'
-  //    b. if not found, examine class on $targetSide for 'd-none'
-  let doReveal = arrToggableWidths.length > 0
-  let doOpenOrClose = zsplitter.show === 'open' || zsplitter.show === 'close'
-  if (doOpenOrClose) {
-    if (zsplitter.show === 'close') {
-      $targetSide.style.width = 0
-      idxWidthStatic = -1
     }
-    if (doReveal) {
-      $resizer.classList.remove('d-none')
-      $targetSide.classList.remove('d-none')
-    } else {
-      $resizer.classList.add('d-none')
-      $targetSide.classList.add('d-none')
+
+    const onMouseUp = () => {
+      document.removeEventListener('mousemove', onMouseMove)
+      document.removeEventListener('mouseup', onMouseUp)
+
+      $resizer.style.removeProperty('cursor')
+      document.body.style.removeProperty('cursor')
+      $target.style.removeProperty('user-select')
+      $target.style.removeProperty('pointer-events')
+      $alt.style.removeProperty('user-select')
+      $alt.style.removeProperty('pointer-events')
+
+      zzb.zui.triggerZSplitterResize()
     }
+
+    $resizer.addEventListener('mousedown', onMouseDown)
   }
-
-  let obj = zzb.zui.getZSplitter($resizer.id)
-  obj.toggle = function(state) {
-    if (state === 'open') {
-      idxWidthStatic = 0
-      $resizer.classList.remove('d-none')
-      $targetSide.classList.remove('d-none')
-      setCacheZSplitter(state)
-      setStaticWidth()
-    } else if (state === 'close') {
-      $targetSide.style.width = 0
-      idxWidthStatic = -1
-      $resizer.classList.remove('d-none')
-      $targetSide.classList.remove('d-none')
-      setCacheZSplitter(state)
-    } else if (state === 'dismiss') {
-      idxWidthStatic = -1
-      $resizer.classList.add('d-none')
-      $targetSide.classList.add('d-none')
-    }
-    zzb.zui.triggerZSplitterResize()
-  }
-
-  zzb.zui.setZSplitter($resizer.id, obj)
-
-  // The current position of mouse
-  let x = 0;
-  let y = 0;
-  let targetWidth = 0;
-
-  // Handle the mousedown event
-  // that's triggered when user drags the resizer
-  const mouseDownHandler = function (e) {
-    // Get the current mouse position
-    x = e.clientX;
-    y = e.clientY;
-    targetWidth = $targetSide.getBoundingClientRect().width;
-
-    // Attach the listeners to `document`
-    document.addEventListener('mousemove', mouseMoveHandler);
-    document.addEventListener('mouseup', mouseUpHandler);
-  };
-
-  const mouseMoveHandler = function (e) {
-    // How far the mouse has been moved
-    const dx = e.clientX - x;
-    const dy = e.clientY - y;
-    const dmod = (direction === 'left' ? 1 : -1)
-
-    const newTargetWidth = ((targetWidth + dx * dmod) * 100) / $resizer.parentNode.getBoundingClientRect().width;
-    $targetSide.style.width = `${newTargetWidth}%`;
-
-    $resizer.style.cursor = 'col-resize';
-    document.body.style.cursor = 'col-resize';
-
-    $targetSide.style.userSelect = 'none';
-    $targetSide.style.pointerEvents = 'none';
-
-    $altSide.style.userSelect = 'none';
-    $altSide.style.pointerEvents = 'none';
-
-    zzb.zui.triggerZSplitterResize()
-  };
-
-  const mouseUpHandler = function () {
-    $resizer.style.removeProperty('cursor');
-    document.body.style.removeProperty('cursor');
-
-    $targetSide.style.removeProperty('user-select');
-    $targetSide.style.removeProperty('pointer-events');
-
-    $altSide.style.removeProperty('user-select');
-    $altSide.style.removeProperty('pointer-events');
-
-    // Remove the handlers of `mousemove` and `mouseup`
-    document.removeEventListener('mousemove', mouseMoveHandler);
-    document.removeEventListener('mouseup', mouseUpHandler);
-
-    zzb.zui.triggerZSplitterResize()
-  };
-
-  // Attach the handler
-  $resizer.addEventListener('mousedown', mouseDownHandler);
 }
 
 _zui.prototype.getZSplitter = function(id) {
@@ -4335,6 +2464,13 @@ _zui.prototype.setZSplitter = function(id, obj) {
   }
 }
 
+_zui.prototype.destroyZSplitter = function(id) {
+  const splitter = this.zsplitters[id];
+  if (splitter) {
+    delete this.zsplitters[id];
+  }
+}
+
 _zui.prototype.toggleZSplitterById = function(id, state) {
   let $elem = document.getElementById(id)
   if ($elem) {
@@ -4348,10 +2484,10 @@ _zui.prototype.onLoadInit = function() {
     Array.from($elem.attributes).forEach(attr => {
       switch (attr.nodeName) {
         case 'zsplitter-left':
-          initZSplitter($elem, 'left', attr.nodeValue)
+          zzb.zui.initZSplitter($elem, 'left', attr.nodeValue)
           return true
         case 'zsplitter-right':
-          initZSplitter($elem, 'right', attr.nodeValue)
+          zzb.zui.initZSplitter($elem, 'right', attr.nodeValue)
           return true
         default:
           break
@@ -4370,12 +2506,6 @@ _zui.prototype.onLoadInit = function() {
   });
   document.querySelectorAll('.zuit-year').forEach(function($elem) {
     $elem.innerHTML = new Date().getFullYear()
-  });
-  document.querySelectorAll('.zpagenohistory').forEach(function($elem) {
-    history.pushState(null, null, location.href);
-    history.back();
-    history.forward();
-    window.onpopstate = function () { history.go(1); };
   });
 }
 
@@ -4417,7 +2547,7 @@ _zui.prototype.setElemIniter = function(target) {
     let isFound = false
     for (let ii = 0; ii < this.elemIniters.length; ii++) {
       if (this.elemIniters[ii].name === initer.name) {
-        this.elemIniters[ii] = intiter
+        this.elemIniters[ii] = initer
         isFound = true
         break
       }
@@ -4595,7 +2725,7 @@ _zui.prototype.onElemInit = function($elem) {
             if (dtAttribs.autoEvInput === true) {
               $elem.addEventListener('input', function(evt) {
                 const vInput = $elem.value
-                if (zzb.types.isNonEmptyString(vInput)) {
+                if (zzb.types.isStringNotEmpty(vInput)) {
                   // is vInput valid?
                   let vTemp = luxon.DateTime.fromFormat(vInput, myLocale.date.dateFormat)
                   if (vTemp.isValid) {
@@ -4652,13 +2782,2485 @@ _zui.prototype.onZLoadSection = function($elem, isCustom) {
   })
 }
 
-document.addEventListener('DOMContentLoaded', function () {
-  zzb.zui.onLoadInit()
-  zzb.zui.onElemInit()
-  zzb.zui.onZLoadSection(null)
-}, false);
+_zui.prototype.__registerBuiltins = function () {
+  if (this.isRegisteredBuiltins) {
+    return
+  }
+
+  this.isRegisteredBuiltins = true
+
+  this.setElemIniter({
+    name: 'zuiTableFilter',
+    fn: function ($root) {
+      const filterInput = $root.querySelector('.zui-tablecard-filter') || document.querySelector('.zui-tablecard-filter')
+      const table = $root.querySelector('.zui-tablecard-table')
+      const cardContainer = $root.querySelector('.zui-tablecard-cards')
+
+      if (!table && !cardContainer) return
+
+      const tableRows = table ? table.querySelectorAll('tbody tr') : []
+      const cardRows = cardContainer ? cardContainer.querySelectorAll('.zui-tablecard-card') : []
+
+      // Hook up filter if input exists
+      if (filterInput) {
+        function filterRecs(query) {
+          const q = query.toLowerCase()
+          if (tableRows) {
+            tableRows.forEach(row => {
+              row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none'
+            })
+          }
+          if (cardRows) {
+            cardRows.forEach(card => {
+              card.style.display = card.textContent.toLowerCase().includes(q) ? '' : 'none'
+            })
+          }
+        }
+
+        filterInput.addEventListener('input', function () {
+          filterRecs(this.value)
+        })
+
+        if (table || cardContainer) {
+          const currentValue = filterInput.value.trim()
+          if (currentValue.length > 0) {
+            filterRecs(currentValue)
+          }
+        }
+      }
+
+      if (table) {
+        const headers = table.querySelectorAll('thead th')
+
+        // Determine unique key for sort state tracking
+        const tableKey = table.getAttribute('id') || table.dataset.sortKey || '__default_table__'
+
+        // Ensure sort state exists in memory cache
+        if (!zzb.dom.cache.get(tableKey, { mode: 'mem' })) {
+          zzb.dom.cache.set(tableKey, { index: null, direction: 1 }, { mode: 'mem' });
+        }
+        const sortState = zzb.dom.cache.get(tableKey, { mode: 'mem' });
+
+        headers.forEach((header, index) => {
+          header.addEventListener('click', () => {
+            const sortType = header.getAttribute('zui-sort-type') || 'text'
+            const tbody = table.querySelector('tbody')
+            if (!tbody) return
+            const rows = Array.from(tbody.querySelectorAll('tr'))
+            if (!rows || rows.length === 0) return
+
+            // Toggle or set new sort direction
+            if (sortState.index === index) {
+              sortState.direction *= -1
+            } else {
+              sortState.index = index
+              sortState.direction = -1 // change to 1 if first click should not sort
+            }
+
+            const direction = sortState.direction
+
+            // Clear old sort classes
+            headers.forEach(h => h.classList.remove('sort-asc', 'sort-desc'))
+            // Add sort indicator class
+            header.classList.add(direction === 1 ? 'sort-asc' : 'sort-desc')
+
+            // Then sort using updated direction
+            const sortedRows = rows.sort((a, b) => {
+              const aCell = a.children[index]
+              const bCell = b.children[index]
+              return compareTableCells(aCell, bCell, sortType) * direction
+            })
+
+            // Update cache
+            zzb.dom.cache.set(tableKey, sortState, { mode: 'mem' });
+
+            // Re-append in sorted order
+            sortedRows.forEach(row => tbody.appendChild(row))
+          })
+        })
+
+        // Reapply previous sort if any
+        if (sortState.index !== null) {
+          const sortHeader = headers[sortState.index]
+          if (sortHeader) {
+            const sortType = sortHeader.getAttribute('zui-sort-type') || 'text'
+            const tbody = table.querySelector('tbody')
+            if (!tbody) return
+            const rows = Array.from(tbody.querySelectorAll('tr'))
+            if (!rows || rows.length === 0) return
+
+            // Apply sort class again
+            headers.forEach(h => h.classList.remove('sort-asc', 'sort-desc'))
+            sortHeader.classList.add(sortState.direction === 1 ? 'sort-asc' : 'sort-desc')
+
+            const sortedRows = rows.sort((a, b) => {
+              const aCell = a.children[sortState.index]
+              const bCell = b.children[sortState.index]
+              return compareTableCells(aCell, bCell, sortType) * sortState.direction
+            })
+
+            sortedRows.forEach(row => tbody.appendChild(row))
+          }
+        }
+      }
+    }
+  })
+}
+
+/**
+ * Compares two table cell elements based on a type or custom sort definition.
+ * Delegates value comparison to `zzb.types.compareValues`.
+ *
+ * @param {HTMLElement} aCell - First cell element.
+ * @param {HTMLElement} bCell - Second cell element.
+ * @param {string} type - Type of comparison (e.g., 'int', 'float', 'custom:field:subtype').
+ * @returns {number} - Comparison result (-1, 0, 1).
+ */
+function compareTableCells(aCell, bCell, type) {
+  let aVal, bVal, sortType;
+
+  if (type.startsWith('custom:')) {
+    const [, field, subtype = 'text'] = type.split(':');
+    sortType = subtype;
+    aVal = getCustomSortValue(aCell, field);
+    bVal = getCustomSortValue(bCell, field);
+  } else {
+    sortType = type;
+    aVal = aCell?.textContent?.trim() || '';
+    bVal = bCell?.textContent?.trim() || '';
+  }
+
+  return zzb.types.compareValues(aVal, bVal, sortType);
+}
+
+/**
+ * Extracts a subvalue from a table cell based on a custom field.
+ *
+ * @param {HTMLElement} cellElem - The table cell element.
+ * @param {string} sortId - The sort ID to find within the cell.
+ * @returns {string} - The extracted value, or empty string.
+ */
+function getCustomSortValue (cellElem, sortId) {
+  if (!cellElem || typeof cellElem.querySelector !== 'function') return '';
+  const target = cellElem.querySelector(`[zui-sort-id="${sortId}"]`);
+  return target ? target.textContent.trim() : '';
+}
+
+/**
+ * Core initializer for ZUI (Zazzy UI) once the environment is ready.
+ *
+ * This method is invoked by the global DOM bootstrap logic, and is responsible
+ * for initializing internal ZUI systems. It assumes that all required DOM elements
+ * are fully loaded and available.
+ *
+ * Specifically:
+ * - Registers built-in initializers via `__registerBuiltins()`
+ * - Executes `onLoadInit()` to configure layout and preload settings
+ * - Executes `onElemInit()` to apply UI logic to the current DOM
+ * - Triggers `onZLoadSection()` to run dynamic actions like zintervals or zloadsection
+ *
+ * This should **not** attach any global event listeners directly. Use this in coordination
+ * with the global `DOMContentLoaded` hook which handles deferring setup logic.
+ */
+_zui.prototype.onZUIReady = function () {
+  if (typeof this.__registerBuiltins === 'function') {
+    this.__registerBuiltins();
+  }
+  this.onLoadInit();
+  this.onElemInit();
+  this.onZLoadSection();
+};
 
 exports.T = _zui
+
+
+/***/ }),
+
+/***/ 247:
+/***/ ((__unused_webpack_module, exports) => {
+
+// ---------------------------------------------------
+// time
+// ---------------------------------------------------
+
+/**
+ * Time Manager that controls interval timers with customizable actions,
+ * automatic starting, caching, and UI element interaction.
+ */
+function _time() {}
+
+/**
+ * ZazzyInterval Class
+ *
+ * Manages a single interval timer with customizable behavior such as:
+ * - Automatic start
+ * - Cache management
+ * - Refresh and action on each interval
+ * - Pause, unpause, and clear functionality
+ */
+class ZazzyInterval {
+  constructor(options) {
+    this.options = ZazzyInterval.getDefaults(options);
+    if (this.options.autostart) {
+      this.start();
+    }
+  }
+
+  /**
+   * Returns the default options for the interval timer.
+   * Merges passed options with the defaults.
+   */
+  static getDefaults(options) {
+    const defaultOptions = {
+      interval: 60000,
+      autostart: false,
+      id: null,
+      targetClick: null,
+      datacache: false,
+      action: function() { console.log('ZazzyInterval no-op'); },
+      _cache: null,
+      _itoken: null,
+      _isPaused: false
+    };
+
+    // Merge the default options with user-provided options.
+    options = zzb.types.isObject(options) ? zzb.types.merge(defaultOptions, options) : defaultOptions;
+    options.autostart = options.autostart === true;
+
+    if (!zzb.types.isStringNotEmpty(options.id)) {
+      options.id = zzb.uuid.newV4();
+    }
+
+    // Ensure the action is a valid function.
+    if (!zzb.types.isFunction(options.action)) {
+      throw new Error('The "action" option must be a function.');
+    }
+
+    // Set default methods if not provided.
+    options.new = options.new || function() {
+      options._itoken = setInterval(options.refresh, options.interval);
+      options._isPaused = false;
+    };
+
+    options.clear = options.clear || function(doPause) {
+      if (options._itoken != null) {
+        clearInterval(options._itoken);
+        options._itoken = null;
+        if (doPause) {
+          options._isPaused = true;
+        }
+      }
+    };
+
+    options.unpause = options.unpause || function() {
+      if (options._isPaused) {
+        options._itoken = setInterval(options.refresh, options.interval);
+        options._isPaused = false;
+      }
+    };
+
+    options.refresh = options.refresh || function() {
+      if (options._itoken != null) {
+        options._isPaused = false;
+        options.action && options.action();
+      }
+    };
+
+    return options;
+  }
+
+  /**
+   * Starts the interval timer.
+   */
+  start() {
+    if (zzb.types.isFunction(this.options.new)) {
+      this.options.new();
+    }
+  }
+
+  /**
+   * Clears the interval timer and optionally pauses it.
+   * @param {boolean} doPause - If true, pauses the interval.
+   */
+  clear(doPause) {
+    if (zzb.types.isFunction(this.options.clear)) {
+      this.options.clear(doPause);
+    }
+  }
+
+  /**
+   * Unpauses the interval timer if it was paused.
+   */
+  unpause() {
+    if (zzb.types.isFunction(this.options.unpause)) {
+      this.options.unpause();
+    }
+  }
+
+  /**
+   * Refreshes the interval and runs the action.
+   */
+  refresh() {
+    if (zzb.types.isFunction(this.options.refresh)) {
+      this.options.refresh();
+    }
+  }
+
+  /**
+   * Sets the cache for this interval timer.
+   * @param {object} obj - The object to store in the cache.
+   */
+  setCache(obj) {
+    this.options._cache = this.options.datacache ? obj : null;
+  }
+
+  /**
+   * Gets the cache for this interval timer.
+   * @returns {object|null} - The cached object or null.
+   */
+  getCache() {
+    return this.options.datacache ? this.options._cache : null;
+  }
+
+  /**
+   * Checks if this interval timer has a cached object.
+   * @returns {boolean} - True if cache exists, false otherwise.
+   */
+  hasCache() {
+    return this.options.datacache && this.options._cache != null;
+  }
+}
+
+/**
+ * _time Class for managing multiple ZazzyInterval instances.
+ * Provides functions to add, clear, unpause, and manage intervals.
+ */
+_time.prototype.ZazzyInterval = ZazzyInterval;
+
+/**
+ * Retrieves a specific interval timer by its ID.
+ * @param {string} id - The ID of the interval to retrieve.
+ * @returns {ZazzyInterval|null} - The interval timer or null if not found.
+ */
+_time.prototype.getInterval = function(id) {
+  if (!this.myIntervals || !zzb.types.isStringNotEmpty(id) || !this.myIntervals[id]) {
+    return null;
+  }
+  return this.myIntervals[id];
+};
+
+/**
+ * Clears all interval timers and optionally pauses them.
+ * @param {boolean} doPause - If true, pauses all intervals.
+ */
+_time.prototype.clearAll = function(doPause) {
+  if (!this.myIntervals || !zzb.types.isObject(this.myIntervals)) {
+    return;
+  }
+  for (const key in this.myIntervals) {
+    if (this.myIntervals[key] instanceof ZazzyInterval) {
+      this.myIntervals[key].clear(doPause);  // Ensure it's an instance of ZazzyInterval
+    }
+  }
+};
+
+/**
+ * Unpauses all interval timers.
+ */
+_time.prototype.unpauseAll = function() {
+  if (!this.myIntervals || !zzb.types.isObject(this.myIntervals)) {
+    return;
+  }
+  for (const key in this.myIntervals) {
+    this.myIntervals[key].unpause();
+  }
+};
+
+/**
+ * Creates a new interval timer with the given options.
+ * @param {object} options - The options for the new interval timer.
+ * @returns {ZazzyInterval} - The newly created ZazzyInterval instance.
+ * @throws {Error} - Throws an error if the interval creation fails.
+ */
+_time.prototype.newInterval = function(options) {
+  if (!this.myIntervals) {
+    this.myIntervals = {};
+  }
+
+  if (options && options.id && zzb.types.isStringNotEmpty(options.id)) {
+    if (this.myIntervals[options.id]) {
+      return this.myIntervals[options.id];
+    }
+  }
+
+  const myInterval = new ZazzyInterval(options);  // Ensure this is an instance of ZazzyInterval
+  if (myInterval && myInterval.options && zzb.types.isStringNotEmpty(myInterval.options.id)) {
+    this.myIntervals[myInterval.options.id] = myInterval;
+    return myInterval;
+  }
+
+  throw new Error('Failed to create ZazzyInterval');
+};
+
+/**
+ * Initializes an interval tied to a UI element.
+ * The element must have the `zi-*` attributes for customization.
+ * @param {HTMLElement} $elem - The DOM element to associate the interval with.
+ */
+_time.prototype.newUIInterval = function ($elem) {
+  if (!$elem) {
+    return;
+  }
+
+  // Prevent re-initialization if already initialized
+  if ($elem.getAttribute('zi-inited') === 'true') {
+    return; // Prevent re-initialization
+  }
+
+  // Set default ID if the element doesn't already have one
+  if (!zzb.types.isStringNotEmpty($elem.getAttribute('id'))) {
+    $elem.setAttribute('id', zzb.uuid.newV4());  // Generate an ID if not provided
+  }
+
+  // Set the 'zi-inited' attribute to 'true' before starting the interval
+  $elem.setAttribute('zi-inited', 'true');
+
+  // Set the targetClick to the element's ID
+  const targetClick = $elem.getAttribute('id');
+
+  // Get the interval value from the element's attributes or use default if not provided
+  const interval = zzb.dom.getAttributeElse($elem, 'zi-interval', 60000);  // Default to 60000ms (1 minute)
+
+  // Get the run limit from the element's attribute (if provided)
+  const runLimit = parseInt($elem.getAttribute('zi-run-limit')) || Infinity;  // Default is no limit
+
+  // Track the number of runs
+  let runCount = 0;
+
+  // Initialize the interval
+  const intervalId = setInterval(() => {
+
+    // Skip action if any modal is open
+    if (document.querySelectorAll('.modal.show').length > 0) {
+      return;
+    }
+
+    // Get the element to trigger the action
+    const element = document.getElementById(targetClick);
+    if (!element) {
+      console.warn('Element not found:', targetClick);
+      return;
+    }
+
+    // Perform the action (e.g., clicking the element)
+    element.setAttribute('zi-noclick', 'true');
+    element.click();
+
+    // Increment the run count
+    runCount++;
+
+    // If the run count exceeds the run limit, stop the interval
+    if (runCount >= runLimit) {
+      clearInterval(intervalId);  // Stop the interval
+    }
+  }, interval);  // Use the interval from the element or default to 60000ms
+
+  // Store the interval ID in the element's `zi-interval-id` attribute
+  $elem.setAttribute('zi-interval-id', intervalId);
+
+  // Optionally store the interval ID in the global `myIntervals` to track it (if necessary)
+  const elementId = $elem.getAttribute('id');
+  if (!this.myIntervals) {
+    this.myIntervals = {};
+  }
+
+  this.myIntervals[elementId] = intervalId;
+};
+
+exports.k = _time;
+
+
+/***/ }),
+
+/***/ 305:
+/***/ ((__unused_webpack_module, exports) => {
+
+// ---------------------------------------------------
+// types
+// ---------------------------------------------------
+
+// A utility constructor providing type-checking,
+// string-conversion, and object-manipulation methods.
+function _types () {}
+
+/**
+ * Deeply merges two objects into a new object.
+ * Properties from `newOptions` override those in `defaultOptions`.
+ *
+ * @param {Object} defaultOptions - The object providing default values.
+ * @param {Object} newOptions - The object containing properties to override defaults.
+ * @returns {Object} - A new object resulting from a deep merge of provided objects.
+ */
+_types.prototype.merge = function(defaultOptions, newOptions) {
+  return deepMerge({}, defaultOptions, newOptions);
+};
+
+/**
+ * Recursively merges multiple source objects into a target object.
+ * Nested objects are merged deeply; other types overwrite directly.
+ *
+ * @param {Object} target - The target object to merge into.
+ * @param {...Object} sources - One or more source objects.
+ * @returns {Object} - The merged target object.
+ */
+function deepMerge(target, ...sources) {
+  sources.forEach(source => {
+    if (!source || typeof source !== 'object') return;
+    Object.keys(source).forEach(key => {
+      const value = source[key];
+      if (typeof value === 'object' && !Array.isArray(value) && value !== null) {
+        target[key] = deepMerge(target[key] || {}, value);
+      } else {
+        target[key] = value;
+      }
+    });
+  });
+  return target;
+}
+
+/**
+ * Truncates a number to a specific number of decimal places without rounding.
+ *
+ * @param {number} num - The number to truncate.
+ * @param {number} decimal - The number of decimal places to retain.
+ * @returns {string} - The truncated number represented as a string.
+ */
+_types.prototype.truncate = function(num, decimal) {
+  if (typeof num !== 'number' || typeof decimal !== 'number' || decimal < 0) return '';
+  const numString = num.toString();
+  const decimalIndex = numString.indexOf('.');
+  if (decimalIndex === -1 || decimal === 0) return numString.split('.')[0];
+  return numString.substring(0, decimalIndex + decimal + 1);
+};
+
+/**
+ * Escapes special HTML characters in a given string to their corresponding HTML entities.
+ *
+ * @param {string} unsafe - The string containing potentially unsafe HTML characters.
+ * @returns {string} - The safely escaped string, or empty string if input is invalid.
+ */
+_types.prototype.escapeHtml = function (unsafe) {
+  if (typeof unsafe !== 'string') return '';
+  const replacements = {
+    '&':'&amp;',
+    '<':'&lt;',
+    '>':'&gt;',
+    '"':'&quot;',
+    '\'':'&#039;'
+  };
+  return unsafe.replace(/[&<>"']/g, char => replacements[char]);
+};
+
+/**
+ * Converts a given value to a primitive string.
+ * - Returns empty string ('') if value is null or undefined.
+ * - Converts numbers, booleans, objects, and other types using standard coercion.
+ * - All zeros are represented simply as "0".
+ *
+ * @param {*} value - The value to convert to string.
+ * @returns {string} - The primitive string representation.
+ */
+_types.prototype.baseToString = function(value) {
+  if (typeof value === 'string') {
+    return value;
+  }
+  if (typeof value === 'number') {
+    return '' + value;
+  }
+  if (value == null) { // handles null or undefined
+    return '';
+  }
+  return '' + value;
+};
+
+/**
+ * Converts a value to a primitive string.
+ * Returns empty string if value is null or undefined.
+ *
+ * @param {*} s - The value to convert to a string.
+ * @returns {string} - The converted primitive string.
+ */
+_types.prototype.toString = function (s) {
+  return s == null ? '' : zzb.types.baseToString(s);
+};
+
+/**
+ * Checks if the provided value is an array.
+ *
+ * @param {*} o - The value to check.
+ * @returns {boolean} - True if value is an array, false otherwise.
+ */
+_types.prototype.isArray = function (o) {
+  return Array.isArray(o);
+};
+
+/**
+ * Checks if the provided value is an array containing at least one element.
+ *
+ * @param {*} o - The value to check.
+ * @returns {boolean} - True if the value is a non-empty array, false otherwise.
+ */
+_types.prototype.isArrayHasRecords = function (o) {
+  return zzb.types.isArray(o) && o.length > 0;
+};
+
+/**
+ * Checks if the provided value is a plain object (not an array, null, or other type).
+ *
+ * @param {*} o - The value to check.
+ * @returns {boolean} - True if the value is a plain object, false otherwise.
+ */
+_types.prototype.isObject = function (o) {
+  return o !== null && typeof o === 'object' && !Array.isArray(o);
+};
+
+/**
+ * Checks if the provided value is a valid number (excluding NaN).
+ *
+ * @param {*} o - The value to check.
+ * @returns {boolean} - True if the value is a valid number, false otherwise.
+ */
+_types.prototype.isNumber = function (o) {
+  return typeof o === 'number' && !isNaN(o);
+};
+
+/**
+ * Checks if the provided value is a string with non-whitespace characters.
+ *
+ * @param {*} s - The value to check.
+ * @returns {boolean} - True if the value is a non-empty string, false otherwise.
+ */
+_types.prototype.isStringNotEmpty = function (s) {
+  return typeof s === 'string' && s.trim().length > 0;
+};
+
+/**
+ * Checks if the provided value is an empty string or contains only whitespace.
+ *
+ * @param {*} s - The value to check.
+ * @returns {boolean} - True if the value is an empty or whitespace-only string, false otherwise.
+ */
+_types.prototype.isStringEmpty = function (s) {
+  return typeof s === 'string' && s.trim().length === 0;
+};
+
+/**
+ * Checks if the provided value is a string type.
+ *
+ * @param {*} s - The value to check.
+ * @returns {boolean} - True if the value is a string, false otherwise.
+ */
+_types.prototype.isString = function (s) {
+  return typeof s === 'string';
+};
+
+/**
+ * Checks if the provided value is a function.
+ *
+ * @param {*} fn - The value to check.
+ * @returns {boolean} - True if the value is a function, false otherwise.
+ */
+_types.prototype.isFunction = function (fn) {
+  return typeof fn === 'function';
+};
+
+/**
+ * Checks if the provided value is a boolean.
+ *
+ * @param {*} b - The value to check.
+ * @returns {boolean} - True if the value is a boolean, false otherwise.
+ */
+_types.prototype.isBoolean = function (b) {
+  return typeof b === 'boolean';
+};
+
+/**
+ * Checks if a given value is a single numeric digit (0–9).
+ *
+ * Accepts string, number, or other types. Only returns true for:
+ * - A single character string containing a digit ('0'–'9')
+ * - A number between 0 and 9 inclusive with no decimals
+ *
+ * Examples:
+ *   isDigit('5')     → true
+ *   isDigit(3)       → true
+ *   isDigit('a')     → false
+ *   isDigit('42')    → false
+ *   isDigit(null)    → false
+ *   isDigit(5.5)     → false
+ *
+ * @param {*} val - The value to check.
+ * @returns {boolean} - True if the value is a single digit, false otherwise.
+ */
+_types.prototype.isDigit = function (val) {
+  if (typeof val === 'number') {
+    return Number.isInteger(val) && val >= 0 && val <= 9;
+  }
+  if (typeof val === 'string' && val.length === 1) {
+    return val >= '0' && val <= '9';
+  }
+  return false;
+};
+
+/**
+ * Compares two values and returns:
+ * - 0 if values are strictly equal.
+ * - 1 if the first value is greater (ascending) or smaller (descending).
+ * - -1 if the first value is smaller (ascending) or greater (descending).
+ *
+ * Special handling:
+ * - Considers `null` less than any other value except `undefined`.
+ * - Considers `undefined` as less than any other value.
+ *
+ * @param {*} x - The first value to compare.
+ * @param {*} y - The second value to compare.
+ * @param {boolean} [isDesc=false] - If true, compares in descending order.
+ * @returns {number} Comparison result: 0, 1, or -1.
+ */
+_types.prototype.compare = function (x, y, isDesc = false) {
+  if (x === y) return 0;
+
+  if (x === undefined) return isDesc ? 1 : -1;
+  if (y === undefined) return isDesc ? -1 : 1;
+  if (x === null) return isDesc ? 1 : -1;
+  if (y === null) return isDesc ? -1 : 1;
+
+  if (isDesc) {
+    return x > y ? -1 : 1;
+  }
+  return x > y ? 1 : -1;
+};
+
+const TYPE_ALIASES = {
+  int: "integer",
+  integer: "integer",
+  str: "string",
+  string: "string",
+  bool: "boolean",
+  boolean: "boolean",
+  float: "float",
+  number: "float",
+  obj: "object",
+  object: "object",
+  null: "null"
+};
+
+/**
+ * Normalizes a type string to a canonical type alias.
+ *
+ * Converts common shorthand or alternative type names like "int", "str", or "bool"
+ * into consistent internal representations such as "integer", "string", or "boolean".
+ *
+ * Supported aliases:
+ * - int, integer → "integer"
+ * - str, string → "string"
+ * - bool, boolean → "boolean"
+ * - float, number → "float"
+ * - obj, object → "object"
+ * - null → "null"
+ *
+ * If the type is unrecognized, returns the original input string.
+ *
+ * @param {*} typeStr - The type to normalize. If not a string, it is stringified.
+ * @returns {string} Normalized type string.
+ */
+_types.prototype.normalizeType = function normalizeType(typeStr) {
+  if (typeof typeStr !== "string") {
+    typeStr = String(typeStr ?? "string");
+  }
+  return TYPE_ALIASES[typeStr.toLowerCase()] || typeStr;
+}
+
+/**
+ * Compares two values based on the specified type.
+ * Supports integer, float, IP (v4/v6), and text types.
+ *
+ * @param {*} a - The first value to compare.
+ * @param {*} b - The second value to compare.
+ * @param {string} type - The comparison type ('int', 'float', 'ip', 'ipv4', 'ipv6', 'text').
+ * @returns {number} - Comparison result: -1, 0, or 1.
+ */
+_types.prototype.compareValues = function(a, b, type) {
+  switch (type) {
+    case 'int':
+      return parseInt(a, 10) - parseInt(b, 10);
+    case 'float':
+      return parseFloat(a) - parseFloat(b);
+    case 'ip':
+    case 'ipv4':
+    case 'ipv6':
+      return this.compareIP(a, b);
+    case 'text':
+    default:
+      return (a || '').toString().toLowerCase().localeCompare((b || '').toString().toLowerCase());
+  }
+};
+
+/**
+ * Compares two IP addresses, determining whether they are IPv4 or IPv6,
+ * and then delegating to the appropriate comparison function.
+ *
+ * Mixed-type comparison treats IPv4 as lower than IPv6.
+ *
+ * @param {string} a - First IP address.
+ * @param {string} b - Second IP address.
+ * @returns {number} - Comparison result: -1, 0, or 1.
+ */
+_types.prototype.compareIP = function(a, b) {
+  const aType = this.detectIPType(a);
+  const bType = this.detectIPType(b);
+
+  if (aType === 'ipv4' && bType === 'ipv4') return this.compareIPv4(a, b);
+  if (aType === 'ipv6' && bType === 'ipv6') return this.compareIPv6(a, b);
+  return aType === 'ipv4' ? -1 : 1;
+};
+
+/**
+ * Detects whether a string represents an IPv4 or IPv6 address.
+ *
+ * @param {string} ip - The IP address to classify.
+ * @returns {string} - Either 'ipv4', 'ipv6', or 'unknown'.
+ */
+_types.prototype.detectIPType = function(ip) {
+  if (ip.includes('.')) return 'ipv4';
+  if (ip.includes(':')) return 'ipv6';
+  return 'unknown';
+};
+
+/**
+ * Compares two IPv4 addresses by their numeric octet values.
+ *
+ * @param {string} a - First IPv4 address.
+ * @param {string} b - Second IPv4 address.
+ * @returns {number} - Comparison result: -1, 0, or 1.
+ */
+_types.prototype.compareIPv4 = function(a, b) {
+  const aParts = a.split('.').map(n => parseInt(n, 10) || 0);
+  const bParts = b.split('.').map(n => parseInt(n, 10) || 0);
+  for (let i = 0; i < 4; i++) {
+    if (aParts[i] < bParts[i]) return -1;
+    if (aParts[i] > bParts[i]) return 1;
+  }
+  return 0;
+}
+
+/**
+ * Compares two IPv6 addresses after expanding their shorthand notation.
+ *
+ * @param {string} a - First IPv6 address.
+ * @param {string} b - Second IPv6 address.
+ * @returns {number} - Comparison result: -1, 0, or 1.
+ */
+_types.prototype.compareIPv6 = function (a, b) {
+  const aParts = normalizeIPv6(a);
+  const bParts = normalizeIPv6(b);
+
+  for (let i = 0; i < 8; i++) {
+    const aVal = parseInt(aParts[i], 16);
+    const bVal = parseInt(bParts[i], 16);
+    if (aVal < bVal) return -1;
+    if (aVal > bVal) return 1;
+  }
+  return 0;
+};
+
+function normalizeIPv6(ip) {
+  const parts = ip.split('::');
+  let head = parts[0] ? parts[0].split(':') : [];
+  let tail = parts[1] ? parts[1].split(':') : [];
+
+  // Normalize each segment to 4-digit hex
+  head = head.map(h => h.padStart(4, '0'));
+  tail = tail.map(h => h.padStart(4, '0'));
+
+  const fill = new Array(8 - head.length - tail.length).fill('0000');
+  return [...head, ...fill, ...tail];
+}
+
+exports.g = _types
+
+
+/***/ }),
+
+/***/ 462:
+/***/ ((__unused_webpack_module, exports) => {
+
+// ---------------------------------------------------
+// strings
+// ---------------------------------------------------
+
+const _strings = function () {}
+
+/**
+ * Creates a flexible string formatting function with support for:
+ * - Positional and named placeholders
+ * - Nested property access (e.g., {user.name})
+ * - Optional value transformers (e.g., {0!upper})
+ * - Escape sequences for literal braces (e.g., {{ and }})
+ *
+ * Usage Examples:
+ *   format('{0}, you have {1} item{2}', 'Alice', 3, 's')             → "Alice, you have 3 items"
+ *   format('{name}, you have {count} item{ending}', {name: 'Bob', count: 1, ending: ''}) → "Bob, you have 1 item"
+ *   format('{0.name} has {1}', [{ name: 'Sally' }, 'apples'])       → "Sally has apples"
+ *
+ * Notes:
+ * - Supports both implicit (e.g., {0}, {1}) and explicit (e.g., {name}) placeholders,
+ *   but not mixed in the same template (will throw an error).
+ * - Accepts an optional transformer map (e.g., `{ upper: s => s.toUpperCase() }`)
+ *   to apply transformations using the `!transform` syntax.
+ *
+ * @param {Object.<string, function>} transformers - Optional map of transformation functions.
+ * @returns {Function} - A formatter function: (template: string, ...values) => string
+ */
+const formatString = function (transformers) {
+  return function format(template) {
+    let args = Array.prototype.slice.call(arguments, 1);
+    let idx = 0;
+    let state = 'UNDEFINED';
+
+    // Normalize args: if passed as a single array, unpack it
+    if (args.length === 1 && Array.isArray(args[0])) {
+      args = args[0];
+    }
+
+    return template.replace(
+      /([{}])\1|[{](.*?)(?:!(.+?))?[}]/g,
+      function (match, literal, _key, xf) {
+        if (literal != null) {
+          return literal; // Escaped curly braces
+        }
+
+        let key = _key;
+
+        if (key.length > 0) {
+          if (state === 'IMPLICIT') {
+            throw new Error('Cannot switch from implicit to explicit numbering');
+          }
+          state = 'EXPLICIT';
+        } else {
+          if (state === 'EXPLICIT') {
+            throw new Error('Cannot switch from explicit to implicit numbering');
+          }
+          state = 'IMPLICIT';
+          key = String(idx++);
+        }
+
+        const path = key.split('.');
+        const lookupPath = /^\d+$/.test(path[0]) ? path : ['0'].concat(path);
+
+        let value = lookupPath
+          .reduce((maybe, key) => {
+            return maybe.reduce((_, x) => {
+              if (x != null && key in Object(x)) {
+                const val = x[key];
+                return [typeof val === 'function' ? val() : val];
+              }
+              return [];
+            }, []);
+          }, [args])
+          .reduce((_, x) => x, '');
+
+        if (xf == null) {
+          return value;
+        } else if (Object.prototype.hasOwnProperty.call(transformers, xf)) {
+          return transformers[xf](value);
+        } else {
+          throw new Error('No transformer named "' + xf + '"');
+        }
+      }
+    );
+  };
+};
+
+_strings.prototype.format = formatString({});
+
+/**
+ * Light-weight formatter that fills missing values with an empty string.
+ *
+ * Supports both:
+ *   - Positional placeholders: '{0}', '{1}' with array args
+ *   - Named placeholders: '{name}', '{count}' with object arg
+ *
+ * Example:
+ *   formatEmpty('Hi {0}, your code is {1}', ['Alice']) → 'Hi Alice, your code is '
+ *   formatEmpty('Hi {name}, your count is {count}', { name: 'Bob' }) → 'Hi Bob, your count is '
+ *
+ * @param {string} template - The string template containing placeholders.
+ * @param {...*} args - An array of values or a single object to interpolate.
+ * @returns {string} - The formatted string with missing values replaced by ''.
+ */
+_strings.prototype.formatEmpty = function (template) {
+  let args = Array.prototype.slice.call(arguments, 1);
+
+  // Normalize args if passed as single array (e.g., formatEmpty('{0}', ['A']))
+  if (args.length === 1 && Array.isArray(args[0])) {
+    args = args[0];
+  }
+
+  // Handle named object replacement
+  if (args.length === 1 && typeof args[0] === 'object' && !Array.isArray(args[0])) {
+    const obj = args[0];
+    return template.replace(/{([^{}]+)}/g, function (_, key) {
+      return obj[key] != null ? obj[key] : '';
+    });
+  }
+
+  // Handle positional replacements
+  return template.replace(/{(\d+)}/g, function (_, index) {
+    return typeof args[index] !== 'undefined' && args[index] !== null
+      ? String(args[index])
+      : '';
+  });
+};
+
+/**
+ * Appends the specified characters to a string **only if** its length exceeds a given threshold.
+ *
+ * Commonly used to truncate long strings and append a suffix (like '...') to indicate continuation.
+ *
+ * Usage Example:
+ *   zzb.strings.appendIfMoreThan('some string', '...', 3)
+ *   // → 'som...'
+ *
+ * If the input string's length is less than or equal to `ifMoreCharCount`, it is returned unchanged.
+ *
+ * @param {string} str - The input string to check and potentially truncate.
+ * @param {string} charsToAppend - The characters to append if truncation occurs.
+ * @param {number} ifMoreCharCount - The length threshold to trigger truncation.
+ * @returns {string} - The original or truncated string with appended characters.
+ */
+_strings.prototype.appendIfMoreThan = function (str, charsToAppend, ifMoreCharCount) {
+  return (str && str.length > ifMoreCharCount)
+    ? str.substring(0, ifMoreCharCount) + charsToAppend
+    : str;
+};
+
+/**
+ * Joins array items into a single string, separated by a specified delimiter (defaults to comma).
+ *
+ * Optionally extracts a nested field from objects using dot-notation (e.g., "user.name").
+ *
+ * Examples:
+ *   zzb.strings.joinArr(['a', 'b', 'c'])                         // → "a, b, c"
+ *   zzb.strings.joinArr([{name:'a'},{name:'b'}], 'name')        // → "a, b"
+ *   zzb.strings.joinArr([{user:{name:'a'}},{user:{name:'b'}}], 'user.name')  // → "a, b"
+ *   zzb.strings.joinArr(['x', 'y'], null, ' / ')                // → "x / y"
+ *
+ * @param {Array} arr - The input array to join (strings or objects).
+ * @param {string} [fieldPath] - Optional dot-notated field path to extract from each object.
+ * @param {string} [delimiter=', '] - The delimiter used to join values.
+ * @returns {string} - The joined string.
+ */
+_strings.prototype.joinArr = function (arr, fieldPath, delimiter) {
+  if (!Array.isArray(arr) || arr.length === 0) return '';
+
+  const sep = delimiter != null ? delimiter : ', ';
+
+  const getNestedValue = (obj, path) => {
+    return path.split('.').reduce((val, key) => {
+      return val && typeof val === 'object' ? val[key] : undefined;
+    }, obj);
+  };
+
+  return arr
+    .map(item => {
+      if (fieldPath && typeof item === 'object' && item !== null) {
+        const val = getNestedValue(item, fieldPath);
+        return val != null ? String(val) : '';
+      }
+      return String(item);
+    })
+    .join(sep);
+};
+
+/**
+ * Converts a word to its plural form based on the given number.
+ *
+ * Appends an "s" or a custom suffix if the number is not 1 or -1, unless `forcePlural` is true.
+ *
+ * Examples:
+ *   zzb.strings.toPlural('dog', 1)                      // → "dog"
+ *   zzb.strings.toPlural('dog', 2)                      // → "dogs"
+ *   zzb.strings.toPlural('city', 2, { suffix: 'ies' })  // → "cities"
+ *
+ * @param {string} word - The base word to pluralize.
+ * @param {number} number - The quantity to evaluate.
+ * @param {Object} [options] - Optional config: { forcePlural: boolean, suffix: string|null }
+ * @returns {string} - The pluralized word.
+ */
+_strings.prototype.toPlural = function (word, number, options) {
+  options = zzb.types.merge({ forcePlural: false, suffix: null }, options);
+
+  if ((number === 1 || number === -1) && !options.forcePlural) {
+    return word;
+  }
+
+  return word + (options.suffix || 's');
+};
+
+/**
+ * Capitalizes the first character of a non-empty string.
+ *
+ * Examples:
+ *   zzb.strings.capitalize('hello') → 'Hello'
+ *
+ * @param {string} target - The string to capitalize.
+ * @returns {string} - Capitalized string or empty string if input is invalid.
+ */
+_strings.prototype.capitalize = function (target) {
+  if (zzb.types.isStringNotEmpty(target)) {
+    return target.charAt(0).toUpperCase() + target.slice(1);
+  }
+  return '';
+};
+
+/**
+ * Trims a string, capitalizes the first letter, and ensures it ends with a period.
+ *
+ * Examples:
+ *   zzb.strings.toFirstCapitalEndPeriod('hello world') → 'Hello world.'
+ *
+ * @param {string} target - The input string to format.
+ * @returns {string} - Formatted string or empty string if input is invalid.
+ */
+_strings.prototype.toFirstCapitalEndPeriod = function (target) {
+  if (zzb.types.isStringNotEmpty(target)) {
+    target = target.trim();
+    target = zzb.strings.capitalize(target);
+    if (!target.endsWith('.')) {
+      target += '.';
+    }
+  }
+  return target;
+};
+
+// Unit labels for size formatting
+const sizeUnitsFormatNameSingle = ['K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y'];
+const sizeUnitsFormatNameDouble = ['KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+const sizeUnitsFormatNameFull = ['Kilobyte', 'Megabyte', 'Gigabyte', 'Terabyte', 'Petabyte', 'Exabyte', 'Zettabyte', 'Yottabyte'];
+const sizeUnitsFormatNameEIC = ['KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB'];
+
+/**
+ * Converts a file size in bytes to a human-readable string using various unit styles.
+ *
+ * Supported `unitsFormat` options:
+ * - 'single': ["K", "M", "G", ...]
+ * - 'double': ["KB", "MB", "GB", ...]
+ * - 'full': ["Kilobyte", "Megabyte", ...]
+ * - 'eic': ["KiB", "MiB", ...]
+ *
+ * @param {number} bytes - The file size in bytes.
+ * @param {string} [unitsFormat='single'] - The format style for units.
+ * @param {boolean} [noSizeUnitSeparation=false] - Whether to omit the space between value and unit.
+ * @param {number} [dp=1] - Number of decimal places.
+ * @returns {string} - Human-readable file size string.
+ */
+_strings.prototype.sizeToHumanReadable = function (bytes, unitsFormat, noSizeUnitSeparation, dp) {
+  if (!zzb.types.isStringNotEmpty(unitsFormat)) unitsFormat = 'single';
+  if (!dp) dp = 1;
+
+  let unitSeperateSpace = noSizeUnitSeparation === true ? '' : ' ';
+  let thresh = 1024;
+
+  let units, unitsBytes = 'B';
+  switch (unitsFormat.toLowerCase()) {
+    case 'full': units = sizeUnitsFormatNameFull; unitsBytes = 'Bytes'; break;
+    case 'double': units = sizeUnitsFormatNameDouble; break;
+    case 'eic': units = sizeUnitsFormatNameEIC; break;
+    default: units = sizeUnitsFormatNameSingle; break;
+  }
+
+  if (Math.abs(bytes) < thresh) {
+    return bytes + unitSeperateSpace + unitsBytes;
+  }
+
+  let u = -1;
+  let r = Math.pow(dp, 10);
+
+  do {
+    bytes /= thresh;
+    ++u;
+  } while (Math.round(Math.abs(bytes) * r) / r >= thresh && u < units.length - 1);
+
+  let valFixed = bytes.toFixed(dp) + '';
+  valFixed = zzb.strings.trimSuffix(valFixed, ['.00', '.0']);
+
+  return valFixed + unitSeperateSpace + units[u];
+};
+
+/**
+ * Removes the specified prefix (or any of multiple) from the start of a string.
+ *
+ * @param {string} target - The input string.
+ * @param {string|string[]} prefix - A prefix or array of prefixes to remove.
+ * @returns {string} - The trimmed string.
+ */
+_strings.prototype.trimPrefix = function(target, prefix) {
+  target = zzb.types.toString(target);
+  let arr = Array.isArray(prefix) ? prefix : [zzb.types.toString(prefix)];
+  for (let ii = 0; ii < arr.length; ii++) {
+    if (target.startsWith(arr[ii])) {
+      return target.slice(arr[ii].length);
+    }
+  }
+  return target;
+};
+
+/**
+ * Removes the specified suffix (or any of multiple) from the end of a string.
+ *
+ * @param {string} target - The input string.
+ * @param {string|string[]} suffix - A suffix or array of suffixes to remove.
+ * @returns {string} - The trimmed string.
+ */
+_strings.prototype.trimSuffix = function(target, suffix) {
+  target = zzb.types.toString(target);
+  let arr = Array.isArray(suffix) ? suffix : [zzb.types.toString(suffix)];
+  for (let ii = 0; ii < arr.length; ii++) {
+    if (target.endsWith(arr[ii])) {
+      return target.slice(0, -arr[ii].length);
+    }
+  }
+  return target;
+};
+
+/**
+ * Converts a duration in milliseconds into a human-readable format like "1d 2h 3m 4.56s".
+ *
+ * @param {number} milliseconds - The duration in milliseconds.
+ * @returns {string} - Human-readable time interval.
+ */
+_strings.prototype.millisecondsTimeToHumanReadable = function (milliseconds) {
+  let temp = milliseconds / 1000;
+  const years = Math.floor(temp / 31536000);
+  const days = Math.floor((temp %= 31536000) / 86400);
+  const hours = Math.floor((temp %= 86400) / 3600);
+  const minutes = Math.floor((temp %= 3600) / 60);
+  const seconds = temp % 60;
+
+  if (days || hours || seconds || minutes) {
+    return (years ? years + 'y ' : '') +
+      (days ? days + 'd ' : '') +
+      (hours ? hours + 'h ' : '') +
+      (minutes ? minutes + 'm ' : '') +
+      Number.parseFloat(seconds).toFixed(2) + 's';
+  }
+
+  return '< 1s';
+};
+
+/**
+ * Converts various value types into a boolean.
+ *
+ * Recognizes:
+ *   - Booleans: true, false
+ *   - Numbers: 1 (true), 0 (false)
+ *   - Strings: "true", "yes", "1" → true; "false", "no", "0", "" → false
+ *   - All else falls back to Boolean coercion
+ *
+ * @param {*} target - The value to evaluate.
+ * @returns {boolean}
+ */
+_strings.prototype.toBool = function (target) {
+  if (typeof target === 'boolean') {
+    return target;
+  }
+
+  if (typeof target === 'number') {
+    return target === 1;
+  }
+
+  if (!zzb.types.isStringNotEmpty(target)) {
+    return false;
+  }
+
+  switch (target.toLowerCase().trim()) {
+    case 'true':
+    case 'yes':
+    case '1':
+      return true;
+    case 'false':
+    case 'no':
+    case '0':
+    case '':
+      return false;
+    default:
+      return Boolean(target);
+  }
+};
+
+/**
+ * Parses the input into an integer, or returns 0 as fallback.
+ * Optionally handles arrays of values if `forceArray` is true.
+ *
+ * @param {*} target - The value or array of values to parse.
+ * @param {boolean} [forceArray=false] - Whether to always return an array.
+ * @returns {number|number[]} - Parsed integer(s) or 0/array of 0s if parsing fails.
+ */
+_strings.prototype.parseIntOrZero = function (target, forceArray) {
+  return this.parseTypeElse(target, 'int', 0, !!forceArray);
+};
+
+/**
+ * Parses the input into a float, or returns 0.0 as fallback.
+ * Optionally handles arrays of values if `forceArray` is true.
+ *
+ * @param {*} target - The value or array of values to parse.
+ * @param {boolean} [forceArray=false] - Whether to always return an array.
+ * @returns {number|number[]} - Parsed float(s) or 0.0/array of 0.0s if parsing fails.
+ */
+_strings.prototype.parseFloatOrZero = function (target, forceArray) {
+  return this.parseTypeElse(target, 'float', 0.0, !!forceArray);
+};
+
+/**
+ * Parses the input into a boolean, or returns false as fallback.
+ * Optionally handles arrays of values if `forceArray` is true.
+ *
+ * @param {*} target - The value or array of values to parse.
+ * @param {boolean} [forceArray=false] - Whether to always return an array.
+ * @returns {boolean|boolean[]} - Parsed boolean(s) or false/array of false if parsing fails.
+ */
+_strings.prototype.parseBoolOrFalse = function (target, forceArray) {
+  return this.parseTypeElse(target, 'bool', false, !!forceArray);
+};
+
+/**
+ * Attempts to parse a value (or array of values) into a specified type, with fallback support.
+ *
+ * Normalizes the provided type using `zzb.types.normalizeType`, which supports aliases like:
+ *   - 'int', 'integer' → 'integer'
+ *   - 'str', 'string' → 'string'
+ *   - 'bool', 'boolean' → 'boolean'
+ *   - 'float', 'number' → 'float'
+ *   - 'obj', 'object' → 'object'
+ *   - 'null' → 'null'
+ *
+ * If the value is null or undefined, or if parsing fails, the fallback is used.
+ *
+ * If `forceArray` is true (or `target` is already an array), all values are parsed and an array is returned.
+ * Otherwise, the function returns a single parsed value.
+ *
+ * @param {*} target - The value or array of values to parse.
+ * @param {string} type - The desired type to parse into (e.g., "int", "string", "bool").
+ * @param {*} fallback - A fallback value used when parsing fails or input is invalid.
+ * @param {boolean} [forceArray=false] - Whether to always return an array of results.
+ * @returns {*} - Parsed value(s) as the specified type, or fallback(s) if parsing fails.
+ */
+_strings.prototype.parseTypeElse = function (target, type, fallback, forceArray) {
+  const makeArray = forceArray || zzb.types.isArray(target);
+  const values = zzb.types.isArray(target) ? target.slice() : [target];
+
+  const normalizedType = zzb.types.normalizeType(type);
+
+  const output = values.map(val => {
+    if (val === undefined || val === null) return fallback;
+
+    let parsed;
+
+    switch (normalizedType) {
+      case 'integer':
+        parsed = parseInt(val);
+        return isNaN(parsed) ? fallback : parsed;
+
+      case 'float':
+        parsed = parseFloat(val);
+        return isNaN(parsed) ? fallback : parsed;
+
+      case 'boolean':
+        return zzb.strings.toBool(val);
+
+      case 'string':
+        return zzb.types.isString(val) ? val : String(val ?? fallback);
+
+      case 'object':
+        return typeof val === 'object' ? val : fallback;
+
+      case 'null':
+        return null;
+
+      case 'date':
+      case 'date-iso':
+        return zzb.types.isStringNotEmpty(val) ? val : fallback;
+
+      default:
+        // fallback for unrecognized types
+        return zzb.types.isString(val) ? val : String(val ?? fallback);
+    }
+  });
+
+  return makeArray ? output : output[0];
+}
+
+/**
+ * Formats a string using a primary or fallback value.
+ * If the `value` is not a non-empty string, the `fallback` is used instead.
+ * If neither is valid, returns an empty string.
+ *
+ * @param {string} template - The string template to format (e.g., 'Hello, {0}!').
+ * @param {string} value - The primary value to insert into the template.
+ * @param {string} fallback - A fallback value used if the primary value is empty or invalid.
+ * @returns {string} - The formatted string, or an empty string if both inputs are empty.
+ */
+_strings.prototype.formatElseEmpty = function (template, value, fallback) {
+  let finalValue = value
+  if (!zzb.types.isStringNotEmpty(finalValue)) {
+    finalValue = fallback
+    if (!zzb.types.isStringNotEmpty(finalValue)) {
+      return ''
+    }
+  }
+  return zzb.strings.format(template, finalValue)
+}
+
+exports.P = _strings
+
+
+/***/ }),
+
+/***/ 531:
+/***/ ((__unused_webpack_module, exports) => {
+
+// ---------------------------------------------------
+// perms (Permission Keys)
+// ---------------------------------------------------
+
+const _perms = function () {}
+
+_perms.prototype.getPO = function (pos, key) {
+  let po = pos[key]
+
+  if (po) {
+    return po
+  }
+
+  return this.getPermObject(key + ':')
+}
+
+_perms.prototype.getPermObjectFromPermkeys = function (permkeys) {
+  const pos = {}
+  const self = this
+
+  if (Array.isArray(permkeys)) {
+    permkeys.forEach(function (permkey) {
+      let po = self.getPermObject(permkey)
+      if (po.key) {
+        pos[po.key] = po
+      }
+    })
+  } else if (zzb.types.isObject(permkeys)) {
+    for (const key in permkeys) {
+      let perm = permkeys[key]
+      // _.forOwn(permkeys, function (perm, key) {
+      if (!perm) {
+        perm = ''
+      }
+      let po = null
+      if (perm.indexOf(':') < 0) {
+        po = self.getPermObject(key + ':' + perm)
+      } else {
+        po = self.getPermObject(perm)
+      }
+      if (po && po.key) {
+        pos[po.key] = po
+      }
+    }
+  }
+
+  return pos
+}
+
+_perms.prototype.mergePermkey = function (permkey, merge) {
+  if (!merge || !zzb.types.isStringNotEmpty(merge)) {
+    return permkey
+  }
+
+  if (!permkey || !zzb.types.isStringNotEmpty(permkey)) {
+    return merge
+  }
+
+  let split = null
+  let po = {}
+  let mo = {}
+
+  if (permkey.indexOf(':') <= 0) {
+    po.key = permkey.trim()
+    po.perm = ''
+  } else {
+    split = permkey.split(':')
+    po.key = split[0].trim()
+    po.perm = split[1].trim().toUpperCase()
+  }
+
+  if (merge.indexOf(':') <= 0) {
+    mo.key = merge.trim().toUpperCase()
+    mo.perm = ''
+  } else {
+    split = merge.split(':')
+    mo.key = split[0].trim()
+    mo.perm = split[1].trim().toUpperCase()
+  }
+
+  if (po.key !== mo.key || po.perm === mo.perm || mo.perm.length === 0) {
+    return permkey
+  } else if (po.key.length === 0) {
+    return merge
+  }
+
+  for (let mm = 0; mm < mo.perm.length; mm++) {
+    if (po.perm.indexOf(mo.perm[mm]) < 0) {
+      po.perm += mo.perm[mm]
+    }
+  }
+
+  return po.key + ':' + po.perm
+}
+
+_perms.prototype.getPermObject = function (permkey, available, merge) {
+  let po = { key: null, perm: null, attr: {}, toPermkey: function () { return this.key + ':' + this.perm } }
+
+  if (merge || zzb.types.isStringNotEmpty(merge)) {
+    permkey = this.mergePermkey(permkey, merge)
+  }
+
+  if (!permkey || !zzb.types.isStringNotEmpty(permkey)) {
+    po.attr = this.getPermAttributes()
+    return po
+  }
+
+  if (permkey.indexOf(':') <= 0) {
+    po.key = permkey
+    po.perm = ''
+    po.attr = this.getPermAttributes()
+    return po
+  }
+
+  let split = permkey.split(':')
+  po.key = split[0]
+  po.perm = split[1]
+
+  po.perm = po.perm.trim().toUpperCase()
+
+  if (po.perm.length > 0) {
+    // remove any permissions from the default that are not available
+    if (available && zzb.types.isStringNotEmpty(available)) {
+      available = available.trim().toUpperCase()
+      for (let mm = po.perm.length - 1; mm >= 0; mm--) {
+        if (available.indexOf(po.perm[mm]) < 0) {
+          po.perm = po.perm.replace(po.perm[mm], '')
+        }
+      }
+    }
+  }
+
+  po.attr = this.getPermAttributes(po.toPermkey(), available)
+
+  return po
+}
+
+const reCRUDXL = new RegExp('^[CRUDXL]*$')
+
+_perms.prototype.getPermAttributes = function (permkey) {
+  // CRUDX
+  let attr = { canRead: false, canCreate: false, canUpdate: false, canDelete: false, canExecute: false, canList: false }
+
+  if (!permkey || !zzb.types.isStringNotEmpty(permkey)) {
+    return attr
+  }
+
+  if (permkey.indexOf(':') >= 0) {
+    permkey = permkey.split(':')[1]
+  }
+
+  permkey = permkey.trim().toUpperCase()
+
+  if (permkey.length === 0) {
+    return attr
+  }
+
+  if (!reCRUDXL.test(permkey)) {
+    return attr
+  }
+
+  attr.canRead = permkey.indexOf('C') >= 0
+  attr.canCreate = permkey.indexOf('R') >= 0
+  attr.canUpdate = permkey.indexOf('U') >= 0
+  attr.canDelete = permkey.indexOf('D') >= 0
+  attr.canExecute = permkey.indexOf('X') >= 0
+  attr.canList = permkey.indexOf('L') >= 0
+
+  return attr
+}
+
+_perms.prototype.hasMatch = function (permkey, target) {
+  if (!permkey || !target) {
+    return false
+  }
+
+  let po = permkey
+  if (zzb.types.isStringNotEmpty(permkey)) {
+    po = this.getPermObject(permkey)
+  }
+
+  if (!zzb.types.isObject(po) || !po.key || !po.perm || po.perm.length === 0) {
+    return false
+  }
+
+  let tp = null
+  if (zzb.types.isStringNotEmpty(target)) {
+    tp = this.getPermObject(target)
+  } else if (Array.isArray(target)) {
+    const self = this
+    target.forEach(function (item) {
+      if (zzb.types.isStringNotEmpty(item)) {
+        item = self.getPermObject(item)
+      }
+      if (item.key === po.key) {
+        tp = item
+        return false
+      }
+    })
+  } else {
+    if (!zzb.types.isObject(target)) {
+      return false
+    }
+    if (target.key) {
+      tp = target
+    } else {
+      if (!target[po.key]) {
+        return false
+      } else {
+        if (zzb.types.isStringNotEmpty(target[po.key])) {
+          tp = this.getPermObject(po.key + ':' + target[po.key])
+        } else {
+          tp = target[po.key]
+        }
+      }
+    }
+  }
+
+  if (!tp || !tp.key || !tp.perm || !tp.perm.length === 0) {
+    return false
+  }
+
+  for (let ii = 0; ii < tp.perm.length; ii++) {
+    if (po.perm.indexOf(tp.perm[ii]) >= 0) {
+      return true
+    }
+  }
+
+  return false
+}
+
+exports.k = _perms
+
+
+/***/ }),
+
+/***/ 628:
+/***/ ((__unused_webpack_module, exports) => {
+
+// ---------------------------------------------------
+// rob (Return Object)
+// ---------------------------------------------------
+
+const _rob = function () {}
+
+_rob.prototype.newROB = function (options) {
+  return zzb.types.merge({
+    message: null,
+    messageType: null,
+    errs: null,
+    recs: [],
+    columns: [],
+    paginate: {
+      page: 0,
+      limit: 0,
+      count: 0
+    },
+    hasErrors: function () {
+      return (this.errs && Array.isArray(this.errs) && this.errs.length > 0)
+    },
+    hasColumns: function () {
+      return (this.columns && Array.isArray(this.columns) && this.columns.length > 0)
+    },
+    hasRecords: function () {
+      return (this.recs && Array.isArray(this.recs) && this.recs.length > 0)
+    },
+    isEmpty: function () {
+      return !this.hasRecords() || (this.hasRecords() && this.first() === null)
+    },
+    first: function () {
+      return (this.recs && Array.isArray(this.recs) && this.recs.length > 0 ? this.recs[0] : null)
+    },
+    find: function (key, value) {
+      let hit = null
+      this.recs.forEach(function (rec) {
+        if (rec && zzb.types.isObject(rec) && !Array.isArray(rec) && rec[key] === value) {
+          hit = rec
+          return false
+        }
+      })
+      return hit
+    },
+    length: function () {
+      return (this.recs && Array.isArray(this.recs) ? this.recs.length : 0)
+    }
+  }, options)
+}
+
+// reduce the error array to an object
+_rob.prototype.toObject = function (errs) {
+  if (!errs || !Array.isArray(errs)) {
+    return { _system: [errs] }
+  }
+  let eo = {}
+  errs.forEach(function (err) {
+    if (err) {
+      if (!err.field) {
+        err.field = '_system'
+      }
+      if (!eo[err.field]) {
+        eo[err.field] = []
+      }
+      eo[err.field].push(err)
+    }
+  })
+  return eo
+}
+
+// Originally we created ROBErrorType but...
+// (a) the stack is wrong when invoked by outside functions and (b) we wanted to control if the stack shows or not
+function mergeErrorDefaults (options) {
+  // '_system' is a reserved word
+  //   why not use null? b/c when converting from array to an object of errors by field, we need a valid string
+  // why we have isErr?
+  //   server-side supports logger { emerg: 0, alert: 1, crit: 2, error: 3, warning: 4, notice: 5, info: 6, debug: 7 }
+  //   of which numbers 0 to 3 are errors and > 4 are not
+  options = zzb.types.merge({ type: 'error', message: null, field: '_system', stack: null, isErr: true, title: null }, options)
+
+  if (options.isErr) {
+    if (options.type === 'warn') {
+      options.type = 'warning'
+    } else if (options.type === 'err') {
+      options.type = 'error'
+    } else if (options.type === 'crit') {
+      options.type = 'critical'
+    } else if (options.type === 'emerg') {
+      options.type = 'emergency'
+    }
+    // no "else" statement to default to a value (eg "error")
+    // this keeps the the available types loosely open
+    switch (options.type) {
+      case 'warning':
+      case 'notice':
+      case 'info':
+      case 'debug':
+        options.isErr = false
+        break
+      default:
+        options.isErr = true
+        break
+    }
+  }
+
+  return options
+}
+
+// Creates a single ROB error object from an object (eg existing error) or from a string
+// options1 could be a string or object, whereas options2 expects an object
+const createError = function (options1, options2) {
+  if (!options1) {
+    return mergeErrorDefaults()
+  }
+  if (zzb.types.isStringNotEmpty(options1)) {
+    return mergeErrorDefaults(zzb.types.merge({ message: options1 }, options2))
+  } else if (!Array.isArray(options1) && zzb.types.isObject(options1)) {
+    return mergeErrorDefaults(options1)
+  }
+
+  throw new Error('bad input in createError - unrecognized err datatype')
+}
+
+_rob.prototype.createError = createError
+
+// Sanitizes ROB error(s), which could be in the format of a string, array or object
+// Returns null or an array of errors
+_rob.prototype.sanitizeErrors = function (errs) {
+  let newErrs = null
+  if (!errs) {
+    return newErrs
+  }
+
+  if (!Array.isArray(errs)) {
+    newErrs = [createError(errs)]
+  } else if (errs.length > 0) {
+    newErrs = []
+    errs.forEach(function (err) {
+      newErrs.push(createError(err))
+    })
+  }
+
+  return newErrs
+}
+
+// always returns an array, even if null
+_rob.prototype.sanitizeRecords = function (recs) {
+  if (!recs) {
+    return []
+  }
+  if (!Array.isArray(recs)) {
+    return [recs]
+  }
+  return recs
+}
+
+_rob.prototype.toListErrs = function (errs) {
+  return zzb.rob.toList(errs)
+}
+
+_rob.prototype.toList = function (items) {
+  let arrFields = []
+  let arrSystem = []
+
+  let arrSystemMessages = []
+  let arrFieldMessages = []
+
+  if (items && Array.isArray(items) && items.length > 0) {
+    items.forEach(function (item) {
+      if (item.isErr === true) {
+        if (item.system === '_system') {
+          arrSystem.push(item)
+        } else if (zzb.types.isStringNotEmpty(item.field)) {
+          if (item.field === '_system') {
+            arrSystem.push(item)
+          } else {
+            arrFields.push(item)
+          }
+        } else {
+          arrSystem.push(item)
+        }
+      } else {
+        if (item.system === '_system') {
+          arrSystemMessages.push(item)
+        } else if (zzb.types.isStringNotEmpty(item.field)) {
+          if (item.field === '_system') {
+            arrSystemMessages.push(item)
+          } else {
+            arrFieldMessages.push(item)
+          }
+        } else {
+          arrSystemMessages.push(item)
+        }
+      }
+    })
+  }
+
+  return {
+    system: arrSystem,
+    fields: arrFields,
+
+    systemMessages: arrSystemMessages,
+    fieldMessages: arrFieldMessages,
+
+    hasErrors: function () {
+      return (this.hasSystemErrors() || this.hasFieldErrors())
+    },
+    hasSystemErrors: function () {
+      return (this.system && this.system.length > 0)
+    },
+    hasFieldErrors: function () {
+      return (this.fields && this.fields.length > 0)
+    },
+    combinedErrors: function () {
+      return this.system.concat(this.fields)
+    },
+    hasMessages: function () {
+      return (this.hasSystemMessages() || this.hasFieldMessages())
+    },
+    hasSystemMessages: function () {
+      return (this.systemMessages && this.systemMessages.length > 0)
+    },
+    hasFieldMessages: function () {
+      return (this.fieldMessages && this.fieldMessages.length > 0)
+    },
+    combinedMessages: function () {
+      return this.systemMessages.concat(this.fieldMessages)
+    },
+    getByFieldName: function (isMessages, name) {
+      if (name === '_system') {
+        return (isMessages) ? this.systemMessages : this.system
+      }
+      let arr = []
+      if (!name) {
+        return arr
+      }
+      let iterate = (isMessages) ? this.fieldMessages : this.fields
+      iterate.forEach(function(item) {
+        if (item.field === name) {
+          item.isMessage = isMessages
+          arr.push(item)
+        }
+      })
+      return arr
+    },
+    getErrsByName: function (name) {
+      return this.getByFieldName(false, name)
+    },
+    getMessagesByName: function (name) {
+      return this.getByFieldName(true, name)
+    },
+    getAnyByName: function (name) {
+      let arrE = this.getErrsByName(name)
+      let arrM = this.getMessagesByName(name)
+      return arrE.concat(arrM)
+    },
+  }
+}
+
+_rob.prototype.renderListErrs = function (options) {
+  return zzb.rob.renderList(options)
+}
+
+_rob.prototype.renderList = function (options) {
+  options = zzb.types.merge({ targets: [], format: 'text', defaultTitle: '', template: null, htmlWrapList: '<ul class="zzb-rob-{0}">{1}</ul>'}, options)
+  let arr = []
+  // backwards-compatible
+  if (options.errs && zzb.types.isArrayHasRecords(options.errs)) {
+    options.targets = options.errs
+  }
+  if (zzb.types.isArrayHasRecords(options.targets)) {
+    let isMulti = (options.targets.length > 1)
+    options.targets.forEach(function (target) {
+      let title = ''
+      if (zzb.types.isStringNotEmpty(options.defaultTitle)) {
+        title = options.defaultTitle
+      } else if (zzb.types.isStringNotEmpty(target.field)) {
+        title = target.field
+      }
+
+      if (options.template) {
+        arr.push(zzb.strings.format(options.template, title, target.message))
+      } else {
+        if (!target.type) {
+          target.type = (target.isMessage) ? 'message' : 'unknown'
+        }
+        if (isMulti) {
+
+        }
+        if (!isMulti && options.format === 'html') {
+          arr.push(zzb.strings.format('<div class="zzb-rob-list-item-{0}">{1}</div>', target.type, target.message))
+        } else if (options.format === 'html' || options.format === 'html-list') {
+          arr.push(zzb.strings.format('<li class="zzb-rob-list-item-{0}">{1}</li>', target.type, target.message))
+        } else if (options.format === 'html-list-label') {
+          arr.push(zzb.strings.format('<li class="zzb-rob-list-item-{0}"><span>{1}:</span> {2}</li>', target.type, title, target.message))
+        } else if (options.format === 'label') {
+          arr.push(zzb.strings.format('{0}: {1}', title, target.message))
+        } else if (options.format === 'text-punctuated') {
+          arr.push(zzb.strings.toFirstCapitalEndPeriod(target.message) + ' ')
+        } else { // text
+          arr.push(zzb.strings.format(target.message))
+        }
+      }
+    })
+    let doHtmlWrap = ((isMulti && options.format === 'html') || options.format === 'html-list' || options.format === 'html-list-label')
+    if (doHtmlWrap && options.htmlWrapList) {
+      return zzb.strings.format(options.htmlWrapList, options.format, arr.join(''))
+    }
+  }
+
+  return arr.join('')
+}
+
+exports.I = _rob
+
+
+/***/ }),
+
+/***/ 636:
+/***/ ((__unused_webpack_module, exports) => {
+
+// ---------------------------------------------------
+// dom
+// ---------------------------------------------------
+
+function _dom () {}
+
+/**
+ * Checks if the current device supports hover interactions (e.g., mouse).
+ *
+ * @returns {boolean} - True if hover is supported; false otherwise.
+ */
+_dom.prototype.hasUIHover = function () {
+  return (!window.matchMedia("(hover: none)").matches)
+}
+
+/**
+ * Determines if a DOM element reference exists.
+ *
+ * @param {Element|null|undefined} $elem - The DOM element or reference.
+ * @returns {boolean} - True if the element exists; false otherwise.
+ */
+_dom.prototype.hasElement = function ($elem) {
+  return !!$elem
+}
+
+/**
+ * Sets an attribute on a DOM element or a list of DOM elements.
+ *
+ * @param {Element|Element[]} $elem - A single DOM element or an array of elements.
+ * @param {string} key - The attribute name to set.
+ * @param {string} value - The attribute value to assign.
+ */
+_dom.prototype.setAttribute = function ($elem, key, value) {
+  if ($elem) {
+    if (zzb.types.isObject($elem)) {
+      $elem.setAttribute(key, value)
+    } else if (zzb.types.isArray($elem)) {
+      $elem.forEach(function($e) {
+        $e.setAttribute(key, value)
+      })
+    }
+  }
+}
+
+/**
+ * Retrieves an attribute from a DOM element, returning a fallback if not found or empty.
+ *
+ * @param {Element|null} $elem - The DOM element.
+ * @param {string} name - The attribute name to retrieve.
+ * @param {*} elseValue - The fallback value to return if the attribute is missing or empty.
+ * @returns {*} - The attribute value or the fallback.
+ */
+_dom.prototype.getAttributeElse = function ($elem, name, elseValue) {
+  if (elseValue === undefined || elseValue === null) {
+    elseValue = null
+  }
+  if (!$elem) {
+    return elseValue
+  }
+  let value = $elem.getAttribute(name)
+  if (zzb.types.isStringNotEmpty(value)) {
+    return value
+  }
+  return elseValue
+}
+
+/**
+ * Extracts all attributes from a DOM element matching a regex, optionally converting names to camelCase.
+ *
+ * @param {Element} $elem - The DOM element.
+ * @param {RegExp} regex - A regular expression to filter attributes (e.g., /^data-/).
+ * @param {number} [camelCaseStrip=-1] - If > 0, strips the prefix and converts the rest to camelCase.
+ * @returns {Object} - A key-value map of matched attributes.
+ */
+_dom.prototype.getAttributes = function ($elem, regex, camelCaseStrip) {
+  if (!$elem || !regex) {
+    return {}
+  }
+  if (!zzb.types.isNumber(camelCaseStrip)) {
+    camelCaseStrip = -1
+  }
+  let data = {};
+  [].forEach.call($elem.attributes, function(attr) {
+    if (regex.test(attr.name)) {
+      if (camelCaseStrip <= 0) {
+        data[attr.name] = attr.value
+      } else {
+        let camelCaseName = attr.name.substr(camelCaseStrip).replace(/-(.)/g, function ($0, $1) {
+          return $1.toUpperCase()
+        })
+        data[camelCaseName] = attr.value
+      }
+    }
+  })
+  return data
+}
+
+
+/**
+ * Sets a deeply nested value in an object based on a dot-notated path.
+ * Supports array notation like `foo[0].bar`.
+ *
+ * Examples:
+ *   setPath(obj, 'user.name', 'Alice')
+ *   setPath(obj, 'items[0].title', 'Item 1')
+ *
+ * @param {Object} obj - The object to update.
+ * @param {string} path - Dot-notated path (supports array syntax).
+ * @param {*} value - The value to assign at the target path.
+ */
+_dom.prototype.setPath = function(obj, path, value) {
+  let current = obj;
+  const pathParts = zzb.types.toString(path).split(".");
+
+  for (let i = 0; i < pathParts.length; i++) {
+    const part = pathParts[i];
+    const arrayMatch = part.match(/^(\w+)\[(\d*)\]$/);
+
+    let key = part;
+    let isArray = false;
+    let arrayIndex = 0;
+
+    if (arrayMatch) {
+      isArray = true;
+      key = arrayMatch[1];
+      arrayIndex = arrayMatch[2] === "" ? null : parseInt(arrayMatch[2], 10);
+    }
+
+    if (i === pathParts.length - 1) {
+      if (isArray) {
+        if (!zzb.types.isArray(current[key])) current[key] = [];
+        if (arrayIndex !== null) {
+          while (current[key].length <= arrayIndex) {
+            current[key].push(null);
+          }
+          current[key][arrayIndex] = value;
+        } else {
+          current[key] = value;
+        }
+      } else {
+        current[key] = value;
+      }
+    } else {
+      if (isArray) {
+        if (!zzb.types.isArray(current[key])) current[key] = [];
+        if (!zzb.types.isObject(current[key][0])) current[key][0] = {};
+        current = current[key][0];
+      } else {
+        if (!zzb.types.isObject(current[key])) current[key] = {};
+        current = current[key];
+      }
+    }
+  }
+}
+
+/**
+ * Converts a form element's input into a deeply nested JSON object.
+ * Uses zf-* attributes to determine types, arrays, and nullability.
+ *
+ * - Supports nested paths like `user.name`
+ * - Handles custom types via `zf-type` (e.g., "int", "[]bool|null")
+ * - Reads value overrides from `zf-cval`
+ *
+ * @param {HTMLFormElement} formElem - The form element to serialize.
+ * @returns {Object} - A deeply nested JSON object.
+ */
+_dom.prototype.formDataToJson = function(formElem) {
+  const data = new FormData(formElem);
+  const raw = {};
+  const nested = {};
+
+  for (let [key, value] of data) {
+    if (raw[key] !== undefined) {
+      if (!zzb.types.isArray(raw[key])) {
+        raw[key] = [raw[key]];
+      }
+      raw[key].push(value);
+    } else {
+      raw[key] = value;
+    }
+  }
+
+  for (const key in raw) {
+    const field = formElem.querySelector(`[name="${key}"]`);
+    let value = raw[key];
+    let typeHint = 'string';
+    let forceArray = false;
+    let isNullable = false;
+
+    if (field) {
+      const zfCVal = field.getAttribute("zf-cval");
+      if (zfCVal !== null) {
+        value = zfCVal;
+      }
+
+      let zfType = field.getAttribute("zf-type") || "string";
+
+      // Handle array type indicator (e.g. "[]int")
+      if (zfType.startsWith("[]")) {
+        forceArray = true;
+        zfType = zfType.slice(2);
+      }
+
+      const typeParts = zfType.split("|").map(t => zzb.types.normalizeType(t));
+      typeHint = typeParts[0];
+      isNullable = typeParts.includes("null");
+
+      const fallback = typeHint === 'integer' || typeHint === 'float'
+        ? 0
+        : typeHint === 'boolean'
+          ? false
+          : '';
+
+      const isEmpty = value === '' || value === null || typeof value === 'undefined';
+
+      if (isEmpty && isNullable) {
+        value = null;
+      } else if (zzb.types.isArray(value)) {
+        value = value.map(v => zzb.strings.parseTypeElse(v, typeHint, fallback, false));
+      } else {
+        value = zzb.strings.parseTypeElse(value, typeHint, fallback, false);
+      }
+    } else {
+      value = value === '' ? '' : value;
+    }
+
+    if (forceArray && !zzb.types.isArray(value)) {
+      value = [value];
+    }
+
+    zzb.dom.setPath(nested, key, value);
+  }
+
+  return nested;
+}
+
+/**
+ * Parses a selector bundle and resolves DOM targets relative to a base element.
+ *
+ * Supports:
+ * - self:              returns the element itself
+ * - none:              returns string 'none'
+ * - selector:#id       uses document.querySelector
+ * - closest:.class     uses $elem.closest
+ * - child:.child       uses $elem.querySelector
+ * - Supports optional label and placement: `label.selector@placement:target`
+ *
+ * Examples:
+ *   findSelectorTargets(elem, 'self')
+ *     → [ { label: 'self', $elem: elem } ]
+ *
+ *   findSelectorTargets(elem, 'none')
+ *     → 'none'
+ *
+ *   findSelectorTargets(elem, 'selector:#modal')
+ *     → [ { label: null, $elem: document.querySelector('#modal'), placement: 'inner' } ]
+ *
+ *   findSelectorTargets(elem, 'closest:.container')
+ *     → [ { label: null, $elem: elem.closest('.container'), placement: 'inner' } ]
+ *
+ *   findSelectorTargets(elem, 'child:.inner-content')
+ *     → [ { label: null, $elem: elem.querySelector('.inner-content'), placement: 'inner' } ]
+ *
+ *   findSelectorTargets(elem, 'alert.closest@outer:.alert-box')
+ *     → [ { label: 'alert', $elem: elem.closest('.alert-box'), placement: 'outer' } ]
+ *
+ *   findSelectorTargets(elem, 'self, selector:#target, notice.child@inner:.message')
+ *     → [ { label: 'self', $elem: elem }, { $elem: document.querySelector('#target'), ... }, { label: 'notice', $elem: ..., placement: 'inner' } ]
+ *
+ * @param {Element} $elem - The base DOM element.
+ * @param {string} bundle - Comma-separated list of selector expressions.
+ * @returns {Array|String|null} - Array of resolved targets, 'none', or null on failure.
+ */
+_dom.prototype.findSelectorTargets = function ($elem, bundle) {
+  if (!$elem || !zzb.types.isStringNotEmpty(bundle)) {
+    return null
+  }
+
+  const result = []
+  const targetStrings = bundle.split(',')
+
+  for (let entry of targetStrings) {
+    entry = entry.trim()
+
+    if (entry === 'self' || entry === 'self:') {
+      result.push({ label: 'self', $elem })
+      continue
+    }
+
+    if (entry === 'none' || entry === 'none:') {
+      return 'none'
+    }
+
+    const colonIndex = entry.indexOf(':')
+    if (colonIndex === -1) continue
+
+    const left = entry.slice(0, colonIndex)
+    const right = entry.slice(colonIndex + 1)
+    if (!zzb.types.isStringNotEmpty(right)) return null
+
+    let label = null
+    let method = left
+    let placement = 'inner'
+
+    // Parse label.method@placement
+    const dotIndex = method.indexOf('.')
+    if (dotIndex > 0) {
+      label = method.slice(0, dotIndex)
+      method = method.slice(dotIndex + 1)
+    }
+
+    const atIndex = method.indexOf('@')
+    if (atIndex > 0) {
+      placement = method.slice(atIndex + 1)
+      method = method.slice(0, atIndex)
+    }
+
+    let $target = null
+    switch (method) {
+      case 'selector':
+      case 's':
+        $target = document.querySelector(right)
+        break
+      case 'closest':
+      case 'c':
+        $target = $elem.closest(right)
+        break
+      case 'child':
+      case 'h':
+        $target = $elem.querySelector(right)
+        break
+      default:
+        console.warn('Unknown selector method:', method)
+        break
+    }
+
+    if (!(placement === 'inner' || placement === 'outer')) {
+      console.warn('Unknown placement param; defaulting to "inner":', placement)
+      placement = 'inner'
+    }
+
+    if ($target) {
+      result.push({ label, $elem: $target, placement })
+    }
+  }
+
+  return result
+}
+
+/**
+ * Attempts to extract a URL-like value from an element by checking a prioritized list of attributes.
+ * Falls back in order: zurl → href → action → src (if not an <img>).
+ *
+ * @param {Element} $elem - The DOM element to inspect.
+ * @param {boolean} [returnNull=false] - If true, returns null instead of an empty string on failure.
+ * @returns {string|null} - The found URL string or fallback value.
+ */
+_dom.prototype.findZUrl = function ($elem, returnNull) {
+  if (!$elem || typeof $elem.getAttribute !== 'function') { returnNull ? null : '' }
+
+  const tag = $elem.nodeName?.toLowerCase()
+  const tryAttrs = ['zurl', 'href', 'action']
+
+  // Only check 'src' if the element is not an image
+  if (tag !== 'img') {
+    tryAttrs.push('src')
+  }
+
+  for (const attr of tryAttrs) {
+    const val = $elem.getAttribute(attr)
+    if (zzb.types.isStringNotEmpty(val) && val !== '#') {
+      return val
+    }
+  }
+
+  return returnNull ? null : ''
+}
+
+/**
+ * Unified in-memory and persistent (localStorage) cache utility for DOM-centric use cases.
+ *
+ * Provides a simple interface to:
+ * - Get/set temporary cache in memory (`mode: 'mem'`)
+ * - Persist small configuration/state values using `localStorage` (`mode: 'persist'`)
+ *
+ * Options:
+ * - `mode`: 'mem' (default) or 'persist'
+ * - `rootKey`: Used as the localStorage key root (default: 'zuiC')
+ *
+ * Example:
+ *   _dom.cache.set('myKey', 'value')                        // memory
+ *   _dom.cache.set('theme', 'dark', { mode: 'persist' })    // localStorage
+ *   _dom.cache.get('theme', { mode: 'persist' })            // 'dark'
+ */
+const _memCache = {};
+
+_dom.prototype.cache = {
+  /**
+   * Retrieves a cached value by key.
+   * @param {string} key - Cache key to retrieve.
+   * @param {Object} [options] - Options: { mode: 'mem' | 'persist', rootKey?: string }
+   * @returns {*} - The cached value or null.
+   */
+  get(key, { mode = 'mem', rootKey = 'zuiC' } = {}) {
+    if (!key) return null;
+
+    if (mode === 'persist') {
+      try {
+        const store = JSON.parse(localStorage.getItem(rootKey) || '{}');
+        return store[key] ?? null;
+      } catch (e) {
+        console.warn('ZUI persistent cache read error:', e);
+        return null;
+      }
+    }
+
+    return _memCache[key] ?? null;
+  },
+
+  /**
+   * Stores a value in cache.
+   * @param {string} key - Key to store under.
+   * @param {*} value - Value to store.
+   * @param {Object} [options] - Options: { mode: 'mem' | 'persist', rootKey?: string }
+   */
+  set(key, value, { mode = 'mem', rootKey = 'zuiC' } = {}) {
+    if (!key) return;
+
+    if (mode === 'persist') {
+      try {
+        const store = JSON.parse(localStorage.getItem(rootKey) || '{}');
+        store[key] = value;
+        localStorage.setItem(rootKey, JSON.stringify(store));
+      } catch (e) {
+        console.warn('ZUI persistent cache write error:', e);
+      }
+    } else {
+      _memCache[key] = value;
+    }
+  },
+
+  /**
+   * Clears a key or all cache depending on mode.
+   * @param {Object} [options] - { key?: string, mode?: 'mem' | 'persist', rootKey?: string }
+   */
+  clear({ key = null, mode = 'mem', rootKey = 'zuiC' } = {}) {
+    if (mode === 'persist') {
+      if (key) {
+        try {
+          const store = JSON.parse(localStorage.getItem(rootKey) || '{}');
+          delete store[key];
+          localStorage.setItem(rootKey, JSON.stringify(store));
+        } catch (e) {
+          console.warn('ZUI persistent cache clear error:', e);
+        }
+      } else {
+        localStorage.removeItem(rootKey);
+      }
+    } else {
+      if (key) {
+        delete _memCache[key];
+      } else {
+        for (const k in _memCache) {
+          delete _memCache[k];
+        }
+      }
+    }
+  }
+};
+
+exports.t = _dom
 
 
 /***/ }),
@@ -4777,6 +5379,299 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_RESULT__;(function (glo
 
   return new _zzb()
 }))
+
+
+/***/ }),
+
+/***/ 964:
+/***/ ((__unused_webpack_module, exports) => {
+
+// ---------------------------------------------------
+// _ajax
+// ---------------------------------------------------
+
+function _ajax () {}
+
+_ajax.prototype.ajax = function (options) {
+  return this.request(options, options.callback)
+}
+
+_ajax.prototype.request = function(options, callback) {
+  if (!zzb.types.isFunction(callback)) {
+    callback = function(){} // no-op
+  }
+  options = zzb.types.merge({url: null, method:'GET', body: null, expectType:'text', headers:{},
+                RAWRETURN: false, SKIPREDIRECT: false, SKIPFLASH: false, SHOWCATCHMESSAGE: false, NOCATCHLOG: false, NOCATCHFLASH: false, CATCHFLASHMESSAGE: '' }, options)
+  if (!zzb.types.isStringNotEmpty(options.url)) {
+    return callback(null, new Error('No url defined to fetch request.'))
+  }
+  if (!zzb.types.isStringNotEmpty(options.method)) {
+    return callback(null, new Error('No url method defined to fetch request.'))
+  }
+  fetch(options.url, {
+    method: options.method,
+    body: options.body,
+    headers: options.headers
+  })
+    .then(function (response) {
+      if (!response.ok) {
+        throw new Error('Remote service returned unexpected status ' + response.status + '.')
+      } else {
+        switch (options.expectType) {
+          case 'json':
+            return response.json()
+          case 'text':
+            return response.text()
+          case 'blob':
+            return response.blob()
+          default:
+            throw new Error('Unknown content received from remote service.')
+        }
+      }
+    })
+    .then(function (data) {
+
+      const objReturn = { request: options, data: data }
+
+      // allow an escape
+      if (objReturn.request.RAWRETURN === true) {
+        return callback(objReturn, null)
+      }
+
+      let noFinalResolve = false
+      const rob = zzb.rob.newROB()
+
+      if (objReturn.request.expectType !== 'json') {
+        // html or some other data type was returned
+        rob.recs = [objReturn.data]
+      } else {
+        // handle redirect
+        if (objReturn.request.SKIPREDIRECT !== true) {
+          if (zzb.types.isStringNotEmpty(data.redirect)) {
+            if (zzb.types.isFunction(objReturn.request.onRedirect)) {
+              objReturn.request.onRedirect(data, function (skipRedirect) {
+                if (!skipRedirect) {
+                  window.location.href = data.redirect
+                }
+              })
+              return
+            } else if (zzb.types.isStringNotEmpty(data.message)) {
+              zzb.dialogs.showMessage({
+                type: zzb.types.isStringNotEmpty(data.messageType) ? data.messageType : null,
+                classDialog: 'zzb-dialog-flash-message zzb-dialog-flash-redirect' + zzb.strings.formatElseEmpty(' zzb-dialog-flash-status-{0}', data.messageType),
+                dataBackdrop: 'static',
+                title: zzb.types.isStringNotEmpty(data.messageTitle) ? data.messageTitle : '',
+                body: data.message,
+                onHide: function (ev) {
+                  window.location.href = data.redirect
+                }
+              })
+            } else {
+              window.location.href = data.redirect
+            }
+            return
+          }
+        }
+
+        // Errors are ALWAYS an ARRAY and in an expected ROB Error format
+        // format:  [ {field: null, message: null, trace: null}]
+        // server-side can instruct this function to ignore sanitizing by inspecting ISROBERRORS
+        if (!data.ISROBERRORS) {
+          if (data.err) {
+            // an err should always be package as an array
+            // this is b/c form submissions could reply with multiple errors for different fields
+            data.errs = zzb.rob.sanitizeErrors(data.err)
+            data.err = null
+          } else if (data.error) {
+            data.errs = zzb.rob.sanitizeErrors(data.error)
+            data.err = null
+          } else if (data.errs) {
+            data.errs = zzb.rob.sanitizeErrors(data.errs)
+            data.err = null
+          }
+        }
+
+        // Records are ALWAYS an array
+        let tmpRecs = data.recs
+        if (!data.ISROBRECS) {
+          if (data.recs) {
+            tmpRecs = zzb.rob.sanitizeRecords(data.recs)
+          } else if (data.rec) {
+            tmpRecs = zzb.rob.sanitizeRecords(data.rec)
+            data.rec = null
+          } else if (!Array.isArray(data.errs) || data.errs.length === 0) {
+            // pass in self
+            tmpRecs = zzb.rob.sanitizeRecords(data)
+          }
+        }
+
+        // Obsolete? Depends on the paginate paradigm to be useful.
+        if (data.paginate) {
+          rob.paginate = data.paginate
+        }
+
+        rob.errs = data.errs
+        rob.recs = tmpRecs
+        tmpRecs = null
+        rob.columns = data.columns
+
+        rob.listErrs = zzb.rob.toList(rob.errs)
+
+        if (options.SKIPFLASH !== true) {
+          if (zzb.types.isStringNotEmpty(data.message)) {
+            noFinalResolve = true
+            zzb.dialogs.showMessage({
+              type: zzb.types.isStringNotEmpty(data.messageType) ? data.messageType : null,
+              classDialog: 'zzb-dialog-flash-message' + zzb.strings.formatElseEmpty(' zzb-dialog-flash-status-{0}', data.messageType, rob.hasErrors() ? 'error' : 'okay'),
+              dataBackdrop: 'static',
+              title: zzb.types.isStringNotEmpty(data.messageTitle) ? data.messageTitle : '',
+              body: data.message,
+              onHide: function (ev) {
+                objReturn.rob = rob
+                callback(objReturn, null);
+              }
+            })
+          }
+        }
+
+        // finish processing
+        if (zzb.types.isFunction(objReturn.request.onFinish)) {
+          noFinalResolve = true
+          objReturn.request.onFinish(rob, function (noResolve) {
+            if (noResolve === true) {
+              return
+            }
+            objReturn.rob = rob
+            callback(objReturn, null);
+          })
+        }
+      }
+
+      if (noFinalResolve === true) {
+        return
+      }
+
+      objReturn.rob = rob
+
+      try {
+        callback(objReturn, null);
+      } catch (err) {
+        // Unexpected handler error. Without it, ugliness javascript err message could be displayed.
+        // The admin needs to ask the user to open the debug console to look at the log.
+        console.log(AjaxMessage.APPEND_FAILED_HANDLER_UNEXPECTED, 'error:', err)
+        throw new Error(AjaxMessage.APPEND_FAILED_HANDLER_UNEXPECTED)
+      }
+    })
+    .catch(function (err) {
+
+      let errMessage = ''
+      if (err && zzb.types.isStringNotEmpty(err.message)) {
+        if (options.NOCATCHLOG !== true) {
+          // Prevent double-logging.
+          if (AjaxMessage.APPEND_FAILED_HANDLER_UNEXPECTED !== err.message) {
+            console.log(err.message)
+          }
+        }
+        if (options.SHOWCATCHMESSAGE !== true) {
+          errMessage = err.message
+        }
+      }
+
+      // UI Dialog to display the error
+      if (options.NOCATCHFLASH !== true) {
+        let divErr = ''
+        if (zzb.types.isStringNotEmpty(errMessage)) {
+          divErr = zzb.strings.format(' <span class="zzb-dialog-error-catch">{0}</span>', errMessage)
+        }
+        if (zzb.types.isStringNotEmpty(options.CATCHFLASHMESSAGE)) {
+          zzb.ajax.showMessageFailedAction({ message: options.CATCHFLASHMESSAGE + divErr })
+        } else {
+          zzb.ajax.showMessageFailedAction({ message: AjaxMessage.MSG_FAILED_REQUEST_UNEXPECTED + divErr })
+        }
+      }
+
+      callback(null, new Error(errMessage))
+    })
+}
+
+_ajax.prototype.get = function(options, callback) {
+  options.method = 'GET'
+  zzb.ajax.request(options, callback)
+}
+
+_ajax.prototype.post = function (options, callback) {
+  options.method = 'POST'
+  zzb.ajax.request(options, callback)
+}
+
+_ajax.prototype.getBLOB = function (options, callback) {
+  options.method = 'GET'
+  options.expectType = 'blob'
+  zzb.ajax.request(options, callback)
+}
+
+_ajax.prototype.getTEXT = function (options, callback) {
+  options.method = 'GET'
+  options.expectType = 'text'
+  zzb.ajax.request(options, callback)
+}
+
+_ajax.prototype.getJSON = function (options, callback) {
+  options.method = 'GET'
+  options.expectType = 'json'
+  zzb.ajax.request(options, callback)
+}
+
+// Sometimes a request is made for a html snippet but json is returned. The function will error if the dataType is
+// specified but in the wrong format. To have jquery "guess", then override expectType in this way: {expectType: 'text'}
+_ajax.prototype.postJSON = function (options, callback) {
+  options.method = 'POST'
+  if (!zzb.types.isStringNotEmpty(options.expectType)) {
+    options.expectType = 'json'
+  }
+  options.headers = {
+    'Content-Type': 'application/json'
+  }
+  if (!zzb.types.isStringNotEmpty(options.body)) {
+    options.body = JSON.stringify(options.body)
+  } else {
+    options.body = '{}'
+  }
+  zzb.ajax.request(options, callback)
+}
+
+_ajax.prototype.postFORM = function (options, callback) {
+  options.method = 'POST'
+  options.expectType = 'json'
+  zzb.ajax.request(options, callback)
+}
+
+const AjaxMessage = function (options) {}
+
+// Default message is AjaxMessage.MSG_FAILED_ACTION_UNEXPECTED
+// If options.SHOWCATCHMESSAGE is true, then the following is appended to it: + '<div class="zzb-dialog-error-catch">Error: ' + caught err.message + '</div>'
+// These can be overwritten with your own defaults.
+AjaxMessage.MSG_FAILED_REQUEST_UNEXPECTED = 'Communications with remote service failed unexpectedly.'
+AjaxMessage.APPEND_FAILED_HANDLER_UNEXPECTED = 'Report this to the remote service administrator.'
+
+_ajax.prototype.showMessageFailedAction = function (options) {
+  options = zzb.types.merge({ err: null, number: null, message: AjaxMessage.MSG_FAILED_ACTION_UNEXPECTED }, options)
+  if (zzb.types.isNumber(options.number)) {
+    options.number = ' (' + options.number + ')'
+  } else {
+    options.number = ''
+  }
+  if (options.err) {
+    console.log(options.err)
+  }
+  zzb.dialogs.showMessage({
+    classDialog: 'zzb-dialog-flash-message zzb-flash-invalid', // zzb-flash-valid
+    dataBackdrop: 'static',
+    body: options.message + options.number
+  })
+}
+
+exports.R = _ajax
 
 
 /***/ })
