@@ -825,22 +825,33 @@ function handleDialog(zaction, callback, results) {
         })
       }
 
-      // Filter DOM buttons in modal-footer: keep only those with valid triggers or defaultSafeTrigger
-      const defaultSafeTrigger = 'cancel'
-      if ($buttons && $buttons.length > 0) {
+      // Normalize footer button triggers to "ok" for zurl-confirm dialogs
+      if (zaction.getZEvent() === 'zurl-confirm') {
         $buttons.forEach($btn => {
-          const trig = $btn.getAttribute('ztrigger')?.toLowerCase()
-          if (!trig) {
-            console.warn('Button in footer is missing ztrigger, removing')
-            $btn.remove()
-            return
-          }
-          const isAllowed = (trig === defaultSafeTrigger) || validBodyTriggers.includes(trig)
-          if (!isAllowed) {
-            console.warn(`Removing modal-footer button with ztrigger="${trig}" – no matching .zaction`)
-            $btn.remove()
+          const trig = $btn.getAttribute('ztrigger')
+          if (trig && trig.toLowerCase() !== 'cancel') {
+            console.log(`Normalizing zurl-confirm button ztrigger "${trig}" → "ok"`)
+            $btn.setAttribute('ztrigger', 'ok')
           }
         })
+      } else {
+        // Filter DOM buttons in modal-footer: keep only those with valid triggers or defaultSafeTrigger
+        const defaultSafeTrigger = 'cancel'
+        if ($buttons && $buttons.length > 0) {
+          $buttons.forEach($btn => {
+            const trig = $btn.getAttribute('ztrigger')?.toLowerCase()
+            if (!trig) {
+              console.warn('Button in footer is missing ztrigger, removing')
+              $btn.remove()
+              return
+            }
+            const isAllowed = (trig === defaultSafeTrigger) || validBodyTriggers.includes(trig)
+            if (!isAllowed) {
+              console.warn(`Removing modal-footer button with ztrigger="${trig}" – no matching .zaction`)
+              $btn.remove()
+            }
+          })
+        }
       }
 
       zzb.dom.setAttribute($elem, '_zdinit', 'true')
