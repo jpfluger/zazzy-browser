@@ -330,6 +330,10 @@ class ZActionEvent {
     return zzb.types.isStringNotEmpty(this.getOptions()?.zurl);
   }
 
+  canRunZVal() {
+    return (this._options && this._options.$data && this._options.zaction && this._options.zaction.doZval === "true")
+  }
+
   runAJAX(options, callback) {
     this.getOptions();
     if (!options || !this._runAJAX) {
