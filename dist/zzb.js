@@ -1,4 +1,4 @@
-//! zzb.js v2.9.0 (https://github.com/jpfluger/zazzy-browser)
+//! zzb.js v2.9.1 (https://github.com/jpfluger/zazzy-browser)
 //! MIT License; Copyright 2017-2023 Jaret Pfluger
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({

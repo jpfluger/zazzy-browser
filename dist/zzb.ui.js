@@ -1,4 +1,4 @@
-//! zzb.ui.js v2.9.0 (https://github.com/jpfluger/zazzy-browser)
+//! zzb.ui.js v2.9.1 (https://github.com/jpfluger/zazzy-browser)
 //! MIT License; Copyright 2017-2023 Jaret Pfluger
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
@@ -898,6 +898,10 @@ class ZActionEvent {
     return zzb.types.isStringNotEmpty(this.getOptions()?.zurl);
   }
 
+  canRunZVal() {
+    return (this._options && this._options.$data && this._options.zaction && this._options.zaction.doZval === "true")
+  }
+
   runAJAX(options, callback) {
     this.getOptions();
     if (!options || !this._runAJAX) {
@@ -1297,110 +1301,184 @@ function findZTriggerDialog($elem, jsSvr) {
 }
 
 function handleDialog(zaction, callback, results) {
+  results = zzb.types.merge({
+    html: null,
+    js: {
+      title: null,
+      altTitle: null,
+      body: null,
+      type: null,
+      buttons: null,
+      noHeaderCloseButton: false,
+      focus: true,
+      keyboard: true
+    }
+  }, results || {})
+
   function handleActionResults(drr, err, $dialog) {
-    if (err) {
-      return
+    if (err) return
+
+    const opts = zaction.getOptions()
+    if (zzb.types.isStringNotEmpty(opts.zdlg.postSave)) {
+      fnPostSave(opts.zdlg.postSave)
+    } else if (opts.hasLoopType) {
+      runInjects(opts.arrInjects, drr.rob.first().dInjects)
     }
-    // console.log('ztrigger', drr, err)
-    if (zzb.types.isStringNotEmpty(zaction.getOptions().zdlg.postSave)) {
-      fnPostSave(zaction.getOptions().zdlg.postSave)
-      // let ss = zaction.getOptions().zdlg.postSave.split(':')
-      // if (ss.length === 2) {
-      //   let $target = document.querySelector(ss[1])
-      //   if ($target) {
-      //     if ($target.getAttribute('za1x2') !== 'true') {
-      //       $target.setAttribute('za1x2', 'true')
-      //       $target.addEventListener('za-post-action', function(ev){
-      //         zzb.zaction.actionHandler(ev, null, null)
-      //       })
-      //     }
-      //     //console.log('ztrigger', ev.detail, err, zaction)
-      //     let ev = new CustomEvent('za-post-action')
-      //     ev.zaExtraHandler = 'za-post-action'
-      //     $target.dispatchEvent(ev)
-      //   }
-      // }
-    } else if (zaction.getOptions().hasLoopType) {
-      runInjects(zaction.getOptions().arrInjects, drr.rob.first().dInjects)
-      // Old method is not an array
-      // zaction.getOptions().$inject.innerHTML = drr.rob.first().html
-      // zzb.zaction.addEventListeners('.zaction', null, zaction.getOptions().$inject)
-      // zzb.zaction.runZLoadActions(zaction.getOptions().$inject)
-    }
+
     if ($dialog) {
       $dialog.close()
     }
   }
 
-  results = zzb.types.merge({html: null, js: {title: null, altTitle: null, body: null, type: null, buttons: null, noHeaderCloseButton: false, focus: true, keyboard: true}}, (results) ? results : {})
+  function buildDialogButtons(dlgType) {
+    const baseButtons = [
+      zzb.dialogs.ZazzyDialog.getButtonDefaults({
+        type: zzb.dialogs.ZazzyDialog.TYPE_SECONDARY,
+        label: 'Cancel',
+        ztrigger: 'cancel',
+        action(dialog) { dialog.close() }
+      }),
+      zzb.dialogs.ZazzyDialog.getButtonDefaults({
+        type: zzb.dialogs.ZazzyDialog.TYPE_PRIMARY,
+        label: 'Ok',
+        ztrigger: 'ok',
+        action(dialog, ev) {
+          if (zaction.getZEvent() === 'zurl-confirm') {
+            zaction.runAJAX(zaction.buildAJAXOptions(), (drr, err) => {
+              handleActionResults(drr, err, dialog)
+            })
+          } else {
+            let objZT = findZTriggerDialog(this)
+            if (!objZT || !objZT.$trigger) {
+              dialog.close()
+            } else {
+              objZT.$trigger.dispatchEvent(new CustomEvent('ztrigger-dialog-button', {
+                detail: { dialog, evOriginal: ev, altHandler: objZT.altHandler }
+              }))
+            }
+          }
+        }
+      })
+    ]
 
-  let dlgOptions = {
-    title: '',
-    body: '',
-    onShow: function(ev) {
+    const theme = splitDlgTheme(findDlgAjaxValue(zaction, results, 'theme', 'altTheme', false))
+    const serverButtons = results.js.buttons
 
-      let $elem = ev.target.querySelector('.modal-body')
-      if (!$elem) {
-        return
+    if (zzb.types.isArrayHasRecords(serverButtons)) {
+      return serverButtons
+    }
+
+    if (theme) {
+      if (theme.type && !zzb.types.isStringNotEmpty(dlgType)) {
+        dlgType = theme.type
       }
-
-      if (zzb.dom.getAttributeElse($elem, '_zdinit', '') === 'true') {
-        return
+      if (theme.button2) {
+        setThemeButton(baseButtons[1], theme.button2)
+      } else {
+        baseButtons.splice(1)
       }
+      if (theme.button1) {
+        setThemeButton(baseButtons[0], theme.button1)
+      } else {
+        baseButtons.splice(0)
+      }
+    }
+
+    const override = zaction.getOptions().zdlg.buttons
+    if (zzb.types.isStringNotEmpty(override)) {
+      const parts = override.split(';')
+      if (parts.length === baseButtons.length) {
+        for (let i = 0; i < baseButtons.length; i++) {
+          const parsed = splitDlgButton(parts[i])
+          if (parsed) {
+            if (parsed.label) baseButtons[i].label = parsed.label
+            if (parsed.type) baseButtons[i].type = parsed.type
+            if (parsed.ztrigger) baseButtons[i].ztrigger = parsed.ztrigger
+          }
+        }
+      } else {
+        console.warn('zdlg-buttons length mismatch with default/theme')
+      }
+    }
+
+    return baseButtons
+
+    function setThemeButton(btn, def) {
+      btn.label = def.label
+      btn.ztrigger = def.ztrigger.toLowerCase()
+      btn.type = def.type
+    }
+  }
+
+  const dlgType = findDlgAjaxValue(zaction, results, 'type', 'altType', false)
+  const dlgButtons = buildDialogButtons(dlgType)
+
+  const dlgOptions = {
+    title: findDlgAjaxValue(zaction, results, 'title', 'altTitle', false),
+    body: findDlgAjaxValue(zaction, results, 'body', null, true),
+    type: dlgType,
+    classBackdrop: findDlgAjaxValue(zaction, results, 'classBackdrop', 'altClassBackdrop', false),
+    classDialog: findDlgAjaxValue(zaction, results, 'class', 'altClass', false),
+    dataBackdrop: '',
+    classWidthMod: findDlgAjaxValue(zaction, results, 'classWidthMod', 'altClassWidthMod', false),
+    classFullscreenMod: findDlgAjaxValue(zaction, results, 'classFullscreenMod', 'altClassFullscreenMod', false),
+    isScrollable: findDlgAjaxValue(zaction, results, 'isScrollable', 'altIsScrollable', false) === 'true',
+    isFullscreen: findDlgAjaxValue(zaction, results, 'isFullscreen', 'altIsFullscreen', false) === 'true',
+    isNoFooter: findDlgAjaxValue(zaction, results, 'isNoFooter', 'altIsNoFooter', false) === 'true',
+    noHeaderCloseButton: zaction.getOptions().zdlg.noHeaderCloseButton === 'true' || results.js.noHeaderCloseButton === true,
+    noFocus: zaction.getOptions().zdlg.noFocus === 'true' || results.js.noFocus === true,
+    noKeyboard: zaction.getOptions().zdlg.noKeyboard === 'true' || results.js.noKeyboard === true,
+    buttons: dlgButtons,
+    onShow(ev) {
+      const $elem = ev.target.querySelector('.modal-body')
+      if (!$elem || zzb.dom.getAttributeElse($elem, '_zdinit', '') === 'true') return
 
       let $buttons = ev.target.querySelectorAll('.modal-footer [ztrigger]')
-      let allowedTriggers = []
-      if ($buttons) {
-        $buttons.forEach(function($button) {
-          allowedTriggers.push($button.getAttribute('ztrigger'))
-        })
-      }
+      const allowedTriggers = Array.from($buttons).map($b => $b.getAttribute('ztrigger'))
 
-      // Load and init elements inside modal body
       zzb.zaction.loadZInputs($elem)
-      if (zzb.zui) {
-        zzb.zui.onElemInit($elem)
-      }
+      if (zzb.zui) zzb.zui.onElemInit($elem)
       zzb.zaction.addEventListeners('.zaction', results.js.actionHandler, $elem)
 
-      // Gather all triggers inside modal-body
-      let $ztElems = $elem.querySelectorAll('[ztrigger]')
+      const $ztElems = $elem.querySelectorAll('[ztrigger]')
       let validBodyTriggers = []
-      if ($ztElems) {
-        $ztElems.forEach(function($ztElem) {
-          let trigger = $ztElem.getAttribute('ztrigger')
-          if (!allowedTriggers.includes(trigger)) {
-            console.log('no match of ztrigger handler "', trigger + '"' )
-          } else {
-            // Assign loop-type info if needed
-            if (zaction.getOptions().hasLoopType) {
-              if (!zzb.types.isStringNotEmpty($ztElem.getAttribute('za-loop-type'))) {
-                $ztElem.setAttribute('za-loop-type', zaction.getOptions().zaction.loopType)
-                $ztElem.setAttribute('za-loop-inject-skip-inject', "false")
-              }
-            }
-            $ztElem.addEventListener('ztrigger-dialog-button', function(ev){
-              zzb.zaction.actionHandler(ev, ev.detail.altHandler, function(drr, err) {
-                handleActionResults(drr, err, ev.detail.dialog)
-              })
-            })
-          }
-          validBodyTriggers.push(trigger)
-        })
-      }
 
-      // Filter DOM buttons in modal-footer: keep only those with valid triggers or defaultSafeTrigger
-      const defaultSafeTrigger = 'cancel'
-      if ($buttons && $buttons.length > 0) {
+      $ztElems.forEach($ztElem => {
+        const trigger = $ztElem.getAttribute('ztrigger')
+        if (allowedTriggers.includes(trigger)) {
+          if (zaction.getOptions().hasLoopType) {
+            if (!zzb.types.isStringNotEmpty($ztElem.getAttribute('za-loop-type'))) {
+              $ztElem.setAttribute('za-loop-type', zaction.getOptions().zaction.loopType)
+              $ztElem.setAttribute('za-loop-inject-skip-inject', 'false')
+            }
+          }
+          $ztElem.addEventListener('ztrigger-dialog-button', ev => {
+            zzb.zaction.actionHandler(ev, ev.detail.altHandler, (drr, err) =>
+              handleActionResults(drr, err, ev.detail.dialog)
+            )
+          })
+        } else {
+          console.log('no match of ztrigger handler "', trigger + '"')
+        }
+        validBodyTriggers.push(trigger)
+      })
+
+      if (zaction.getZEvent() === 'zurl-confirm') {
+        $buttons.forEach($btn => {
+          const trig = $btn.getAttribute('ztrigger')
+          if (trig && trig.toLowerCase() !== 'cancel') {
+            console.log(`Normalizing zurl-confirm button ztrigger "${trig}" → "ok"`)
+            $btn.setAttribute('ztrigger', 'ok')
+          }
+        })
+      } else {
+        const defaultSafeTrigger = 'cancel'
         $buttons.forEach($btn => {
           const trig = $btn.getAttribute('ztrigger')?.toLowerCase()
           if (!trig) {
             console.warn('Button in footer is missing ztrigger, removing')
             $btn.remove()
-            return
-          }
-          const isAllowed = (trig === defaultSafeTrigger) || validBodyTriggers.includes(trig)
-          if (!isAllowed) {
+          } else if (!(trig === defaultSafeTrigger || validBodyTriggers.includes(trig))) {
             console.warn(`Removing modal-footer button with ztrigger="${trig}" – no matching .zaction`)
             $btn.remove()
           }
@@ -1408,126 +1486,13 @@ function handleDialog(zaction, callback, results) {
       }
 
       zzb.dom.setAttribute($elem, '_zdinit', 'true')
-
-      if ($elem.classList.contains('d-none')) {
-        $elem.classList.remove('d-none')
-      }
+      $elem.classList.remove('d-none')
     },
     onShown: null,
     onHide: null,
-    onHidden: null,
-    buttons: [
-      zzb.dialogs.ZazzyDialog.getButtonDefaults({
-        type: zzb.dialogs.ZazzyDialog.TYPE_SECONDARY,
-        label: 'Cancel',
-        ztrigger: 'cancel',
-        action: function (dialog, ev) {
-          dialog.close()
-        }
-      }),
-      zzb.dialogs.ZazzyDialog.getButtonDefaults({
-        type: zzb.dialogs.ZazzyDialog.TYPE_PRIMARY,
-        label: 'Ok',
-        ztrigger: 'ok',
-        action: function (dialog, ev) {
-          if (zaction.getZEvent() === 'zurl-confirm') {
-            zaction.runAJAX(zaction.buildAJAXOptions(), function(drr, err) {
-              handleActionResults(drr, err, dialog)
-            })
-          } else {
-            let objZT = findZTriggerDialog(this)
-            if (!objZT && !objZT.$trigger) {
-              dialog.close()
-            } else {
-              objZT.$trigger.dispatchEvent(new CustomEvent('ztrigger-dialog-button', {detail: {dialog: dialog, evOriginal: ev, altHandler: objZT.altHandler}}))
-            }
-          }
-        }
-      })
-    ]
+    onHidden: null
   }
 
-  dlgOptions.title = findDlgAjaxValue(zaction, results, 'title', 'altTitle', false)
-  dlgOptions.body = findDlgAjaxValue(zaction, results, 'body', null, true)
-  dlgOptions.type = findDlgAjaxValue(zaction, results, 'type', 'altType', false)
-  dlgOptions.classBackdrop = findDlgAjaxValue(zaction, results, 'classBackdrop', 'altClassBackdrop', false)
-  dlgOptions.classDialog = findDlgAjaxValue(zaction, results, 'class', 'altClass', false)
-  dlgOptions.dataBackdrop = ''
-  dlgOptions.classWidthMod = findDlgAjaxValue(zaction, results, 'classWidthMod', 'altClassWidthMod', false)
-  dlgOptions.classFullscreenMod = findDlgAjaxValue(zaction, results, 'classFullscreenMod', 'altClassFullscreenMod', false)
-  dlgOptions.isScrollable = findDlgAjaxValue(zaction, results, 'isScrollable', 'altIsScrollable', false) === 'true'
-  dlgOptions.isFullscreen = findDlgAjaxValue(zaction, results, 'isFullscreen', 'altIsFullscreen', false) === 'true'
-  dlgOptions.isNoFooter = findDlgAjaxValue(zaction, results, 'isNoFooter', 'altIsNoFooter', false) === 'true'
-  dlgOptions.noHeaderCloseButton = (zaction.getOptions().zdlg.noHeaderCloseButton === 'true' || results.js.noHeaderCloseButton === true)
-  dlgOptions.noFocus = (zaction.getOptions().zdlg.noFocus === 'true' || results.js.noFocus === true)
-  dlgOptions.noKeyboard = (zaction.getOptions().zdlg.noKeyboard === 'true' || results.js.noKeyboard === true)
-
-  let dlgTheme = null
-  dlgTheme = findDlgAjaxValue(zaction, results, 'theme', 'altTheme', false)
-  dlgTheme = (zzb.types.isStringNotEmpty(dlgTheme) ? splitDlgTheme(dlgTheme) : null)
-
-  // The server can reply with its own set of buttons
-  // but it may be easier to define overrides on the element.
-  // See syntax for 'zdlg-buttons'
-  if (zzb.types.isArrayHasRecords(results.js.buttons)) {
-    dlgOptions.buttons = results.js.buttons
-
-    // dialog themes
-    if (dlgTheme) {
-      if (dlgTheme.type && !zzb.types.isStringNotEmpty(dlgOptions.type)) {
-        dlgOptions.type = dlgTheme.type
-      }
-      // The question is if we allow the client to override any server theme buttons?
-      // Currently, no. Reason for having server buttons is to have a length !== 2.
-      // Future use cases will help determine a better implementation.
-    }
-  } else {
-    // dialog themes
-    if (dlgTheme) {
-      if (dlgTheme.type && !zzb.types.isStringNotEmpty(dlgOptions.type)) {
-        dlgOptions.type = dlgTheme.type
-      }
-      function setButton(but, ii) {
-        dlgOptions.buttons[ii].label = but.label
-        dlgOptions.buttons[ii].ztrigger = but.ztrigger.toLowerCase()
-        dlgOptions.buttons[ii].type = but.type
-      }
-      if (dlgTheme.button2) {
-        setButton(dlgTheme.button2, 1)
-      } else {
-        dlgOptions.buttons.splice(1)
-      }
-      if (dlgTheme.button1) {
-        setButton(dlgTheme.button1, 0)
-      } else {
-        dlgOptions.buttons.splice(0)
-      }
-    }
-
-    // Individual button overrides
-    let ovBut = zaction.getOptions().zdlg.buttons
-    if (zzb.types.isStringNotEmpty(ovBut)) {
-      ovBut = ovBut.split(';')
-      if (ovBut.length !== dlgOptions.buttons.length) {
-        console.log('zdlg-buttons definition does not match default options/theme')
-      } else {
-        for (let ii = 0; ii < dlgOptions.buttons.length; ii++) {
-          let but = splitDlgButton(ovBut[ii])
-          if (but) {
-            if (zzb.types.isStringNotEmpty(but.label)) {
-              dlgOptions.buttons[ii].label = but.label
-            }
-            if (zzb.types.isStringNotEmpty(but.type)) {
-              dlgOptions.buttons[ii].type = but.type
-            }
-            if (zzb.types.isStringNotEmpty(but.ztrigger)) {
-              dlgOptions.buttons[ii].ztrigger = but.ztrigger
-            }
-          }
-        }
-      }
-    }
-  }
   zzb.dialogs.showMessage(dlgOptions)
 }
 
