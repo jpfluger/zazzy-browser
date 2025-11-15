@@ -523,15 +523,18 @@ _zui.prototype.onElemInit = function($elem) {
         // zdate-locale = The locale to use. default is "en" (English).
         // zdate-auto-close = [ "true" | "false" ] = If false, do not automatically close the calendar pop-up after the date is selected. Default is "true".
         // zdate-use-iso-val = [ "true" | "false" ] = If false, do not use ISO dates but default to whatever the Picker selects. Default is "false" unless 'zf-type="date-iso".
+        const zfType = zzb.dom.getAttributeElse($elem, 'zf-type', '');
+        const useISOVal = zfType.startsWith('date-iso') || zfType.includes('date-iso');
         let dtAttribs = zzb.types.merge({
           value: zzb.dom.getAttributeElse($elem, 'value', null),
           locale: 'en',
           autoClose: true,
-          useISOVal: zzb.dom.getAttributeElse($elem, 'zf-type', null) === 'date-iso',
+          useISOVal: useISOVal,
           addBtnToday: true,
           addBtnClear: true,
           autoEvInput: false,
           autoEvBlur: false,
+          // format: 'MM/dd/yyyy' <-- prefer locale 'en' instead of hardcoding here
         }, zzb.dom.getAttributes($elem, /^zdate-/, 6))
         dtAttribs.autoClose = zzb.strings.toBool(dtAttribs.autoClose)
         dtAttribs.addBtnToday = zzb.strings.toBool(dtAttribs.addBtnToday)
@@ -547,19 +550,60 @@ _zui.prototype.onElemInit = function($elem) {
           dpButtons.push('clear')
         }
 
-        // Update the date if an input field.
         let isInput = ($elem.nodeName === 'INPUT')
         let dtCache = null
 
         const mycfval = $elem.getAttribute('zf-cval')
-        if (zzb.types.isStringNotEmpty(dtAttribs.value)) {
-          if (!zzb.types.isStringNotEmpty(mycfval)) {
-            dtCache = (dtAttribs.value === 'now' ? new Date() : new Date(Date.parse(dtAttribs.value)))
-            zzb.dom.setAttribute($elem, 'zdate-value', '')
+        const tz = zzb.dom.getTimeZone($elem); // Get timezone for this element
+
+        // Parse and set initial zf-cval if needed (for both readonly and editable)
+        let initialLocalDt = null;
+        if (useISOVal && !zzb.types.isStringNotEmpty(mycfval) && zzb.types.isStringNotEmpty(dtAttribs.value)) {
+          if (luxon) {
+            let parseDt;
+            if (dtAttribs.value.includes('T')) {
+              parseDt = luxon.DateTime.fromISO(dtAttribs.value, { zone: tz });
+            } else {
+              parseDt = luxon.DateTime.fromFormat(dtAttribs.value, 'yyyy-MM-dd', { zone: tz });
+            }
+            if (parseDt.isValid) {
+              initialLocalDt = parseDt.startOf('day');
+              const utcISO = initialLocalDt.toUTC().toISO();
+              zzb.dom.setAttribute($elem, 'zf-cval', utcISO);
+              console.log('initial zf-cval set:', utcISO);
+            }
+          } else {
+            // Fallback without Luxon: Assume value is UTC ISO or yyyy-MM-dd (treated as UTC)
+            const parsedUTC = zzb.time.parseToUTC(dtAttribs.value);
+            if (parsedUTC) {
+              const utcDate = new Date(Date.UTC(new Date(parsedUTC).getFullYear(), new Date(parsedUTC).getMonth(), new Date(parsedUTC).getDate()));
+              const utcISO = utcDate.toISOString();
+              zzb.dom.setAttribute($elem, 'zf-cval', utcISO);
+              console.log('initial zf-cval set (fallback):', utcISO);
+            }
+          }
+        }
+
+        // Set dtCache for picker if parsed
+        if (initialLocalDt) {
+          dtCache = initialLocalDt.toJSDate();
+        } else if (zzb.types.isStringNotEmpty(dtAttribs.value)) {
+          const parsedUTC = zzb.time.parseToUTC(dtAttribs.value);
+          if (parsedUTC) {
+            dtCache = new Date(parsedUTC);
           }
         }
         if (zzb.types.isStringNotEmpty(mycfval)) {
-          dtCache = (dtAttribs.value === 'now' ? new Date() : new Date(Date.parse(mycfval)))
+          const parsedUTC = zzb.time.parseToUTC(mycfval);
+          if (parsedUTC) {
+            dtCache = new Date(parsedUTC);
+          }
+        }
+
+        // Skip attaching picker and handlers if readonly (prevents any changes)
+        if ($elem.readOnly) {
+          zzb.dom.setAttribute($elem, 'zdate-value', ''); // Optional: Clear any zdate-value if set
+          return;
         }
 
         let name = zzb.dom.getAttributeElse($elem, 'name', null)
@@ -571,53 +615,65 @@ _zui.prototype.onElemInit = function($elem) {
             buttons: dpButtons,
             onSelect: function (ops) {
               if (isInput) {
-                //console.log(ops, dtAttribs, ops.date.toISOString(), ops.date.getTimezoneOffset())
-                if (dtAttribs.useISOVal) {
-                  //zzb.dom.setAttribute($elem, 'value', ops.date.toISOString())
-                  if (name && ops && ops.date) {
-                    // Set the cached value, which overrides the AirPicker value on form submit.
-                    zzb.dom.setAttribute($elem, 'zf-cval', ops.date.toISOString())
-                    // console.log(name, 'onSelect', ops.date.toISOString())
+                if (dtAttribs.useISOVal && name && ops && ops.date) {
+                  // Interpret selected date as local midnight in element's timezone
+                  let localDt;
+                  if (luxon) {
+                    localDt = luxon.DateTime.fromJSDate(ops.date, { zone: tz }).startOf('day'); // Midnight local
+                    const utcDt = localDt.toUTC();
+                    zzb.dom.setAttribute($elem, 'zf-cval', utcDt.toISO()); // Full RFC 3339: "2025-11-14T00:00:00Z"
+                    console.log('date picker onSelect luxon', 'zf-cval', utcDt.toISO())
+                  } else {
+                    // Fallback: Create UTC midnight from local date
+                    const localDate = ops.date;
+                    const utcDate = new Date(Date.UTC(localDate.getFullYear(), localDate.getMonth(), localDate.getDate()));
+                    zzb.dom.setAttribute($elem, 'zf-cval', utcDate.toISOString()); // "2025-11-14T00:00:00.000Z" (trim ms if needed)
+                    console.log('date picker onSelect', 'zf-cval', utcDate, utcDate.toISOString())
                   }
                 }
               }
             }
           })
           if (dtCache) {
-            adp.selectDate(dtCache)
-            // console.log('adp.selectDate dtCache', dtCache)
+            adp.selectDate(dtCache);
           }
           if (!luxon) {
             if (dtAttribs.autoEvInput === true || dtAttribs.autoEvBlur === true) {
-              console.log('advanced date processing using "luxon.js"')
+              console.log('advanced date processing using "luxon.js"');
             }
           } else {
-            // Ref: https://github.com/t1m0n/air-datepicker/issues/41
             if (dtAttribs.autoEvInput === true) {
               $elem.addEventListener('input', function(evt) {
-                const vInput = $elem.value
+                const vInput = $elem.value;
                 if (zzb.types.isStringNotEmpty(vInput)) {
-                  // is vInput valid?
-                  let vTemp = luxon.DateTime.fromFormat(vInput, myLocale.date.dateFormat)
+                  let vTemp = luxon.DateTime.fromFormat(vInput, myLocale.date.dateFormat, { zone: tz }).startOf('day');
                   if (vTemp.isValid) {
-                    // console.log('input-isValid', vTemp.toJSDate())
-                    adp.selectDate(vTemp.toJSDate())
+                    adp.selectDate(vTemp.toJSDate());
+                    // Store full UTC RFC 3339
+                    zzb.dom.setAttribute($elem, 'zf-cval', vTemp.toUTC().toISO());
+                    console.log('date picker input event', 'zf-cval', vTemp.toUTC().toISO(), vTemp.toUTC().toISOString())
                   }
                 }
               })
             }
             if (dtAttribs.autoEvBlur === true) {
               $elem.addEventListener('blur', function(evt) {
-                const vPick = $elem.getAttribute('zf-cval')
-                const vInput = $elem.value
-
-                // console.log('onBlur', vPick, vInput, adp.viewDate.toISOString())
-
-                let vTemp = luxon.DateTime.fromFormat(vInput, myLocale.date.dateFormat)
-                if (!vTemp.isValid) {
-                  zzb.dom.setAttribute($elem, 'zf-cval', '')
-                  $elem.value = ''
-                }
+                setTimeout(() => {
+                  const vInput = $elem.value;
+                  let vTemp = luxon.DateTime.fromFormat(vInput, myLocale.date.dateFormat, { zone: tz }).startOf('day');
+                  if (vTemp.isValid) {
+                    const utcISO = vTemp.toUTC().toISO();
+                    zzb.dom.setAttribute($elem, 'zf-cval', utcISO);
+                    adp.selectDate(vTemp.toJSDate());
+                    // Optionally update display to local format
+                    $elem.value = zzb.time.toLocalDisplay(utcISO, { timeZone: tz, dateStyle: 'medium' });
+                    console.log('date picker blur isValid', 'zf-cval', utcISO)
+                  } else {
+                    zzb.dom.setAttribute($elem, 'zf-cval', '');
+                    $elem.value = '';
+                    console.log('date picker blur !isValid', 'zf-cval', '')
+                  }
+                }, 0);  // Delay to allow picker update first
               })
             }
           }

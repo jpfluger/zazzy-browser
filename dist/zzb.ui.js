@@ -1,4 +1,4 @@
-//! zzb.ui.js v2.9.1 (https://github.com/jpfluger/zazzy-browser)
+//! zzb.ui.js v2.9.2 (https://github.com/jpfluger/zazzy-browser)
 //! MIT License; Copyright 2017-2023 Jaret Pfluger
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
@@ -2617,15 +2617,18 @@ _zui.prototype.onElemInit = function($elem) {
         // zdate-locale = The locale to use. default is "en" (English).
         // zdate-auto-close = [ "true" | "false" ] = If false, do not automatically close the calendar pop-up after the date is selected. Default is "true".
         // zdate-use-iso-val = [ "true" | "false" ] = If false, do not use ISO dates but default to whatever the Picker selects. Default is "false" unless 'zf-type="date-iso".
+        const zfType = zzb.dom.getAttributeElse($elem, 'zf-type', '');
+        const useISOVal = zfType.startsWith('date-iso') || zfType.includes('date-iso');
         let dtAttribs = zzb.types.merge({
           value: zzb.dom.getAttributeElse($elem, 'value', null),
           locale: 'en',
           autoClose: true,
-          useISOVal: zzb.dom.getAttributeElse($elem, 'zf-type', null) === 'date-iso',
+          useISOVal: useISOVal,
           addBtnToday: true,
           addBtnClear: true,
           autoEvInput: false,
           autoEvBlur: false,
+          // format: 'MM/dd/yyyy' <-- prefer locale 'en' instead of hardcoding here
         }, zzb.dom.getAttributes($elem, /^zdate-/, 6))
         dtAttribs.autoClose = zzb.strings.toBool(dtAttribs.autoClose)
         dtAttribs.addBtnToday = zzb.strings.toBool(dtAttribs.addBtnToday)
@@ -2641,19 +2644,60 @@ _zui.prototype.onElemInit = function($elem) {
           dpButtons.push('clear')
         }
 
-        // Update the date if an input field.
         let isInput = ($elem.nodeName === 'INPUT')
         let dtCache = null
 
         const mycfval = $elem.getAttribute('zf-cval')
-        if (zzb.types.isStringNotEmpty(dtAttribs.value)) {
-          if (!zzb.types.isStringNotEmpty(mycfval)) {
-            dtCache = (dtAttribs.value === 'now' ? new Date() : new Date(Date.parse(dtAttribs.value)))
-            zzb.dom.setAttribute($elem, 'zdate-value', '')
+        const tz = zzb.dom.getTimeZone($elem); // Get timezone for this element
+
+        // Parse and set initial zf-cval if needed (for both readonly and editable)
+        let initialLocalDt = null;
+        if (useISOVal && !zzb.types.isStringNotEmpty(mycfval) && zzb.types.isStringNotEmpty(dtAttribs.value)) {
+          if (luxon) {
+            let parseDt;
+            if (dtAttribs.value.includes('T')) {
+              parseDt = luxon.DateTime.fromISO(dtAttribs.value, { zone: tz });
+            } else {
+              parseDt = luxon.DateTime.fromFormat(dtAttribs.value, 'yyyy-MM-dd', { zone: tz });
+            }
+            if (parseDt.isValid) {
+              initialLocalDt = parseDt.startOf('day');
+              const utcISO = initialLocalDt.toUTC().toISO();
+              zzb.dom.setAttribute($elem, 'zf-cval', utcISO);
+              console.log('initial zf-cval set:', utcISO);
+            }
+          } else {
+            // Fallback without Luxon: Assume value is UTC ISO or yyyy-MM-dd (treated as UTC)
+            const parsedUTC = zzb.time.parseToUTC(dtAttribs.value);
+            if (parsedUTC) {
+              const utcDate = new Date(Date.UTC(new Date(parsedUTC).getFullYear(), new Date(parsedUTC).getMonth(), new Date(parsedUTC).getDate()));
+              const utcISO = utcDate.toISOString();
+              zzb.dom.setAttribute($elem, 'zf-cval', utcISO);
+              console.log('initial zf-cval set (fallback):', utcISO);
+            }
+          }
+        }
+
+        // Set dtCache for picker if parsed
+        if (initialLocalDt) {
+          dtCache = initialLocalDt.toJSDate();
+        } else if (zzb.types.isStringNotEmpty(dtAttribs.value)) {
+          const parsedUTC = zzb.time.parseToUTC(dtAttribs.value);
+          if (parsedUTC) {
+            dtCache = new Date(parsedUTC);
           }
         }
         if (zzb.types.isStringNotEmpty(mycfval)) {
-          dtCache = (dtAttribs.value === 'now' ? new Date() : new Date(Date.parse(mycfval)))
+          const parsedUTC = zzb.time.parseToUTC(mycfval);
+          if (parsedUTC) {
+            dtCache = new Date(parsedUTC);
+          }
+        }
+
+        // Skip attaching picker and handlers if readonly (prevents any changes)
+        if ($elem.readOnly) {
+          zzb.dom.setAttribute($elem, 'zdate-value', ''); // Optional: Clear any zdate-value if set
+          return;
         }
 
         let name = zzb.dom.getAttributeElse($elem, 'name', null)
@@ -2665,53 +2709,65 @@ _zui.prototype.onElemInit = function($elem) {
             buttons: dpButtons,
             onSelect: function (ops) {
               if (isInput) {
-                //console.log(ops, dtAttribs, ops.date.toISOString(), ops.date.getTimezoneOffset())
-                if (dtAttribs.useISOVal) {
-                  //zzb.dom.setAttribute($elem, 'value', ops.date.toISOString())
-                  if (name && ops && ops.date) {
-                    // Set the cached value, which overrides the AirPicker value on form submit.
-                    zzb.dom.setAttribute($elem, 'zf-cval', ops.date.toISOString())
-                    // console.log(name, 'onSelect', ops.date.toISOString())
+                if (dtAttribs.useISOVal && name && ops && ops.date) {
+                  // Interpret selected date as local midnight in element's timezone
+                  let localDt;
+                  if (luxon) {
+                    localDt = luxon.DateTime.fromJSDate(ops.date, { zone: tz }).startOf('day'); // Midnight local
+                    const utcDt = localDt.toUTC();
+                    zzb.dom.setAttribute($elem, 'zf-cval', utcDt.toISO()); // Full RFC 3339: "2025-11-14T00:00:00Z"
+                    console.log('date picker onSelect luxon', 'zf-cval', utcDt.toISO())
+                  } else {
+                    // Fallback: Create UTC midnight from local date
+                    const localDate = ops.date;
+                    const utcDate = new Date(Date.UTC(localDate.getFullYear(), localDate.getMonth(), localDate.getDate()));
+                    zzb.dom.setAttribute($elem, 'zf-cval', utcDate.toISOString()); // "2025-11-14T00:00:00.000Z" (trim ms if needed)
+                    console.log('date picker onSelect', 'zf-cval', utcDate, utcDate.toISOString())
                   }
                 }
               }
             }
           })
           if (dtCache) {
-            adp.selectDate(dtCache)
-            // console.log('adp.selectDate dtCache', dtCache)
+            adp.selectDate(dtCache);
           }
           if (!luxon) {
             if (dtAttribs.autoEvInput === true || dtAttribs.autoEvBlur === true) {
-              console.log('advanced date processing using "luxon.js"')
+              console.log('advanced date processing using "luxon.js"');
             }
           } else {
-            // Ref: https://github.com/t1m0n/air-datepicker/issues/41
             if (dtAttribs.autoEvInput === true) {
               $elem.addEventListener('input', function(evt) {
-                const vInput = $elem.value
+                const vInput = $elem.value;
                 if (zzb.types.isStringNotEmpty(vInput)) {
-                  // is vInput valid?
-                  let vTemp = luxon.DateTime.fromFormat(vInput, myLocale.date.dateFormat)
+                  let vTemp = luxon.DateTime.fromFormat(vInput, myLocale.date.dateFormat, { zone: tz }).startOf('day');
                   if (vTemp.isValid) {
-                    // console.log('input-isValid', vTemp.toJSDate())
-                    adp.selectDate(vTemp.toJSDate())
+                    adp.selectDate(vTemp.toJSDate());
+                    // Store full UTC RFC 3339
+                    zzb.dom.setAttribute($elem, 'zf-cval', vTemp.toUTC().toISO());
+                    console.log('date picker input event', 'zf-cval', vTemp.toUTC().toISO(), vTemp.toUTC().toISOString())
                   }
                 }
               })
             }
             if (dtAttribs.autoEvBlur === true) {
               $elem.addEventListener('blur', function(evt) {
-                const vPick = $elem.getAttribute('zf-cval')
-                const vInput = $elem.value
-
-                // console.log('onBlur', vPick, vInput, adp.viewDate.toISOString())
-
-                let vTemp = luxon.DateTime.fromFormat(vInput, myLocale.date.dateFormat)
-                if (!vTemp.isValid) {
-                  zzb.dom.setAttribute($elem, 'zf-cval', '')
-                  $elem.value = ''
-                }
+                setTimeout(() => {
+                  const vInput = $elem.value;
+                  let vTemp = luxon.DateTime.fromFormat(vInput, myLocale.date.dateFormat, { zone: tz }).startOf('day');
+                  if (vTemp.isValid) {
+                    const utcISO = vTemp.toUTC().toISO();
+                    zzb.dom.setAttribute($elem, 'zf-cval', utcISO);
+                    adp.selectDate(vTemp.toJSDate());
+                    // Optionally update display to local format
+                    $elem.value = zzb.time.toLocalDisplay(utcISO, { timeZone: tz, dateStyle: 'medium' });
+                    console.log('date picker blur isValid', 'zf-cval', utcISO)
+                  } else {
+                    zzb.dom.setAttribute($elem, 'zf-cval', '');
+                    $elem.value = '';
+                    console.log('date picker blur !isValid', 'zf-cval', '')
+                  }
+                }, 0);  // Delay to allow picker update first
               })
             }
           }
@@ -2953,6 +3009,48 @@ exports.T = _zui
  * automatic starting, caching, and UI element interaction.
  */
 function _time() {}
+
+// In _time (extend existing)
+
+/**
+ * Normalizes an input date/time to a UTC ISO 8601 string.
+ *
+ * Handles strings, numbers, or Date objects, converting to UTC for internal use.
+ * Returns null for invalid or missing inputs. Useful for standardizing dates
+ * from servers or forms before storage or transmission.
+ *
+ * @param {string|number|Date|null} input - Date input to parse.
+ * @returns {string|null} UTC ISO string or null if invalid.
+ */
+_time.prototype.parseToUTC = function (input) {
+  if (!input) return null;
+  const date = new Date(input); // Parses ISO or local
+  if (isNaN(date)) return null;
+  return date.toISOString(); // Normalize to UTC ISO
+};
+
+/**
+ * Formats a UTC ISO string for local display with options.
+ *
+ * Uses Intl.DateTimeFormat for locale/timezone-aware output. Defaults to
+ * medium date and short time styles. Integrate with getTimeZone for overrides.
+ *
+ * @param {string} isoUTC - UTC ISO string to format.
+ * @param {Object} [options={}] - Formatting options.
+ * @param {string} [options.locale='default'] - Locale code.
+ * @param {string} [options.timeZone='UTC'] - IANA timezone.
+ * @param {string} [options.dateStyle='medium'] - Date style.
+ * @param {string} [options.timeStyle='short'] - Time style.
+ * @returns {string} Formatted local date/time string.
+ */
+_time.prototype.toLocalDisplay = function (isoUTC, options = {}) {
+  const date = new Date(isoUTC);
+  return new Intl.DateTimeFormat(options.locale || 'default', {
+    timeZone: options.timeZone || 'UTC', // Override per your attr
+    dateStyle: options.dateStyle || 'medium',
+    timeStyle: options.timeStyle || 'short'
+  }).format(date);
+};
 
 /**
  * ZazzyInterval Class
@@ -4441,6 +4539,77 @@ exports.k = _perms
 
 const _rob = function () {}
 
+// Define ROBType constants (mirroring Go's predefined types)
+const ROBTYPE_DEBUG = 'debug';
+const ROBTYPE_INFO = 'info';
+const ROBTYPE_NOTICE = 'notice';
+const ROBTYPE_WARNING = 'warning';
+const ROBTYPE_ERROR = 'error';
+const ROBTYPE_CRITICAL = 'critical';
+const ROBTYPE_EMERGENCY = 'emergency';
+
+// Function to normalize a ROBType string (similar to Go's NormalizeROBType)
+function normalizeROBType(robType) {
+  if (typeof robType !== 'string') {
+    return ROBTYPE_ERROR; // Fallback for non-string inputs
+  }
+
+  robType = robType.trim().toLowerCase(); // Normalize case and trim whitespace
+
+  switch (robType) {
+    case 'emerg':
+      return ROBTYPE_EMERGENCY;
+    case 'crit':
+      return ROBTYPE_CRITICAL;
+    case 'err':
+      return ROBTYPE_ERROR;
+    case 'warn':
+      return ROBTYPE_WARNING;
+    case '':
+      return ROBTYPE_DEBUG;
+    default:
+      // Check if it's already a valid type
+      const validTypes = [
+        ROBTYPE_EMERGENCY,
+        ROBTYPE_CRITICAL,
+        ROBTYPE_ERROR,
+        ROBTYPE_WARNING,
+        ROBTYPE_NOTICE,
+        ROBTYPE_INFO,
+        ROBTYPE_DEBUG
+      ];
+      if (validTypes.includes(robType)) {
+        return robType;
+      }
+      return ROBTYPE_ERROR; // Fallback for unknown types
+  }
+}
+
+// Function to validate a ROBType string (similar to Go's Validate)
+// Returns null if valid, or an error message string if invalid
+function validateROBType(robType) {
+  if (typeof robType !== 'string' || robType.trim() === '') {
+    return 'ROBType must be a non-empty string';
+  }
+
+  robType = robType.trim();
+
+  for (let i = 0; i < robType.length; i++) {
+    const char = robType[i];
+    if (!/[a-zA-Z0-9\-_.]/.test(char)) {
+      return `Invalid character '${char}'; ROBType allows A-Z, a-z, 0-9, -_.`;
+    }
+    if (i === 0 || i === robType.length - 1) {
+      if (/[\-_.]/.test(char)) {
+        return `Invalid character '${char}' at position ${i}; only alphas and numbers can begin or end the ROBType`;
+      }
+    }
+  }
+
+  return null; // Valid
+}
+
+// Creates a new ROB object with default properties and methods
 _rob.prototype.newROB = function (options) {
   return zzb.types.merge({
     message: null,
@@ -4484,7 +4653,26 @@ _rob.prototype.newROB = function (options) {
   }, options)
 }
 
-// reduce the error array to an object
+// Normalizes a ROBType string to a standard value
+_rob.prototype.normalizeROBType = normalizeROBType
+
+// Validates if a ROBType string conforms to format rules; returns error message or null
+_rob.prototype.validateROBType = validateROBType
+
+// Checks if a given ROBType represents an error level
+_rob.prototype.isError = function (robType) {
+  const normalized = this.normalizeROBType(robType);
+  switch (normalized) {
+    case ROBTYPE_EMERGENCY:
+    case ROBTYPE_CRITICAL:
+    case ROBTYPE_ERROR:
+      return true;
+    default:
+      return false;
+  }
+}
+
+// Reduces an array of errors to an object grouped by field
 _rob.prototype.toObject = function (errs) {
   if (!errs || !Array.isArray(errs)) {
     return { _system: [errs] }
@@ -4504,8 +4692,7 @@ _rob.prototype.toObject = function (errs) {
   return eo
 }
 
-// Originally we created ROBErrorType but...
-// (a) the stack is wrong when invoked by outside functions and (b) we wanted to control if the stack shows or not
+// Merges default properties into an error object and normalizes its type
 function mergeErrorDefaults (options) {
   // '_system' is a reserved word
   //   why not use null? b/c when converting from array to an object of errors by field, we need a valid string
@@ -4515,22 +4702,21 @@ function mergeErrorDefaults (options) {
   options = zzb.types.merge({ type: 'error', message: null, field: '_system', stack: null, isErr: true, title: null }, options)
 
   if (options.isErr) {
-    if (options.type === 'warn') {
-      options.type = 'warning'
-    } else if (options.type === 'err') {
-      options.type = 'error'
-    } else if (options.type === 'crit') {
-      options.type = 'critical'
-    } else if (options.type === 'emerg') {
-      options.type = 'emergency'
+    // Use normalizeROBType for consistency
+    options.type = normalizeROBType(options.type);
+
+    // Optional: Validate and fallback if invalid
+    const validationErr = validateROBType(options.type);
+    if (validationErr) {
+      console.warn(validationErr);
+      options.type = ROBTYPE_ERROR;
     }
-    // no "else" statement to default to a value (eg "error")
-    // this keeps the the available types loosely open
+
     switch (options.type) {
-      case 'warning':
-      case 'notice':
-      case 'info':
-      case 'debug':
+      case ROBTYPE_WARNING:
+      case ROBTYPE_NOTICE:
+      case ROBTYPE_INFO:
+      case ROBTYPE_DEBUG:
         options.isErr = false
         break
       default:
@@ -4542,9 +4728,8 @@ function mergeErrorDefaults (options) {
   return options
 }
 
-// Creates a single ROB error object from an object (eg existing error) or from a string
-// options1 could be a string or object, whereas options2 expects an object
-const createError = function (options1, options2) {
+// Creates a single ROB error object from a string or object input
+_rob.prototype.createError = function (options1, options2) {
   if (!options1) {
     return mergeErrorDefaults()
   }
@@ -4557,10 +4742,7 @@ const createError = function (options1, options2) {
   throw new Error('bad input in createError - unrecognized err datatype')
 }
 
-_rob.prototype.createError = createError
-
-// Sanitizes ROB error(s), which could be in the format of a string, array or object
-// Returns null or an array of errors
+// Sanitizes input errors into a standardized array of error objects
 _rob.prototype.sanitizeErrors = function (errs) {
   let newErrs = null
   if (!errs) {
@@ -4568,18 +4750,21 @@ _rob.prototype.sanitizeErrors = function (errs) {
   }
 
   if (!Array.isArray(errs)) {
-    newErrs = [createError(errs)]
+    newErrs = [this.createError(errs)]
   } else if (errs.length > 0) {
     newErrs = []
     errs.forEach(function (err) {
-      newErrs.push(createError(err))
-    })
+      // Skip invalid items (e.g., numbers, null) to avoid errors
+      if (typeof err === 'string' || (typeof err === 'object' && err !== null)) {
+        newErrs.push(this.createError(err))
+      }
+    }.bind(this))
   }
 
   return newErrs
 }
 
-// always returns an array, even if null
+// Sanitizes records into an array, ensuring consistency
 _rob.prototype.sanitizeRecords = function (recs) {
   if (!recs) {
     return []
@@ -4590,10 +4775,12 @@ _rob.prototype.sanitizeRecords = function (recs) {
   return recs
 }
 
+// Converts an array of errors to a categorized list object (alias for toList)
 _rob.prototype.toListErrs = function (errs) {
-  return zzb.rob.toList(errs)
+  return this.toList(errs)
 }
 
+// Converts an array of items (errors or messages) to a categorized list object
 _rob.prototype.toList = function (items) {
   let arrFields = []
   let arrSystem = []
@@ -4604,26 +4791,18 @@ _rob.prototype.toList = function (items) {
   if (items && Array.isArray(items) && items.length > 0) {
     items.forEach(function (item) {
       if (item.isErr === true) {
-        if (item.system === '_system') {
+        if (item.field === '_system') {
           arrSystem.push(item)
         } else if (zzb.types.isStringNotEmpty(item.field)) {
-          if (item.field === '_system') {
-            arrSystem.push(item)
-          } else {
-            arrFields.push(item)
-          }
+          arrFields.push(item)
         } else {
           arrSystem.push(item)
         }
       } else {
-        if (item.system === '_system') {
+        if (item.field === '_system') {
           arrSystemMessages.push(item)
         } else if (zzb.types.isStringNotEmpty(item.field)) {
-          if (item.field === '_system') {
-            arrSystemMessages.push(item)
-          } else {
-            arrFieldMessages.push(item)
-          }
+          arrFieldMessages.push(item)
         } else {
           arrSystemMessages.push(item)
         }
@@ -4693,10 +4872,12 @@ _rob.prototype.toList = function (items) {
   }
 }
 
+// Renders an array of errors as a formatted string (alias for renderList)
 _rob.prototype.renderListErrs = function (options) {
-  return zzb.rob.renderList(options)
+  return this.renderList(options)
 }
 
+// Renders a list of items (errors or messages) in various formats (text, html, etc.)
 _rob.prototype.renderList = function (options) {
   options = zzb.types.merge({ targets: [], format: 'text', defaultTitle: '', template: null, htmlWrapList: '<ul class="zzb-rob-{0}">{1}</ul>'}, options)
   let arr = []
@@ -4719,9 +4900,6 @@ _rob.prototype.renderList = function (options) {
       } else {
         if (!target.type) {
           target.type = (target.isMessage) ? 'message' : 'unknown'
-        }
-        if (isMulti) {
-
         }
         if (!isMulti && options.format === 'html') {
           arr.push(zzb.strings.format('<div class="zzb-rob-list-item-{0}">{1}</div>', target.type, target.message))
@@ -4748,7 +4926,6 @@ _rob.prototype.renderList = function (options) {
 }
 
 exports.I = _rob
-
 
 /***/ }),
 
@@ -5134,6 +5311,27 @@ _dom.prototype.findZUrl = function ($elem, returnNull) {
 }
 
 /**
+ * Retrieves the timezone for a given DOM element, with hierarchical fallbacks.
+ *
+ * Prioritizes the 'zdate-zone' attribute on the element for specific overrides.
+ * If not found, checks the document body for a global setting. Falls back to
+ * the browser's local timezone for user-specific adaptation.
+ *
+ * @param {Element|null} $elem - The DOM element to inspect for 'zdate-zone'.
+ * @returns {string} The resolved IANA timezone (e.g., "America/Chicago").
+ */
+_dom.prototype.getTimeZone = function ($elem) {
+  let tz = this.getAttributeElse($elem, 'zdate-zone', null);
+  if (!tz) {
+    tz = document.body.getAttribute('zdate-zone') || null;
+  }
+  if (!tz) {
+    tz = Intl.DateTimeFormat().resolvedOptions().timeZone; // Browser local (e.g., "America/Chicago")
+  }
+  return tz;
+};
+
+/**
  * Unified in-memory and persistent (localStorage) cache utility for DOM-centric use cases.
  *
  * Provides a simple interface to:
@@ -5244,7 +5442,8 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_RESULT__;(function (glo
 		(__WEBPACK_AMD_DEFINE_FACTORY__.call(exports, __webpack_require__, exports, module)) :
 		__WEBPACK_AMD_DEFINE_FACTORY__),
 		__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__))
-  } else {}
+  } else // removed by dead control flow
+{}
 }(this, function () {
 
   // ---------------------------------------------------
@@ -5493,7 +5692,9 @@ _ajax.prototype.request = function(options, callback) {
               body: data.message,
               onHide: function (ev) {
                 objReturn.rob = rob
-                callback(objReturn, null);
+                if (!zzb.types.isStringNotEmpty(data.messageType)) {
+                  callback(objReturn, null);
+                }
               }
             })
           }

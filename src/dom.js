@@ -377,6 +377,27 @@ _dom.prototype.findZUrl = function ($elem, returnNull) {
 }
 
 /**
+ * Retrieves the timezone for a given DOM element, with hierarchical fallbacks.
+ *
+ * Prioritizes the 'zdate-zone' attribute on the element for specific overrides.
+ * If not found, checks the document body for a global setting. Falls back to
+ * the browser's local timezone for user-specific adaptation.
+ *
+ * @param {Element|null} $elem - The DOM element to inspect for 'zdate-zone'.
+ * @returns {string} The resolved IANA timezone (e.g., "America/Chicago").
+ */
+_dom.prototype.getTimeZone = function ($elem) {
+  let tz = this.getAttributeElse($elem, 'zdate-zone', null);
+  if (!tz) {
+    tz = document.body.getAttribute('zdate-zone') || null;
+  }
+  if (!tz) {
+    tz = Intl.DateTimeFormat().resolvedOptions().timeZone; // Browser local (e.g., "America/Chicago")
+  }
+  return tz;
+};
+
+/**
  * Unified in-memory and persistent (localStorage) cache utility for DOM-centric use cases.
  *
  * Provides a simple interface to:

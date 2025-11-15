@@ -140,7 +140,9 @@ _ajax.prototype.request = function(options, callback) {
               body: data.message,
               onHide: function (ev) {
                 objReturn.rob = rob
-                callback(objReturn, null);
+                if (!zzb.types.isStringNotEmpty(data.messageType)) {
+                  callback(objReturn, null);
+                }
               }
             })
           }

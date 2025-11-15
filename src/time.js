@@ -8,6 +8,48 @@
  */
 function _time() {}
 
+// In _time (extend existing)
+
+/**
+ * Normalizes an input date/time to a UTC ISO 8601 string.
+ *
+ * Handles strings, numbers, or Date objects, converting to UTC for internal use.
+ * Returns null for invalid or missing inputs. Useful for standardizing dates
+ * from servers or forms before storage or transmission.
+ *
+ * @param {string|number|Date|null} input - Date input to parse.
+ * @returns {string|null} UTC ISO string or null if invalid.
+ */
+_time.prototype.parseToUTC = function (input) {
+  if (!input) return null;
+  const date = new Date(input); // Parses ISO or local
+  if (isNaN(date)) return null;
+  return date.toISOString(); // Normalize to UTC ISO
+};
+
+/**
+ * Formats a UTC ISO string for local display with options.
+ *
+ * Uses Intl.DateTimeFormat for locale/timezone-aware output. Defaults to
+ * medium date and short time styles. Integrate with getTimeZone for overrides.
+ *
+ * @param {string} isoUTC - UTC ISO string to format.
+ * @param {Object} [options={}] - Formatting options.
+ * @param {string} [options.locale='default'] - Locale code.
+ * @param {string} [options.timeZone='UTC'] - IANA timezone.
+ * @param {string} [options.dateStyle='medium'] - Date style.
+ * @param {string} [options.timeStyle='short'] - Time style.
+ * @returns {string} Formatted local date/time string.
+ */
+_time.prototype.toLocalDisplay = function (isoUTC, options = {}) {
+  const date = new Date(isoUTC);
+  return new Intl.DateTimeFormat(options.locale || 'default', {
+    timeZone: options.timeZone || 'UTC', // Override per your attr
+    dateStyle: options.dateStyle || 'medium',
+    timeStyle: options.timeStyle || 'short'
+  }).format(date);
+};
+
 /**
  * ZazzyInterval Class
  *
