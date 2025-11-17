@@ -297,7 +297,8 @@ class ZActionEvent {
     this.zcall = ev?.target?.getAttribute('zcall') || null;
     this._options = null;
     this._runAJAX = null;
-    this.reservePH = [':event', ':mod', ':zid', ':zidParent', ':blobName'];
+    // order matters due to prefix search: ':zidParent' should come before ':zid'
+    this.reservePH = [':event', ':mod', ':zidParent', ':zid', ':blobName', ':za-zid-parent', ':za-zid'];
   }
 
   isMouseDown() {
@@ -374,10 +375,15 @@ class ZActionEvent {
     }
 
     if (!opts.forceIgnoreZUrl && zzb.types.isStringNotEmpty(opts.zurl)) {
-      for (const ph of this.reservePH) {
+      // Sort by length descending to process longer placeholders first
+      const sortedPH = this.reservePH.slice().sort((a, b) => b.length - a.length);
+      for (const ph of sortedPH) {
         if (opts.zurl.includes(ph)) {
-          const key = ph.slice(1);
-          const val = opts.zaction[key];
+          let key = ph.slice(1);
+          if (key.startsWith('za-')) {
+            key = key.slice(3).replace(/-([a-z])/g, (m, letter) => letter.toUpperCase());
+          }
+          const val = opts.zaction[key] ?? opts[key];  // Fallback to opts[key] if zaction[key] missing
           if (!zzb.types.isStringNotEmpty(val)) {
             throw new Error(`Missing required placeholder '${ph}' in zurl`);
           }
