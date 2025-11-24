@@ -21,6 +21,18 @@ const _zui = function () {
 }
 
 /**
+ * Sets the dynamic navbar height as a CSS variable.
+ * Calculates offsetHeight of the fixed navbar and applies it to --bs-navbar-height.
+ */
+_zui.prototype.setDynamicNavbarHeight = function () {
+  const navbar = document.querySelector('.navbar.fixed-top');
+  if (navbar) {
+    const height = navbar.offsetHeight;
+    document.documentElement.style.setProperty('--bs-navbar-height', `${height}px`);
+  }
+};
+
+/**
  * Returns the default responsive width.
  * @returns {number}
  */
@@ -885,6 +897,7 @@ function getCustomSortValue (cellElem, sortId) {
  * - Executes `onLoadInit()` to configure layout and preload settings
  * - Executes `onElemInit()` to apply UI logic to the current DOM
  * - Triggers `onZLoadSection()` to run dynamic actions like zintervals or zloadsection
+ * - NEW: Sets dynamic navbar height and listens for resize
  *
  * This should **not** attach any global event listeners directly. Use this in coordination
  * with the global `DOMContentLoaded` hook which handles deferring setup logic.
@@ -896,6 +909,18 @@ _zui.prototype.onZUIReady = function () {
   this.onLoadInit();
   this.onElemInit();
   this.onZLoadSection();
+
+  // NEW: Set initial navbar height
+  this.setDynamicNavbarHeight();
+
+  // NEW: Debounced resize listener (to avoid rapid firing)
+  let resizeTimeout;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(() => {
+      this.setDynamicNavbarHeight();
+    }, 100); // 100ms debounce; adjust as needed
+  });
 };
 
 exports.zui = _zui
