@@ -1,5 +1,13 @@
 # zazzy-browser (`zzb`)
 
+🛑 **ARCHIVED PROJECT**  
+This repository represents an older version of this project and is no longer actively maintained here. It has been left public for educational purposes.
+
+🟢 **Note to prospective team members:**  
+This repo is a time capsule — old, strange, and unapologetic. Want a seat at my table? Stow your AI toolbox. The whiteboard awaits.  Dissect the code. Ruthlessly roast my old design decisions. Then let’s talk real enterprise architecture, cybersecurity, and networking — the kind that survives in the trenches, not just white-room theory.
+
+---
+
 **Zazzy Browser** (`zzb`) is a collection of modular, high-level browser utilities designed to simplify client-server interactions and user interface behaviors. It is built using **vanilla JavaScript**—with no dependencies on libraries like [jQuery](https://jquery.com/) or [Lodash](https://lodash.com/).
 
 The utilities are designed to complement [Bootstrap 5](https://getbootstrap.com/) and support modern, declarative HTML development through attribute-driven interaction patterns.
